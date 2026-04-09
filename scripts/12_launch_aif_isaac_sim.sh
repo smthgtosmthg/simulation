@@ -61,6 +61,9 @@ log "Launching AIF exploration: ${N_DRONES} drone(s), mode $([ "${HEADLESS}" == 
 export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
 export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 export OMNI_KIT_ACCEPT_EULA=YES
+export AIF_FACTORY_USD="http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Environments/Simple_Warehouse/warehouse_multiple_shelves.usd"
+
+log "Factory USD forced: ${AIF_FACTORY_USD}"
 
 # shellcheck disable=SC2086
 python "${WORKSPACE}/scripts/12_aif_isaac_sim.py" \

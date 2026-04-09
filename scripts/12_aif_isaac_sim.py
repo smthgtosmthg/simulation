@@ -66,7 +66,7 @@ class SimConfig:
     # simulation
     headless: bool = False
     max_steps: int = 500 #combien de fois on décide
-    sim_steps_per_aif: int = 120   #combien de temps on laisse voler entre deux décisions.
+    sim_steps_per_aif: int = 60   #combien de temps on laisse voler entre deux décisions.
     target_coverage: float = 95.0
     output_dir: str = "/tmp"
 
@@ -496,112 +496,6 @@ def _create_backend_class():
 
 
 # ════════════════════════════════════════════════════════════════
-# 7. Obstacle Layout
-# ════════════════════════════════════════════════════════════════
-
-def create_obstacle_layout() -> List[Dict]:
-    obstacles: List[Dict] = []
-
-    for i, y in enumerate([4.0, 8.5, 13.0, 17.0]):
-        obstacles.append({"type": "box", "label": f"shelf_{i}",
-                          "x": 7.0, "y": y, "w": 12.0, "h": 0.8, "z_h": 3.0})
-
-    crates = [(3.0, 3.0), (4.5, 7.0), (25.0, 4.0), (26.0, 15.0),
-              (22.0, 8.0), (2.0, 16.0), (20.0, 18.0), (15.0, 1.5)]
-    for i, (cx, cy) in enumerate(crates):
-        obstacles.append({"type": "box", "label": f"crate_{i}",
-                          "x": cx, "y": cy, "w": 1.5, "h": 1.5, "z_h": 1.5})
-
-    for i, (px, py) in enumerate([(5.5, 6.5), (5.5, 15.0), (24.0, 6.5), (24.0, 15.0)]):
-        obstacles.append({"type": "cylinder", "label": f"pillar_{i}",
-                          "x": px, "y": py, "radius": 0.5, "z_h": 4.0})
-
-    W, H, T = 30.0, 20.0, 0.15
-    obstacles.append({"type": "box", "label": "wall_south", "x": 0, "y": -T,  "w": W, "h": T, "z_h": 3.5})
-    obstacles.append({"type": "box", "label": "wall_north", "x": 0, "y": H,   "w": W, "h": T, "z_h": 3.5})
-    obstacles.append({"type": "box", "label": "wall_west",  "x": -T, "y": 0,  "w": T, "h": H, "z_h": 3.5})
-    obstacles.append({"type": "box", "label": "wall_east",  "x": W,  "y": 0,  "w": T, "h": H, "z_h": 3.5})
-
-    return obstacles
-
-
-# ════════════════════════════════════════════════════════════════
-# 8. Scene Builder (USD prims with physics colliders)
-# ════════════════════════════════════════════════════════════════
-
-def build_scene_obstacles(obstacles: List[Dict]):
-    from pxr import Gf, Sdf, UsdGeom, UsdPhysics, UsdShade
-    import omni.usd
-
-    stage = omni.usd.get_context().get_stage() #recuperer le stage usd 
-    stage.DefinePrim("/World/Obstacles", "Xform")#creer dosssier pour ranger tous les obstacles 
-
-    # ── Create reusable materials ──
-    def _make_material(name: str, color: Gf.Vec3f) -> UsdShade.Material:
-        mat_path = f"/World/Looks/{name}"
-        mat = UsdShade.Material.Define(stage, mat_path)
-        shader = UsdShade.Shader.Define(stage, f"{mat_path}/Shader")
-        shader.CreateIdAttr("UsdPreviewSurface")
-        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(color)
-        shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.7)
-        mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
-        return mat
-
-    mat_shelf = _make_material("shelf_mat", Gf.Vec3f(0.55, 0.35, 0.15))  
-    mat_crate = _make_material("crate_mat", Gf.Vec3f(0.9, 0.75, 0.3)) 
-    mat_pillar = _make_material("pillar_mat", Gf.Vec3f(0.7, 0.7, 0.7))   
-    mat_wall = _make_material("wall_mat", Gf.Vec3f(0.85, 0.85, 0.8))     
-
-    def _pick_material(label: str) -> UsdShade.Material:
-        if "shelf" in label:
-            return mat_shelf
-        elif "crate" in label:
-            return mat_crate
-        elif "pillar" in label:
-            return mat_pillar
-        else:
-            return mat_wall
-
-    for obs in obstacles:
-        path = f"/World/Obstacles/{obs['label']}"
-        mat = _pick_material(obs["label"])
-
-        if obs["type"] == "box":
-            cx = obs["x"] + obs["w"] / 2.0
-            cy = obs["y"] + obs["h"] / 2.0
-            cz = obs["z_h"] / 2.0
-
-            prim = UsdGeom.Cube.Define(stage, path)
-            prim.GetSizeAttr().Set(1.0)
-            xf = UsdGeom.Xformable(prim.GetPrim())
-            xf.ClearXformOpOrder()
-            xf.AddTranslateOp().Set(Gf.Vec3d(cx, cy, cz))
-            xf.AddScaleOp().Set(Gf.Vec3f(
-                float(obs["w"]) / 2.0, float(obs["h"]) / 2.0, float(obs["z_h"]) / 2.0
-            ))
-
-            UsdPhysics.RigidBodyAPI.Apply(prim.GetPrim())
-            UsdPhysics.RigidBodyAPI(prim.GetPrim()).GetKinematicEnabledAttr().Set(True)
-            UsdPhysics.CollisionAPI.Apply(prim.GetPrim())
-            UsdShade.MaterialBindingAPI(prim.GetPrim()).Bind(mat)
-
-        elif obs["type"] == "cylinder":
-            prim = UsdGeom.Cylinder.Define(stage, path)
-            prim.GetRadiusAttr().Set(float(obs["radius"]))
-            prim.GetHeightAttr().Set(float(obs["z_h"]))
-            xf = UsdGeom.Xformable(prim.GetPrim())
-            xf.ClearXformOpOrder()
-            xf.AddTranslateOp().Set(Gf.Vec3d(obs["x"], obs["y"], obs["z_h"] / 2.0))
-
-            UsdPhysics.RigidBodyAPI.Apply(prim.GetPrim())
-            UsdPhysics.RigidBodyAPI(prim.GetPrim()).GetKinematicEnabledAttr().Set(True)
-            UsdPhysics.CollisionAPI.Apply(prim.GetPrim())
-            UsdShade.MaterialBindingAPI(prim.GetPrim()).Bind(mat)
-
-    print(f"[INFO] Created {len(obstacles)} obstacles with physics colliders")
-
-
-# ════════════════════════════════════════════════════════════════
 # 9. LiDAR Reader (PhysX RotatingLidarPhysX — real raycasting)
 # ════════════════════════════════════════════════════════════════
 
@@ -869,8 +763,39 @@ def setup_world():
     pif.initialize_world()
     world = pif.world
     world.scene.add_default_ground_plane()
+    _load_factory_environment()
     _add_scene_lighting()
     return world
+
+
+def _load_factory_environment():
+    """Load one forced factory USD path (no path search/fallback)."""
+    try:
+        from isaacsim.core.utils.stage import add_reference_to_stage
+    except ImportError:
+        from omni.isaac.core.utils.stage import add_reference_to_stage
+
+    import omni.usd
+    forced_usd = os.getenv(
+        "AIF_FACTORY_USD",
+        "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Environments/Simple_Warehouse/warehouse_multiple_shelves.usd",
+    ).strip()
+
+    stage = omni.usd.get_context().get_stage()
+    print(f"[INFO] Factory USD forced path: {forced_usd}")
+
+    try:
+        add_reference_to_stage(usd_path=forced_usd, prim_path="/World/Factory")
+    except Exception as e:
+        raise RuntimeError(f"Failed to load forced factory USD: {forced_usd} ({e})") from e
+
+    # Verify that the prim actually resolved to scene content.
+    prim = stage.GetPrimAtPath("/World/Factory")
+    if not (prim.IsValid() and prim.GetChildren()):
+        stage.RemovePrim("/World/Factory")
+        raise RuntimeError(f"Forced factory USD is unreachable or empty: {forced_usd}")
+
+    print(f"[INFO] Factory environment loaded OK: {forced_usd}")
 
 
 def _add_scene_lighting():
@@ -949,8 +874,8 @@ def main():
     sim_app = create_sim_app(cfg)
 
     world = setup_world()
-    obstacles = create_obstacle_layout()
-    build_scene_obstacles(obstacles)
+    # Factory scene is authoritative; avoid injecting legacy handcrafted obstacles.
+    obstacles: List[Dict] = []
 
     agents: List[DroneAgent] = []
     for i in range(cfg.num_drones):
@@ -970,7 +895,7 @@ def main():
             agent.lidar.initialize()
 
     print(f"[INFO] {cfg.num_drones} drones | grid {cfg.grid_width}×{cfg.grid_height}")
-    print(f"[INFO] {len(obstacles)} obstacles with physics colliders")
+    print("[INFO] Using factory template colliders from USD scene")
     print(f"[INFO] {cfg.sim_steps_per_aif} physics ticks per AIF decision")
     print(f"[INFO] Dashboard → {cfg.output_dir}/aif_state.json")
 
