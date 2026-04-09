@@ -70,6 +70,20 @@ class SimConfig:
     target_coverage: float = 95.0
     output_dir: str = "/tmp"
 
+
+    world_origin_x: float = float("nan")  
+    world_origin_y: float = float("nan")   
+
+    @property
+    def origin_x(self) -> float:
+        import math
+        return -self.env_width  / 2 if math.isnan(self.world_origin_x) else self.world_origin_x
+
+    @property
+    def origin_y(self) -> float:
+        import math
+        return -self.env_height / 2 if math.isnan(self.world_origin_y) else self.world_origin_y
+
     @property #nombre de collone 
     def grid_width(self) -> int:
         return int(self.env_width / self.grid_resolution)
@@ -593,13 +607,13 @@ class DroneAgent:
     @property
     def x(self) -> float:
         if self.backend:
-            return self.backend.get_position_xy()[0]
+            return self.backend.get_position_xy()[0] - self.cfg.origin_x
         return self.trail[-1][0]
 
     @property
     def y(self) -> float:
         if self.backend:
-            return self.backend.get_position_xy()[1]
+            return self.backend.get_position_xy()[1] - self.cfg.origin_y
         return self.trail[-1][1]
 
     def perceive(self):
@@ -621,7 +635,11 @@ class DroneAgent:
         ty = clamp(self.y + dy * self.cfg.step_size, 0.5, self.cfg.env_height - 0.5)
 
         if self.backend:
-            self.backend.set_target(tx, ty, self.cfg.fly_altitude)
+            self.backend.set_target(
+                tx + self.cfg.origin_x,
+                ty + self.cfg.origin_y,
+                self.cfg.fly_altitude,
+            )
 
         cx, cy = self.x, self.y
         self.total_dist += math.hypot(cx - self._prev_xy[0], cy - self._prev_xy[1])
@@ -822,6 +840,78 @@ def _add_scene_lighting():
     print("[INFO] Scene lighting added (dome + sun)")
 
 
+def setup_viewport_camera(cfg: SimConfig):
+
+    if cfg.headless:
+        return
+
+    cx = cfg.env_width  / 2  
+    cy = cfg.env_height / 2  
+    tz = cfg.fly_altitude   
+
+    cam_x = cx
+    cam_y = cy - 18.0
+    cam_z = 25.0
+
+    try:
+        import omni.usd
+        from pxr import Gf, UsdGeom
+        import omni.kit.viewport.utility as vp_utils
+
+        viewport = vp_utils.get_active_viewport()
+        if viewport is None:
+            print("[WARN] setup_viewport_camera: no active viewport found, skipping.")
+            return
+
+
+        stage = omni.usd.get_context().get_stage()
+        persp_prim = stage.GetPrimAtPath("/OmniverseKit_Persp")
+        if persp_prim and persp_prim.IsValid():
+            UsdGeom.Camera(persp_prim).CreateClippingRangeAttr(Gf.Vec2f(0.01, 500.0))
+
+        try:
+            from omni.kit.viewport.utility.camera_state import ViewportCameraState
+            cs = ViewportCameraState(viewport)
+            cs.set_position_world(Gf.Vec3d(cam_x, cam_y, cam_z), True)
+            cs.set_target_world(Gf.Vec3d(cx, cy, tz), True)
+            print(
+                f"[INFO] Overview camera (ViewportCameraState) → "
+                f"eye=({cam_x:.1f}, {cam_y:.1f}, {cam_z:.1f})  "
+                f"target=({cx:.1f}, {cy:.1f}, {tz:.1f})"
+            )
+            return
+        except Exception as e1:
+            print(f"[INFO] ViewportCameraState unavailable ({e1}), trying USD camera…")
+
+        import math
+        cam_path = "/World/OverviewCamera"
+        camera = UsdGeom.Camera.Define(stage, cam_path)
+
+        camera.CreateFocalLengthAttr(18.0)
+        camera.CreateHorizontalApertureAttr(36.0)
+        camera.CreateClippingRangeAttr(Gf.Vec2f(0.01, 500.0))
+
+    
+        dY = cy    - cam_y   
+        dZ = tz    - cam_z  
+        pitch_deg = math.degrees(math.atan2(-dZ, dY)) 
+
+        xf = UsdGeom.Xformable(camera.GetPrim())
+        xf.ClearXformOpOrder()
+        xf.AddTranslateOp().Set(Gf.Vec3d(cam_x, cam_y, cam_z))
+        xf.AddRotateXYZOp().Set(Gf.Vec3f(pitch_deg, 0.0, 0.0))
+
+        viewport.set_active_camera(cam_path)
+        print(
+            f"[INFO] Overview camera (USD prim) → "
+            f"eye=({cam_x:.1f}, {cam_y:.1f}, {cam_z:.1f})  "
+            f"pitch={pitch_deg:.1f}°  path={cam_path}"
+        )
+
+    except Exception as e:
+        print(f"[WARN] Could not configure viewport camera: {e}")
+
+
 def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
     """Create Pegasus Multirotors with AIF flight backends + PhysX LiDAR sensors."""
     from pegasus.simulator.params import ROBOTS
@@ -835,8 +925,11 @@ def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
 
     multirotors = []
     for agent in agents:
-        sx = cfg.env_width / 2 + (agent.id - (cfg.num_drones - 1) / 2) * cfg.drone_spacing
-        sy = cfg.env_height / 2
+        gx = cfg.env_width  / 2 + (agent.id - (cfg.num_drones - 1) / 2) * cfg.drone_spacing
+        gy = cfg.env_height / 2
+
+        sx = gx + cfg.origin_x
+        sy = gy + cfg.origin_y
 
         backend = AifFlightBackend(agent.id, np.array([sx, sy, cfg.fly_altitude]), cfg)
 
@@ -855,7 +948,10 @@ def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
         lidar = LidarReader(agent.id, prim_path, cfg)
         agent.setup_physical(backend, lidar)
 
-        print(f"[INFO] Drone {agent.id} @ ({sx:.1f}, {sy:.1f}) — PD backend + PhysX LiDAR")
+        print(
+            f"[INFO] Drone {agent.id} — grid({gx:.1f},{gy:.1f}) "
+            f"→ world({sx:.1f},{sy:.1f}) — PD backend + PhysX LiDAR"
+        )
 
     return multirotors
 
@@ -874,14 +970,14 @@ def main():
     sim_app = create_sim_app(cfg)
 
     world = setup_world()
-    # Factory scene is authoritative; avoid injecting legacy handcrafted obstacles.
+    setup_viewport_camera(cfg)
     obstacles: List[Dict] = []
 
     agents: List[DroneAgent] = []
     for i in range(cfg.num_drones):
-        sx = cfg.env_width / 2 + (i - (cfg.num_drones - 1) / 2) * cfg.drone_spacing
-        sy = cfg.env_height / 2
-        agents.append(DroneAgent(i, sx, sy, cfg))
+        gx = cfg.env_width  / 2 + (i - (cfg.num_drones - 1) / 2) * cfg.drone_spacing
+        gy = cfg.env_height / 2
+        agents.append(DroneAgent(i, gx, gy, cfg))
 
     create_physical_drones(agents, cfg)
     coordinator = SwarmCoordinator(agents, cfg)
