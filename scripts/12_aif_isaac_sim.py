@@ -298,41 +298,65 @@ def frontier_attraction(wx: float, wy: float, belief: BeliefGrid) -> float: #Sco
 #frontier_attraction = incertain local dans le voisinage.
 
 def select_action(
-    pos_x: float, pos_y: float,#position du drone 
-    others: List[Tuple[float, float]], #position des autres drones
+    pos_x: float, pos_y: float,
+    others: List[Tuple[float, float]],
     belief: BeliefGrid,
     fused: Optional[BeliefGrid],
     cfg: SimConfig,
     rng: np.random.Generator,
-) -> Tuple[str, float, float]:
-    plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief #on mélange la croyance locale et la croyance fusionnée pour la planification, en fonction du paramètre fusion_mix
-    n = len(ACTIONS) #8 +rester 
-    G = np.full(n, 1e6) #score initialisé grand pour chauqe action 
-    valid = np.zeros(n, dtype=bool) #pou marquer les actions autorisées
+) -> Tuple[Tuple[str, float, float], List[Dict], int]:
+    """Returns (action_tuple, candidates_diagnostics, selected_index)."""
+    plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
+    n = len(ACTIONS)
+    G = np.full(n, 1e6)
+    valid = np.zeros(n, dtype=bool)
+    cand_diag: List[Dict] = []
 
     for i, (name, dx, dy) in enumerate(ACTIONS):
         nx = pos_x + dx * cfg.step_size
         ny = pos_y + dy * cfg.step_size
-        if not (0.5 <= nx < cfg.env_width - 0.5 and 0.5 <= ny < cfg.env_height - 0.5):#test pour rester dans les limites de l'environnement (en laissant une marge de 0.5m pour éviter les collisions avec les murs)
+        entry: Dict[str, Any] = {
+            "idx": i, "name": name,
+            "nx": round(nx, 3), "ny": round(ny, 3),
+            "valid": False, "reason": "",
+            "ig": 0.0, "frontier": 0.0,
+            "move": 0.0, "coll": 0.0, "G": 1e6,
+        }
+        if not (0.5 <= nx < cfg.env_width - 0.5 and 0.5 <= ny < cfg.env_height - 0.5):
+            entry["reason"] = "out-of-bounds"
+            cand_diag.append(entry)
             continue
         gx, gy = plan_belief.world_to_grid(nx, ny)
-        if plan_belief.probability[gy, gx] >= cfg.occ_threshold: #si occupé 
+        if plan_belief.probability[gy, gx] >= cfg.occ_threshold:
+            entry["reason"] = f"occupied p={plan_belief.probability[gy, gx]:.2f}"
+            cand_diag.append(entry)
             continue
         valid[i] = True
-        ig = expected_info_gain(nx, ny, plan_belief, cfg) #gain d’info attendu (exploration utile).
-        fr = frontier_attraction(nx, ny, plan_belief) #attraction de frontière (proximité de zones incertaines).
-        move = 0.0 if name == "stay" else 1.0 #favorise les actions de mouvement par rapport à rester sur place (pour éviter de rester bloqué dans une zone sans faire de progrès)
-        coll = sum( #pénalité pour la collision avec les autres drones (plus la position est proche des autres drones, plus la pénalité est grande)
+        ig = expected_info_gain(nx, ny, plan_belief, cfg)
+        fr = frontier_attraction(nx, ny, plan_belief)
+        move = 0.0 if name == "stay" else 1.0
+        coll = sum(
             1.0 / (math.hypot(nx - ox, ny - oy) + 0.1)
             for ox, oy in others if math.hypot(nx - ox, ny - oy) < 3.0
         )
         G[i] = -cfg.w_epistemic * ig - cfg.w_pragmatic * fr + cfg.w_movement * move + cfg.w_collision * coll
+        entry.update({
+            "valid": True, "reason": "ok",
+            "ig": round(ig, 4), "frontier": round(fr, 4),
+            "move": round(move, 2), "coll": round(coll, 4),
+            "G": round(G[i], 4),
+        })
+        cand_diag.append(entry)
 
     if not valid.any():
         valid[0] = True
-        G[0] = 0.0 #force stay si aucune action n'est valide 
+        G[0] = 0.0
+        if cand_diag:
+            cand_diag[0]["valid"] = True
+            cand_diag[0]["reason"] = "forced-stay"
+            cand_diag[0]["G"] = 0.0
     idx = softmax_sample(G, cfg.softmax_temp, rng)
-    return ACTIONS[idx]
+    return ACTIONS[idx], cand_diag, idx
 
 
 # ════════════════════════════════════════════════════════════════
@@ -599,6 +623,10 @@ class DroneAgent:
         self._prev_xy = (sx, sy)
         self.backend: Optional[AifFlightBackend] = None
         self.lidar: Optional[LidarReader] = None
+        # diagnostic data (populated each step for logging)
+        self.lidar_diag: Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]] = None
+        self.candidates_diag: List[Dict] = []
+        self.selected_idx: int = 0
 
     def setup_physical(self, backend: AifFlightBackend, lidar: LidarReader):
         self.backend = backend
@@ -619,8 +647,10 @@ class DroneAgent:
     def perceive(self):
         """Read real LiDAR data and update local belief grid."""
         if self.lidar is None:
+            self.lidar_diag = None
             return
         angles, ranges, hits = self.lidar.read()
+        self.lidar_diag = (angles.copy(), ranges.copy(), hits.copy())
         self.belief.update_from_lidar(
             self.x, self.y, angles, ranges, hits,
             self.cfg.lidar_max_range, self.cfg.lo_free, self.cfg.lo_occ,
@@ -628,7 +658,7 @@ class DroneAgent:
 
     def plan(self, others: List[Tuple[float, float]], fused: Optional[BeliefGrid]):
        #appelle select action pour choisir une action ==> calculer la cible et envoyer la cible au backend 
-        name, dx, dy = select_action(
+        (name, dx, dy), self.candidates_diag, self.selected_idx = select_action(
             self.x, self.y, others, self.belief, fused, self.cfg, self.rng,
         )
         tx = clamp(self.x + dx * self.cfg.step_size, 0.5, self.cfg.env_width - 0.5)
@@ -674,27 +704,42 @@ class DroneAgent:
 # ════════════════════════════════════════════════════════════════
 
 class SwarmCoordinator:
-    def __init__(self, agents: List[DroneAgent], cfg: SimConfig):
+    def __init__(self, agents: List[DroneAgent], cfg: SimConfig,
+                 diag_logger: Optional["DiagnosticLogger"] = None):
         self.agents = agents
         self.cfg = cfg
         self.prior_lo = logit(cfg.prior_occupancy)
         self.fused_belief = agents[0].belief.copy()
         self.step_count = 0
         self.history: List[Dict] = []
+        self.diag = diag_logger
 
-    def step(self): #cycle complet multidrone : perception, fusion, planification, logging
+    def step(self):
         h_before = self.fused_belief.mean_entropy()
-#chaque drone met à jour sa carte locale avec son LiDAR.
+
+        if self.diag:
+            self.diag.log_step_header(self.step_count + 1)
+
+        # perception
         for a in self.agents:
             a.perceive()
-#combine toutes les cartes locales en une carte globale:
+            if self.diag and a.lidar_diag is not None:
+                angles, ranges, hits = a.lidar_diag
+                self.diag.log_lidar(a.id, a.x, a.y, angles, ranges, hits)
+
+        # fusion
         self.fused_belief = fuse_beliefs_logodds(
             [a.belief for a in self.agents], self.prior_lo,
         )
-#planification : chaque drone choisit une action en fonction de sa carte locale et de la carte globale fusionnée, ainsi que de la position des autres drones.
+
+        # planning
         for a in self.agents:
             others = [(o.x, o.y) for o in self.agents if o.id != a.id]
             a.plan(others, self.fused_belief)
+            if self.diag:
+                self.diag.log_candidates(a.id, a.x, a.y, others,
+                                         a.candidates_diag, a.selected_idx)
+                self.diag.log_belief(a.id, a.belief, self.fused_belief)
 
         h_after = self.fused_belief.mean_entropy()
         self.step_count += 1
@@ -706,6 +751,10 @@ class SwarmCoordinator:
             "free_energies": [round(a.last_G, 4) for a in self.agents],
             "info_gains": [round(a.last_ig, 4) for a in self.agents],
         })
+
+        if self.diag:
+            self.diag.log_step_summary(self.step_count, self.agents,
+                                       self.fused_belief)
 
     def get_full_state(self, obstacles: List[Dict]) -> Dict:
         return {
@@ -743,6 +792,190 @@ class DataLogger:
         with open(tmp, "w") as f:
             json.dump(data, f, separators=(",", ":"))
         os.replace(tmp, path)
+
+
+# ════════════════════════════════════════════════════════════════
+# 12b. Diagnostic Logger  — detailed per-drone log for debugging
+# ════════════════════════════════════════════════════════════════
+
+class DiagnosticLogger:
+    """Writes a human-readable diagnostic log to help identify
+    exploration, obstacle-detection, collision-avoidance and
+    planning issues."""
+
+    def __init__(self, output_dir: str, cfg: SimConfig):
+        self.cfg = cfg
+        self.log_path = os.path.join(output_dir, "aif_diagnostic.log")
+        with open(self.log_path, "w") as f:
+            f.write("=" * 90 + "\n")
+            f.write("  AIF DIAGNOSTIC LOG\n")
+            f.write(f"  Started : {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"  Drones  : {cfg.num_drones}\n")
+            f.write(f"  Env     : {cfg.env_width} x {cfg.env_height} m  "
+                    f"(grid {cfg.grid_width} x {cfg.grid_height}, res {cfg.grid_resolution} m)\n")
+            f.write(f"  Weights : epistemic={cfg.w_epistemic}  pragmatic={cfg.w_pragmatic}  "
+                    f"movement={cfg.w_movement}  collision={cfg.w_collision}\n")
+            f.write(f"  Softmax : temp={cfg.softmax_temp}  fusion_mix={cfg.fusion_mix}\n")
+            f.write(f"  Occ thr : {cfg.occ_threshold}   step_size={cfg.step_size} m\n")
+            f.write(f"  LiDAR   : rays={cfg.num_rays}  range=[{cfg.lidar_min_range}, "
+                    f"{cfg.lidar_max_range}] m  hz={cfg.lidar_hz}\n")
+            f.write("=" * 90 + "\n\n")
+        print(f"[INFO] Diagnostic log → {self.log_path}")
+
+    # ── helpers ──────────────────────────────────────────────────
+    def _w(self, text: str):
+        with open(self.log_path, "a") as f:
+            f.write(text)
+
+    # ── step header ──────────────────────────────────────────────
+    def log_step_header(self, step: int):
+        self._w(f"\n{'━' * 90}\n")
+        self._w(f"  STEP {step}   ({time.strftime('%H:%M:%S')})\n")
+        self._w(f"{'━' * 90}\n")
+
+    # ── LiDAR diagnostics per drone ──────────────────────────────
+    def log_lidar(self, drone_id: int, pos_x: float, pos_y: float,
+                  angles: np.ndarray, ranges: np.ndarray, hits: np.ndarray):
+        n_total = len(hits)
+        n_hits = int(hits.sum())
+        pct = n_hits / max(n_total, 1) * 100
+
+        self._w(f"\n  ┌─ DRONE {drone_id}  LiDAR  pos=({pos_x:.2f}, {pos_y:.2f})\n")
+        self._w(f"  │  Rays total={n_total}  hits={n_hits} ({pct:.1f}%)\n")
+
+        if n_hits > 0:
+            hr = ranges[hits]
+            ha = angles[hits]
+            self._w(f"  │  Hit ranges : min={hr.min():.2f} m  max={hr.max():.2f} m  "
+                    f"mean={hr.mean():.2f} m\n")
+            # 5 closest obstacles
+            order = np.argsort(hr)[:5]
+            self._w(f"  │  Closest obstacles:\n")
+            for k in order:
+                adeg = math.degrees(ha[k]) % 360
+                self._w(f"  │    angle={adeg:6.1f}°  dist={hr[k]:.2f} m\n")
+            # directional summary (4 quadrants)
+            for label, lo, hi in [("FRONT 315-45°", 315, 45),
+                                   ("RIGHT 45-135°", 45, 135),
+                                   ("BACK 135-225°", 135, 225),
+                                   ("LEFT 225-315°", 225, 315)]:
+                adeg = np.degrees(ha) % 360
+                if lo > hi:  # wraps around 0
+                    mask = (adeg >= lo) | (adeg < hi)
+                else:
+                    mask = (adeg >= lo) & (adeg < hi)
+                cnt = int(mask.sum())
+                if cnt > 0:
+                    mn = hr[mask].min()
+                    self._w(f"  │    {label:16s}  hits={cnt:3d}  closest={mn:.2f} m\n")
+                else:
+                    self._w(f"  │    {label:16s}  hits=  0\n")
+        else:
+            self._w(f"  │  ⚠  NO obstacles detected by LiDAR\n")
+        self._w(f"  └{'─' * 60}\n")
+
+    # ── candidate actions table per drone ────────────────────────
+    def log_candidates(self, drone_id: int, pos_x: float, pos_y: float,
+                       others: List[Tuple[float, float]],
+                       cand: List[Dict], selected_idx: int):
+        self._w(f"\n  ┌─ DRONE {drone_id}  Action Selection  pos=({pos_x:.2f}, {pos_y:.2f})\n")
+
+        # inter-drone distances
+        if others:
+            self._w(f"  │  Other drones:\n")
+            for ox, oy in others:
+                d = math.hypot(pos_x - ox, pos_y - oy)
+                tag = " ⚠ DANGER" if d < 1.5 else " ⚠ CLOSE" if d < 3.0 else ""
+                self._w(f"  │    ({ox:.2f}, {oy:.2f})  dist={d:.2f} m{tag}\n")
+
+        # header
+        self._w(f"  │\n")
+        self._w(f"  │  {'#':>2} {'Act':<5} {'Valid':<6} {'Reason':<14} "
+                f"{'nx':>6} {'ny':>6}  "
+                f"{'IG':>8} {'Front':>7} {'Move':>5} {'Coll':>7} "
+                f"{'G_total':>9}\n")
+        self._w(f"  │  {'-' * 88}\n")
+
+        for c in cand:
+            sel = " ◄" if c["idx"] == selected_idx else ""
+            self._w(f"  │  {c['idx']:2d} {c['name']:<5} "
+                    f"{str(c['valid']):<6} {c['reason']:<14} "
+                    f"{c['nx']:6.2f} {c['ny']:6.2f}  "
+                    f"{c.get('ig', 0):8.3f} {c.get('frontier', 0):7.3f} "
+                    f"{c.get('move', 0):5.2f} {c.get('coll', 0):7.3f} "
+                    f"{c.get('G', 9999):9.3f}{sel}\n")
+
+        sel_c = cand[selected_idx]
+        self._w(f"  │\n")
+        self._w(f"  │  ➜ SELECTED: {sel_c['name']}  target=({sel_c['nx']:.2f}, {sel_c['ny']:.2f})  "
+                f"G={sel_c.get('G', 0):.4f}\n")
+        self._w(f"  └{'─' * 60}\n")
+
+    # ── belief grid stats per drone ──────────────────────────────
+    def log_belief(self, drone_id: int, belief: BeliefGrid,
+                   fused: Optional[BeliefGrid] = None):
+        total = belief.width * belief.height
+        occ = int((belief.probability >= self.cfg.occ_threshold).sum())
+        free = int((belief.probability < 0.3).sum())
+        unc = total - occ - free
+
+        self._w(f"\n  ┌─ DRONE {drone_id}  Belief Grid\n")
+        self._w(f"  │  Entropy  : {belief.mean_entropy():.4f}\n")
+        self._w(f"  │  Coverage : {belief.exploration_ratio() * 100:.1f}%\n")
+        self._w(f"  │  Cells    : occupied={occ} ({occ/total*100:.1f}%)  "
+                f"free={free} ({free/total*100:.1f}%)  "
+                f"uncertain={unc} ({unc/total*100:.1f}%)\n")
+        if fused is not None:
+            f_occ = int((fused.probability >= self.cfg.occ_threshold).sum())
+            self._w(f"  │  Fused    : entropy={fused.mean_entropy():.4f}  "
+                    f"coverage={fused.exploration_ratio() * 100:.1f}%  "
+                    f"occ_cells={f_occ}\n")
+        self._w(f"  └{'─' * 60}\n")
+
+    # ── step summary (inter-drone + wall proximity) ──────────────
+    def log_step_summary(self, step: int, agents, fused: BeliefGrid):
+        self._w(f"\n  ── Step {step} Summary ──\n")
+        # positions
+        for a in agents:
+            arrived = ""
+            if a.backend is not None:
+                arrived = "  arrived=True" if a.backend.is_at_target() else "  arrived=False"
+            self._w(f"    D{a.id} pos=({a.x:.2f}, {a.y:.2f})  "
+                    f"action={a.last_action}  dist_total={a.total_dist:.2f} m{arrived}\n")
+
+        # pairwise distances
+        for i in range(len(agents)):
+            for j in range(i + 1, len(agents)):
+                d = math.hypot(agents[i].x - agents[j].x, agents[i].y - agents[j].y)
+                tag = " ⚠ COLLISION-RISK" if d < 1.5 else " ⚠ CLOSE" if d < 3.0 else ""
+                self._w(f"    D{agents[i].id}↔D{agents[j].id} = {d:.2f} m{tag}\n")
+
+        # wall proximity warnings
+        for a in agents:
+            warns = []
+            if a.x < 1.0:
+                warns.append(f"LEFT wall x={a.x:.2f}")
+            if a.x > self.cfg.env_width - 1.0:
+                warns.append(f"RIGHT wall x={a.x:.2f}")
+            if a.y < 1.0:
+                warns.append(f"BOTTOM wall y={a.y:.2f}")
+            if a.y > self.cfg.env_height - 1.0:
+                warns.append(f"TOP wall y={a.y:.2f}")
+            if warns:
+                self._w(f"    ⚠ D{a.id} WALL: {', '.join(warns)}\n")
+
+        # overlap detection (same grid cell)
+        cells = {}
+        for a in agents:
+            gx, gy = fused.world_to_grid(a.x, a.y)
+            key = (gx, gy)
+            cells.setdefault(key, []).append(a.id)
+        for key, ids in cells.items():
+            if len(ids) > 1:
+                self._w(f"    ⚠ OVERLAP: drones {ids} in same grid cell {key}\n")
+
+        self._w(f"    Fused coverage={fused.exploration_ratio() * 100:.1f}%  "
+                f"entropy={fused.mean_entropy():.4f}\n")
 
 
 # ════════════════════════════════════════════════════════════════
@@ -980,7 +1213,8 @@ def main():
         agents.append(DroneAgent(i, gx, gy, cfg))
 
     create_physical_drones(agents, cfg)
-    coordinator = SwarmCoordinator(agents, cfg)
+    diag_logger = DiagnosticLogger(cfg.output_dir, cfg)
+    coordinator = SwarmCoordinator(agents, cfg, diag_logger=diag_logger)
     logger = DataLogger(cfg.output_dir)
 
     world.reset()
