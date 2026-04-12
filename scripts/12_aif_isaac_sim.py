@@ -337,7 +337,7 @@ def select_action(
         move = 0.0 if name == "stay" else 1.0
         coll = sum(
             1.0 / (math.hypot(nx - ox, ny - oy) + 0.1)
-            for ox, oy in others if math.hypot(nx - ox, ny - oy) < 3.0
+            for ox, oy in others if math.hypot(nx - ox, ny - oy) < 8.0
         )
         G[i] = -cfg.w_epistemic * ig - cfg.w_pragmatic * fr + cfg.w_movement * move + cfg.w_collision * coll
         entry.update({
@@ -431,6 +431,12 @@ def _create_backend_class():
         def get_position_xy(self) -> Tuple[float, float]:
             p = self.get_position()
             return float(p[0]), float(p[1])
+
+        def get_yaw(self) -> float:
+            """Extract current yaw from rotation matrix."""
+            if not self.received_first_state:
+                return self.target_yaw
+            return float(math.atan2(self.R[1, 0], self.R[0, 0]))
 
         def is_at_target(self) -> bool:
             return self.arrived
@@ -538,6 +544,14 @@ def _create_backend_class():
 # ════════════════════════════════════════════════════════════════
 
 class LidarReader:
+    """PhysX rotating LiDAR reader with scan accumulation.
+
+    The PhysX RotatingLidarPhysX only returns a partial angular slice per
+    physics tick (~60 rays out of 360).  We accumulate partial scans across
+    multiple ticks so that `get_accumulated()` returns a full 360° scan.
+    Each partial scan is rotated from body-frame to world-frame using the
+    drone yaw supplied at accumulation time.
+    """
 
     def __init__(self, drone_id: int, drone_prim_path: str, cfg: SimConfig):
         from isaacsim.sensors.physx import RotatingLidarPhysX
@@ -558,50 +572,68 @@ class LidarReader:
         self.sensor.enable_visualization(high_lod=False, draw_points=True, draw_lines=False)
         print(f"[INFO] PhysX LiDAR attached: {self.prim_path}")
 
-    def initialize(self): #active le LiDAR après reset du monde.
+        # Accumulation buffers (world-frame)
+        self._acc_angles: List[np.ndarray] = []
+        self._acc_depths: List[np.ndarray] = []
+        self._acc_hits:   List[np.ndarray] = []
+
+    def initialize(self):
         self.sensor.initialize()
         self.sensor.post_reset()
         print(f"[INFO] LiDAR initialized: {self.prim_path}")
 
-    def read(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Returns:
-            angles: azimuth in radians
-            ranges: distance per ray (metres)
-            hits:   True if ray struck a surface
-        """
+    # ── internal: parse one partial frame ────────────────────────
+    def _parse_frame(self) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         frame = self.sensor.get_current_frame()
-        depth = frame.get("linear_depth")
+        depth   = frame.get("linear_depth")
         azimuth = frame.get("azimuth")
-
-        self._read_count += 1
-
-        if self._read_count <= 5 or self._read_count % 100 == 0:
-            d_info = "None" if depth is None else f"len={len(depth)}"
-            a_info = "None" if azimuth is None else f"len={len(azimuth)}"
-            print(f"  [LiDAR] {self.prim_path} read#{self._read_count}: depth={d_info} azimuth={a_info}")
-            if depth is not None and len(depth) > 0:
-                d_arr = np.asarray(depth).ravel()
-                n_hits = int((d_arr < self.cfg.lidar_max_range - 0.05).sum())
-                print(f"           range=[{d_arr.min():.2f}, {d_arr.max():.2f}] hits={n_hits}/{len(d_arr)}")
-
         if depth is None or azimuth is None or len(depth) == 0:
+            return None
+        depth   = np.asarray(depth,   dtype=np.float64).ravel()
+        azimuth = np.asarray(azimuth, dtype=np.float64).ravel()
+        # Isaac Sim may return degrees
+        if azimuth.size > 0 and azimuth.max() > 2 * math.pi + 0.1:
+            azimuth = np.deg2rad(azimuth)
+        hits = (depth >= self.cfg.lidar_min_range) & (depth < (self.cfg.lidar_max_range - 0.05))
+        return azimuth, depth, hits
+
+    # ── called every physics tick ────────────────────────────────
+    def accumulate(self, yaw: float = 0.0):
+        """Read one partial LiDAR frame, rotate to world-frame, append to buffer."""
+        parsed = self._parse_frame()
+        if parsed is None:
+            return
+        angles, depths, hits = parsed
+        # Body-frame → world-frame
+        world_angles = (angles + yaw) % (2 * math.pi)
+        self._acc_angles.append(world_angles)
+        self._acc_depths.append(depths)
+        self._acc_hits.append(hits)
+
+    # ── called once per AIF step in perceive() ───────────────────
+    def get_accumulated(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Return all accumulated scans merged, then clear the buffer."""
+        if not self._acc_angles:
             n = self.cfg.num_rays
             return (
                 np.linspace(0, 2 * math.pi, n, endpoint=False),
                 np.full(n, self.cfg.lidar_max_range),
                 np.zeros(n, dtype=bool),
             )
+        angles = np.concatenate(self._acc_angles)
+        depths = np.concatenate(self._acc_depths)
+        hits   = np.concatenate(self._acc_hits)
+        self._acc_angles.clear()
+        self._acc_depths.clear()
+        self._acc_hits.clear()
 
-        depth = np.asarray(depth, dtype=np.float64).ravel()
-        azimuth = np.asarray(azimuth, dtype=np.float64).ravel()
-
-        # Isaac Sim may return degrees
-        if azimuth.size > 0 and azimuth.max() > 2 * math.pi + 0.1:
-            azimuth = np.deg2rad(azimuth)
-
-        hits = depth < (self.cfg.lidar_max_range - 0.05)
-        return azimuth, depth, hits
+        self._read_count += 1
+        if self._read_count <= 5 or self._read_count % 50 == 0:
+            n_hits = int(hits.sum())
+            pct = n_hits / max(len(angles), 1) * 100
+            print(f"  [LiDAR] {self.prim_path} scan#{self._read_count}: "
+                  f"rays={len(angles)}  hits={n_hits} ({pct:.0f}%)")
+        return angles, depths, hits
 
 
 # ════════════════════════════════════════════════════════════════
@@ -627,6 +659,10 @@ class DroneAgent:
         self.lidar_diag: Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]] = None
         self.candidates_diag: List[Dict] = []
         self.selected_idx: int = 0
+        # anti-stagnation
+        self._stag_pos = (sx, sy)
+        self._stag_steps = 0
+        self._STAG_THRESHOLD = 5  # steps stuck → force random move
 
     def setup_physical(self, backend: AifFlightBackend, lidar: LidarReader):
         self.backend = backend
@@ -645,24 +681,61 @@ class DroneAgent:
         return self.trail[-1][1]
 
     def perceive(self):
-        """Read real LiDAR data and update local belief grid."""
+        """Use accumulated LiDAR scans (full 360°) to update local belief grid."""
         if self.lidar is None:
             self.lidar_diag = None
             return
-        angles, ranges, hits = self.lidar.read()
+        angles, ranges, hits = self.lidar.get_accumulated()
         self.lidar_diag = (angles.copy(), ranges.copy(), hits.copy())
         self.belief.update_from_lidar(
             self.x, self.y, angles, ranges, hits,
             self.cfg.lidar_max_range, self.cfg.lo_free, self.cfg.lo_occ,
         )
 
+    def accumulate_lidar(self):
+        """Called every physics tick to gather a partial LiDAR scan."""
+        if self.lidar is None or self.backend is None:
+            return
+        self.lidar.accumulate(self.backend.get_yaw())
+
     def plan(self, others: List[Tuple[float, float]], fused: Optional[BeliefGrid]):
-       #appelle select action pour choisir une action ==> calculer la cible et envoyer la cible au backend 
-        (name, dx, dy), self.candidates_diag, self.selected_idx = select_action(
-            self.x, self.y, others, self.belief, fused, self.cfg, self.rng,
-        )
-        tx = clamp(self.x + dx * self.cfg.step_size, 0.5, self.cfg.env_width - 0.5)
-        ty = clamp(self.y + dy * self.cfg.step_size, 0.5, self.cfg.env_height - 0.5)
+        cx, cy = self.x, self.y
+
+        # ── Anti-stagnation: detect if drone hasn’t moved ──
+        moved = math.hypot(cx - self._stag_pos[0], cy - self._stag_pos[1])
+        if moved < 0.5:
+            self._stag_steps += 1
+        else:
+            self._stag_steps = 0
+            self._stag_pos = (cx, cy)
+
+        if self._stag_steps >= self._STAG_THRESHOLD:
+            # Force a random cardinal action to escape
+            idx = int(self.rng.integers(1, len(ACTIONS)))  # skip “stay”
+            name, dx, dy = ACTIONS[idx]
+            # Build a minimal diagnostic entry so log_candidates doesn't crash
+            self.candidates_diag = [{
+                "idx": idx, "name": name,
+                "nx": round(cx + dx * self.cfg.step_size, 3),
+                "ny": round(cy + dy * self.cfg.step_size, 3),
+                "valid": True, "reason": "forced-stag",
+                "ig": 0.0, "frontier": 0.0, "move": 1.0, "coll": 0.0, "G": 0.0,
+            }]
+            self.selected_idx = 0  # index into the 1-element list
+            self._stag_steps = 0
+            print(f"  [STAG] D{self.id} stuck {self._STAG_THRESHOLD} steps → forced {name}")
+        else:
+            (name, dx, dy), self.candidates_diag, self.selected_idx = select_action(
+                cx, cy, others, self.belief, fused, self.cfg, self.rng,
+            )
+            # Update dashboard-exported diagnostics
+            if self.candidates_diag and self.selected_idx < len(self.candidates_diag):
+                sel = self.candidates_diag[self.selected_idx]
+                self.last_G  = sel.get("G", 0.0)
+                self.last_ig = sel.get("ig", 0.0)
+
+        tx = clamp(cx + dx * self.cfg.step_size, 0.5, self.cfg.env_width - 0.5)
+        ty = clamp(cy + dy * self.cfg.step_size, 0.5, self.cfg.env_height - 0.5)
 
         if self.backend:
             self.backend.set_target(
@@ -671,7 +744,6 @@ class DroneAgent:
                 self.cfg.fly_altitude,
             )
 
-        cx, cy = self.x, self.y
         self.total_dist += math.hypot(cx - self._prev_xy[0], cy - self._prev_xy[1])
         self._prev_xy = (cx, cy)
         self.trail.append((round(cx, 2), round(cy, 2)))
@@ -1014,19 +1086,22 @@ def setup_world():
     pif.initialize_world()
     world = pif.world
     world.scene.add_default_ground_plane()
-    _load_factory_environment()
+    factory_bounds = _load_factory_environment()
     _add_scene_lighting()
-    return world
+    return world, factory_bounds
 
 
 def _load_factory_environment():
-    """Load one forced factory USD path (no path search/fallback)."""
+    """Load one forced factory USD path (no path search/fallback).
+    Returns the XY bounding box (min_x, min_y, max_x, max_y) in metres."""
     try:
         from isaacsim.core.utils.stage import add_reference_to_stage
     except ImportError:
         from omni.isaac.core.utils.stage import add_reference_to_stage
 
     import omni.usd
+    from pxr import UsdGeom, Gf
+
     forced_usd = os.getenv(
         "AIF_FACTORY_USD",
         "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/4.2/Isaac/Environments/Simple_Warehouse/warehouse_multiple_shelves.usd",
@@ -1046,7 +1121,17 @@ def _load_factory_environment():
         stage.RemovePrim("/World/Factory")
         raise RuntimeError(f"Forced factory USD is unreachable or empty: {forced_usd}")
 
+    # ── Compute XY bounding box of the factory ──
+    bbox_cache = UsdGeom.BBoxCache(0.0, [UsdGeom.Tokens.default_])
+    bbox = bbox_cache.ComputeWorldBound(prim)
+    rng = bbox.GetRange()
+    lo = rng.GetMin()
+    hi = rng.GetMax()
+    print(f"[INFO] Factory bounding box: "
+          f"X=[{lo[0]:.2f}, {hi[0]:.2f}]  Y=[{lo[1]:.2f}, {hi[1]:.2f}]  "
+          f"Z=[{lo[2]:.2f}, {hi[2]:.2f}]")
     print(f"[INFO] Factory environment loaded OK: {forced_usd}")
+    return (float(lo[0]), float(lo[1]), float(hi[0]), float(hi[1]))
 
 
 def _add_scene_lighting():
@@ -1158,8 +1243,8 @@ def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
 
     multirotors = []
     for agent in agents:
-        gx = cfg.env_width  / 2 + (agent.id - (cfg.num_drones - 1) / 2) * cfg.drone_spacing
-        gy = cfg.env_height / 2
+        gx = agent.trail[0][0]
+        gy = agent.trail[0][1]
 
         sx = gx + cfg.origin_x
         sy = gy + cfg.origin_y
@@ -1202,14 +1287,32 @@ def main():
     print(f"[INFO] Isaac Sim — {'headless' if cfg.headless else 'GUI'}")
     sim_app = create_sim_app(cfg)
 
-    world = setup_world()
+    world, factory_bounds = setup_world()
+
+    # ── Auto-adjust env dimensions from factory USD bounding box ──
+    if factory_bounds:
+        margin = 1.0  # 1 m padding around the factory
+        bx0, by0, bx1, by1 = factory_bounds
+        cfg.world_origin_x = bx0 - margin
+        cfg.world_origin_y = by0 - margin
+        cfg.env_width  = (bx1 - bx0) + 2 * margin
+        cfg.env_height = (by1 - by0) + 2 * margin
+        # round to grid resolution
+        cfg.env_width  = math.ceil(cfg.env_width  / cfg.grid_resolution) * cfg.grid_resolution
+        cfg.env_height = math.ceil(cfg.env_height / cfg.grid_resolution) * cfg.grid_resolution
+        print(f"[INFO] Env adapted to factory: "
+              f"{cfg.env_width:.1f} × {cfg.env_height:.1f} m  "
+              f"origin=({cfg.origin_x:.2f}, {cfg.origin_y:.2f})  "
+              f"grid={cfg.grid_width}×{cfg.grid_height}")
+
     setup_viewport_camera(cfg)
     obstacles: List[Dict] = []
 
     agents: List[DroneAgent] = []
     for i in range(cfg.num_drones):
         gx = cfg.env_width  / 2 + (i - (cfg.num_drones - 1) / 2) * cfg.drone_spacing
-        gy = cfg.env_height / 2
+        # Spawn well inside factory walls (USD bbox extends beyond walls due to floor)
+        gy = max(8.0, cfg.env_height * 0.20)
         agents.append(DroneAgent(i, gx, gy, cfg))
 
     create_physical_drones(agents, cfg)
@@ -1235,6 +1338,9 @@ def main():
         if not running or not sim_app.is_running():
             break
         world.step(render=not cfg.headless)
+        # Start accumulating LiDAR scans during takeoff
+        for agent in agents:
+            agent.accumulate_lidar()
     print("[INFO] Take-off complete.\n")
 
     # ── AIF exploration loop ──
@@ -1248,6 +1354,9 @@ def main():
             if not running or not sim_app.is_running():
                 break
             world.step(render=not cfg.headless)
+            # Accumulate partial LiDAR scans each physics tick
+            for agent in agents:
+                agent.accumulate_lidar()
 
         # log for dashboard
         state = coordinator.get_full_state(obstacles)

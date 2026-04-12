@@ -5,7 +5,7 @@
 
 const POLL_MS = 500;
 const DRONE_COLORS = ['#22d3ee', '#34d399', '#a78bfa', '#fbbf24', '#f472b6', '#fb923c'];
-const MAP_CELL_PX = 10; // pixels per grid cell on the map canvas
+let MAP_CELL_PX = 10; // pixels per grid cell on the map canvas (recalculated dynamically)
 
 let paused = false;
 let lastStep = -1;
@@ -100,12 +100,18 @@ function renderMap(state) {
 
     const gw = env.grid_width;
     const gh = env.grid_height;
+
+    // Dynamic cell size: fit container while keeping aspect ratio (width AND height)
+    const wrap = document.getElementById('mapWrap');
+    const maxW = wrap.clientWidth - 32; // subtract padding
+    const maxH = window.innerHeight * 0.68; // match CSS max-height ~70vh
+    MAP_CELL_PX = Math.max(4, Math.min(Math.floor(maxW / gw), Math.floor(maxH / gh)));
     const cell = MAP_CELL_PX;
 
     canvas.width  = gw * cell;
     canvas.height = gh * cell;
 
-    // 1) Draw belief grid using ImageData → scaled
+    // 1) Draw belief grid — Y-FLIPPED so Y+ (Isaac Sim) = top of canvas
     const tmp = document.createElement('canvas');
     tmp.width = gw;
     tmp.height = gh;
@@ -116,7 +122,8 @@ function renderMap(state) {
         for (let x = 0; x < gw; x++) {
             const p = belief[y] ? belief[y][x] : 0.5;
             const [r, g, b] = beliefToRGB(p);
-            const idx = (y * gw + x) * 4;
+            const flippedY = gh - 1 - y;           // ← Y flip
+            const idx = (flippedY * gw + x) * 4;
             img.data[idx]     = r;
             img.data[idx + 1] = g;
             img.data[idx + 2] = b;
@@ -128,19 +135,20 @@ function renderMap(state) {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
 
-    // 2) Draw obstacle outlines
+    // 2) Draw obstacle outlines (Y-flipped)
     ctx.strokeStyle = 'rgba(148,163,184,0.4)';
     ctx.lineWidth = 1;
     const res = env.grid_resolution;
     for (const obs of (env.obstacles || [])) {
         if (obs.type === 'box') {
+            const oy = canvas.height - (obs.y / res) * cell - (obs.h / res) * cell;
             ctx.strokeRect(
-                (obs.x / res) * cell, (obs.y / res) * cell,
+                (obs.x / res) * cell, oy,
                 (obs.w / res) * cell, (obs.h / res) * cell
             );
         } else if (obs.type === 'cylinder') {
             const cx = (obs.x / res) * cell;
-            const cy = (obs.y / res) * cell;
+            const cy = canvas.height - (obs.y / res) * cell; // ← Y flip
             const r  = (obs.radius / res) * cell;
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -148,7 +156,8 @@ function renderMap(state) {
         }
     }
 
-    // 3) Draw drone trails + positions
+    // 3) Draw drone trails + positions (Y-flipped)
+    const ch = canvas.height;
     for (const drone of (state.drones || [])) {
         const color = DRONE_COLORS[drone.id % DRONE_COLORS.length];
         const trail = drone.trail || [];
@@ -161,7 +170,7 @@ function renderMap(state) {
             ctx.globalAlpha = 0.35;
             for (let i = 0; i < trail.length; i++) {
                 const px = (trail[i][0] / res) * cell;
-                const py = (trail[i][1] / res) * cell;
+                const py = ch - (trail[i][1] / res) * cell;   // ← Y flip
                 if (i === 0) ctx.moveTo(px, py);
                 else ctx.lineTo(px, py);
             }
@@ -171,7 +180,7 @@ function renderMap(state) {
 
         // drone dot
         const dx = (drone.x / res) * cell;
-        const dy = (drone.y / res) * cell;
+        const dy = ch - (drone.y / res) * cell;               // ← Y flip
         ctx.beginPath();
         ctx.arc(dx, dy, cell * 0.8, 0, Math.PI * 2);
         ctx.fillStyle = color;
@@ -180,10 +189,10 @@ function renderMap(state) {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // heading arrow
+        // heading arrow (negate sin because canvas Y is now flipped)
         const hLen = cell * 1.5;
         const hx = dx + Math.cos(drone.heading) * hLen;
-        const hy = dy + Math.sin(drone.heading) * hLen;
+        const hy = dy - Math.sin(drone.heading) * hLen;       // ← negate sin
         ctx.beginPath();
         ctx.moveTo(dx, dy);
         ctx.lineTo(hx, hy);
