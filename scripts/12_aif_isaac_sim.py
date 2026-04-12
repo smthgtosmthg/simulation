@@ -35,10 +35,12 @@ class SimConfig:
     # lidar 
     num_rays: int = 360 #nombre de rayon par scan 
     lidar_fov_h: float = 360.0      # champs de vision horizontal en degrés
-    lidar_fov_v: float = 10.0       # champs de vision vertical en degrés
+    lidar_fov_v: float = 40.0       # champs de vision vertical en degrés (±20° pour détecter étagères)
+    lidar_vert_res: float = 5.0     # résolution verticale en degrés (8 couches verticales)
     lidar_max_range: float = 8.0 # portée maximale du lidar en mètres
     lidar_min_range: float = 0.15 # portée minimale du lidar en mètres
     lidar_hz: float = 10.0 # fréquence de scan du lidar en Hz
+    floor_filter_z: float = 0.25    # hauteur min pour filtrer les hits au sol
 
     # active inference
     prior_occupancy: float = 0.5 # probabilité a priori d'occupation d'une cellule
@@ -207,6 +209,43 @@ class BeliefGrid:
     def exploration_ratio(self) -> float:
         known = (self.probability < 0.3) | (self.probability > 0.7)
         return float(known.sum() / known.size)
+
+    def effective_bounds(self, occ_threshold: float = 0.65) -> Tuple[int, int, int, int]:
+        """Bounding box (gx1, gy1, gx2, gy2) des cellules occupées (murs)."""
+        occ = self.probability >= occ_threshold
+        if not occ.any():
+            return 0, 0, self.width, self.height
+        rows = np.any(occ, axis=1)
+        cols = np.any(occ, axis=0)
+        rmin, rmax = int(np.where(rows)[0][0]), int(np.where(rows)[0][-1])
+        cmin, cmax = int(np.where(cols)[0][0]), int(np.where(cols)[0][-1])
+        return cmin, rmin, cmax + 1, rmax + 1
+
+    def interior_exploration_ratio(
+        self, drone_positions: List[Tuple[float, float]], occ_threshold: float = 0.65
+    ) -> float:
+        """Coverage basée sur le flood-fill intérieur (zone accessible depuis les drones)."""
+        from collections import deque
+        visited = np.zeros((self.height, self.width), dtype=bool)
+        queue: deque = deque()
+        for wx, wy in drone_positions:
+            gx, gy = self.world_to_grid(wx, wy)
+            if not visited[gy, gx]:
+                visited[gy, gx] = True
+                queue.append((gx, gy))
+        while queue:
+            x, y = queue.popleft()
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < self.width and 0 <= ny < self.height:
+                    if not visited[ny, nx] and self.probability[ny, nx] < occ_threshold:
+                        visited[ny, nx] = True
+                        queue.append((nx, ny))
+        interior = int(visited.sum())
+        if interior == 0:
+            return self.exploration_ratio()
+        known = ((self.probability < 0.3) | (self.probability > 0.7)) & visited
+        return float(known.sum() / interior)
 
     def copy(self) -> "BeliefGrid":
         new = BeliefGrid.__new__(BeliefGrid)
@@ -564,11 +603,17 @@ class LidarReader:
             prim_path=self.prim_path,
             rotation_frequency=cfg.lidar_hz,
             fov=(cfg.lidar_fov_h, cfg.lidar_fov_v),
-            resolution=(cfg.lidar_fov_h / cfg.num_rays, cfg.lidar_fov_v),
+            resolution=(cfg.lidar_fov_h / cfg.num_rays, cfg.lidar_vert_res),
             valid_range=(cfg.lidar_min_range, cfg.lidar_max_range),
         )
         self.sensor.add_linear_depth_data_to_frame()
         self.sensor.add_azimuth_data_to_frame()
+        try:
+            self.sensor.add_zenith_data_to_frame()
+            self._has_zenith = True
+        except Exception:
+            self._has_zenith = False
+            print(f"[WARN] Zenith data unavailable for {self.prim_path}, floor filtering disabled")
         self.sensor.enable_visualization(high_lod=False, draw_points=True, draw_lines=False)
         print(f"[INFO] PhysX LiDAR attached: {self.prim_path}")
 
@@ -594,7 +639,35 @@ class LidarReader:
         # Isaac Sim may return degrees
         if azimuth.size > 0 and azimuth.max() > 2 * math.pi + 0.1:
             azimuth = np.deg2rad(azimuth)
-        hits = (depth >= self.cfg.lidar_min_range) & (depth < (self.cfg.lidar_max_range - 0.05))
+
+        # ── Multi-layer: utiliser zenith pour projeter en 2D et filtrer le sol ──
+        zenith = frame.get("zenith") if self._has_zenith else None
+        if zenith is not None and len(zenith) > 0:
+            zenith = np.asarray(zenith, dtype=np.float64).ravel()
+            if zenith.size > 0 and zenith.max() > 2 * math.pi + 0.1:
+                zenith = np.deg2rad(zenith)
+            # Convention zenith: 0=up, pi/2=horizontal, pi=down
+            # Si valeurs proches de 0 → c'est de l'élévation (0=horiz)
+            if zenith.size > 0 and np.median(zenith) < math.pi / 4:
+                # elevation convention: 0=horiz, >0=up, <0=down
+                cos_elev = np.cos(zenith)
+                sin_elev = np.sin(zenith)
+                horizontal_range = depth * np.abs(cos_elev)
+                hit_z = self.cfg.fly_altitude + depth * sin_elev
+            else:
+                # zenith convention: pi/2=horiz
+                sin_zen = np.sin(zenith)
+                cos_zen = np.cos(zenith)
+                horizontal_range = depth * np.abs(sin_zen)
+                hit_z = self.cfg.fly_altitude + depth * cos_zen
+            # Filtrer les hits au sol
+            valid_height = hit_z > self.cfg.floor_filter_z
+            hits = (horizontal_range >= self.cfg.lidar_min_range) & \
+                   (horizontal_range < (self.cfg.lidar_max_range - 0.05)) & valid_height
+            depth = horizontal_range
+        else:
+            hits = (depth >= self.cfg.lidar_min_range) & (depth < (self.cfg.lidar_max_range - 0.05))
+
         return azimuth, depth, hits
 
     # ── called every physics tick ────────────────────────────────
@@ -612,7 +685,9 @@ class LidarReader:
 
     # ── called once per AIF step in perceive() ───────────────────
     def get_accumulated(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Return all accumulated scans merged, then clear the buffer."""
+        """Return all accumulated scans merged, then clear the buffer.
+        Multi-layer scans are binned par azimuth: on garde le hit le plus
+        proche par bin pour éviter de sur-compter les couches verticales."""
         if not self._acc_angles:
             n = self.cfg.num_rays
             return (
@@ -627,13 +702,35 @@ class LidarReader:
         self._acc_depths.clear()
         self._acc_hits.clear()
 
+        # ── Bin par azimuth: un seul rayon par direction (le plus proche) ──
+        n = self.cfg.num_rays
+        bin_width = 2 * math.pi / n
+        bins = (angles / bin_width).astype(int) % n
+
+        out_angles = np.linspace(0, 2 * math.pi, n, endpoint=False)
+        out_depths = np.full(n, self.cfg.lidar_max_range)
+        out_hits   = np.zeros(n, dtype=bool)
+
+        for i in range(n):
+            mask = bins == i
+            if not mask.any():
+                continue
+            b_d = depths[mask]
+            b_h = hits[mask]
+            if b_h.any():
+                hit_d = b_d[b_h]
+                out_depths[i] = hit_d.min()  # obstacle le plus proche
+                out_hits[i] = True
+            else:
+                out_depths[i] = b_d.max()  # portée libre la plus lointaine
+
         self._read_count += 1
         if self._read_count <= 5 or self._read_count % 50 == 0:
-            n_hits = int(hits.sum())
-            pct = n_hits / max(len(angles), 1) * 100
+            n_hits = int(out_hits.sum())
+            pct = n_hits / max(n, 1) * 100
             print(f"  [LiDAR] {self.prim_path} scan#{self._read_count}: "
-                  f"rays={len(angles)}  hits={n_hits} ({pct:.0f}%)")
-        return angles, depths, hits
+                  f"raw_rays={len(angles)}  binned={n}  hits={n_hits} ({pct:.0f}%)")
+        return out_angles, out_depths, out_hits
 
 
 # ════════════════════════════════════════════════════════════════
@@ -815,10 +912,15 @@ class SwarmCoordinator:
 
         h_after = self.fused_belief.mean_entropy()
         self.step_count += 1
+        drone_positions = [(a.x, a.y) for a in self.agents]
+        interior_pct = self.fused_belief.interior_exploration_ratio(
+            drone_positions, self.cfg.occ_threshold
+        ) * 100
         self.history.append({
             "step": self.step_count,
             "mean_entropy": round(h_after, 4),
-            "exploration_pct": round(self.fused_belief.exploration_ratio() * 100, 2),
+            "exploration_pct": round(interior_pct, 2),
+            "exploration_pct_raw": round(self.fused_belief.exploration_ratio() * 100, 2),
             "step_info_gain": round(max(0.0, h_before - h_after), 4),
             "free_energies": [round(a.last_G, 4) for a in self.agents],
             "info_gains": [round(a.last_ig, 4) for a in self.agents],
@@ -829,6 +931,7 @@ class SwarmCoordinator:
                                        self.fused_belief)
 
     def get_full_state(self, obstacles: List[Dict]) -> Dict:
+        eb = self.fused_belief.effective_bounds(self.cfg.occ_threshold)
         return {
             "step": self.step_count,
             "timestamp": time.time(),
@@ -837,6 +940,9 @@ class SwarmCoordinator:
                 "grid_resolution": self.cfg.grid_resolution,
                 "grid_width": self.cfg.grid_width, "grid_height": self.cfg.grid_height,
                 "obstacles": obstacles,
+                "effective_bounds": {
+                    "x1": eb[0], "y1": eb[1], "x2": eb[2], "y2": eb[3]
+                },
             },
             "drones": [a.get_state() for a in self.agents],
             "fused_belief": self.fused_belief.to_list(),

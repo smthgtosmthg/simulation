@@ -100,30 +100,46 @@ function renderMap(state) {
 
     const gw = env.grid_width;
     const gh = env.grid_height;
+    const res = env.grid_resolution;
 
-    // Dynamic cell size: fit container while keeping aspect ratio (width AND height)
+    // ── Effective bounds: crop to detected walls (real environment) ──
+    const eb = env.effective_bounds;
+    const pad = 2; // grid-cell padding around walls
+    let cx1 = 0, cy1 = 0, cx2 = gw, cy2 = gh;
+    if (eb && eb.x2 > eb.x1 && eb.y2 > eb.y1) {
+        cx1 = Math.max(0, eb.x1 - pad);
+        cy1 = Math.max(0, eb.y1 - pad);
+        cx2 = Math.min(gw, eb.x2 + pad);
+        cy2 = Math.min(gh, eb.y2 + pad);
+    }
+    const cropW = cx2 - cx1;
+    const cropH = cy2 - cy1;
+
+    // Dynamic cell size: fit container while keeping aspect ratio
     const wrap = document.getElementById('mapWrap');
-    const maxW = wrap.clientWidth - 32; // subtract padding
-    const maxH = window.innerHeight * 0.68; // match CSS max-height ~70vh
-    MAP_CELL_PX = Math.max(4, Math.min(Math.floor(maxW / gw), Math.floor(maxH / gh)));
+    const maxW = wrap.clientWidth - 32;
+    const maxH = window.innerHeight * 0.68;
+    MAP_CELL_PX = Math.max(4, Math.min(Math.floor(maxW / cropW), Math.floor(maxH / cropH)));
     const cell = MAP_CELL_PX;
 
-    canvas.width  = gw * cell;
-    canvas.height = gh * cell;
+    canvas.width  = cropW * cell;
+    canvas.height = cropH * cell;
 
-    // 1) Draw belief grid — Y-FLIPPED so Y+ (Isaac Sim) = top of canvas
+    // 1) Draw belief grid — cropped + Y-FLIPPED
     const tmp = document.createElement('canvas');
-    tmp.width = gw;
-    tmp.height = gh;
+    tmp.width = cropW;
+    tmp.height = cropH;
     const tctx = tmp.getContext('2d');
-    const img = tctx.createImageData(gw, gh);
+    const img = tctx.createImageData(cropW, cropH);
 
-    for (let y = 0; y < gh; y++) {
-        for (let x = 0; x < gw; x++) {
+    for (let y = cy1; y < cy2; y++) {
+        for (let x = cx1; x < cx2; x++) {
             const p = belief[y] ? belief[y][x] : 0.5;
             const [r, g, b] = beliefToRGB(p);
-            const flippedY = gh - 1 - y;           // ← Y flip
-            const idx = (flippedY * gw + x) * 4;
+            const localX = x - cx1;
+            const localY = y - cy1;
+            const flippedY = cropH - 1 - localY;
+            const idx = (flippedY * cropW + localX) * 4;
             img.data[idx]     = r;
             img.data[idx + 1] = g;
             img.data[idx + 2] = b;
@@ -135,28 +151,25 @@ function renderMap(state) {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
 
-    // 2) Draw obstacle outlines (Y-flipped)
+    // 2) Draw obstacle outlines (cropped + Y-flipped)
     ctx.strokeStyle = 'rgba(148,163,184,0.4)';
     ctx.lineWidth = 1;
-    const res = env.grid_resolution;
     for (const obs of (env.obstacles || [])) {
         if (obs.type === 'box') {
-            const oy = canvas.height - (obs.y / res) * cell - (obs.h / res) * cell;
-            ctx.strokeRect(
-                (obs.x / res) * cell, oy,
-                (obs.w / res) * cell, (obs.h / res) * cell
-            );
+            const ox = ((obs.x / res) - cx1) * cell;
+            const oy = canvas.height - ((obs.y / res) - cy1) * cell - (obs.h / res) * cell;
+            ctx.strokeRect(ox, oy, (obs.w / res) * cell, (obs.h / res) * cell);
         } else if (obs.type === 'cylinder') {
-            const cx = (obs.x / res) * cell;
-            const cy = canvas.height - (obs.y / res) * cell; // ← Y flip
-            const r  = (obs.radius / res) * cell;
+            const ocx = ((obs.x / res) - cx1) * cell;
+            const ocy = canvas.height - ((obs.y / res) - cy1) * cell;
+            const or2 = (obs.radius / res) * cell;
             ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.arc(ocx, ocy, or2, 0, Math.PI * 2);
             ctx.stroke();
         }
     }
 
-    // 3) Draw drone trails + positions (Y-flipped)
+    // 3) Draw drone trails + positions (cropped + Y-flipped)
     const ch = canvas.height;
     for (const drone of (state.drones || [])) {
         const color = DRONE_COLORS[drone.id % DRONE_COLORS.length];
@@ -169,8 +182,8 @@ function renderMap(state) {
             ctx.lineWidth = 2;
             ctx.globalAlpha = 0.35;
             for (let i = 0; i < trail.length; i++) {
-                const px = (trail[i][0] / res) * cell;
-                const py = ch - (trail[i][1] / res) * cell;   // ← Y flip
+                const px = ((trail[i][0] / res) - cx1) * cell;
+                const py = ch - ((trail[i][1] / res) - cy1) * cell;
                 if (i === 0) ctx.moveTo(px, py);
                 else ctx.lineTo(px, py);
             }
@@ -179,8 +192,8 @@ function renderMap(state) {
         }
 
         // drone dot
-        const dx = (drone.x / res) * cell;
-        const dy = ch - (drone.y / res) * cell;               // ← Y flip
+        const dx = ((drone.x / res) - cx1) * cell;
+        const dy = ch - ((drone.y / res) - cy1) * cell;
         ctx.beginPath();
         ctx.arc(dx, dy, cell * 0.8, 0, Math.PI * 2);
         ctx.fillStyle = color;
@@ -189,10 +202,10 @@ function renderMap(state) {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // heading arrow (negate sin because canvas Y is now flipped)
+        // heading arrow
         const hLen = cell * 1.5;
         const hx = dx + Math.cos(drone.heading) * hLen;
-        const hy = dy - Math.sin(drone.heading) * hLen;       // ← negate sin
+        const hy = dy - Math.sin(drone.heading) * hLen;
         ctx.beginPath();
         ctx.moveTo(dx, dy);
         ctx.lineTo(hx, hy);
