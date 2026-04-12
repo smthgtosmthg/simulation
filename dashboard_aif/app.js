@@ -11,7 +11,7 @@ let paused = false;
 let lastStep = -1;
 
 // ── Chart.js instances ──
-let chartEntropy, chartCoverage, chartFE, chartIG;
+let chartEntropy, chartCoverage, chartFE, chartIG, chartInnovation, chartActiveDrones;
 
 // ════════════════════════════════════════════════════
 // Initialization
@@ -53,6 +53,7 @@ async function poll() {
         updateBadges(state);
         updateDroneTable(state);
         updateCharts(history, state);
+        updateResilienceEvents(state);
     } catch {
         setOffline();
     }
@@ -226,18 +227,36 @@ function renderMap(state) {
 
 function updateKPIs(state) {
     const m = state.metrics || {};
+    const r = state.resilience || {};
+    const drones = state.drones || [];
+    const activeCount = drones.filter(d => d.active !== false).length;
+    const phase = m.resilience_phase || r.phase || 'normal';
+
     document.getElementById('kpiStep').textContent      = state.step || 0;
     document.getElementById('kpiCoverage').textContent   = (m.exploration_pct || 0).toFixed(1) + '%';
     document.getElementById('kpiEntropy').textContent    = (m.mean_entropy || 0).toFixed(3);
-    document.getElementById('kpiDrones').textContent     = (state.drones || []).length;
+    document.getElementById('kpiDrones').textContent     = drones.length;
     document.getElementById('kpiInfoGain').textContent   = (m.step_info_gain || 0).toFixed(4);
+    document.getElementById('kpiActiveDrones').textContent = `${activeCount}/${drones.length}`;
+    document.getElementById('kpiInnovation').textContent  = (m.innovation_ema || 0).toFixed(4);
+
+    const phaseEl = document.getElementById('kpiPhase');
+    phaseEl.textContent = phase.toUpperCase();
+    phaseEl.setAttribute('data-phase', phase);
 }
 
 function updateBadges(state) {
     const m = state.metrics || {};
+    const r = state.resilience || {};
+    const phase = m.resilience_phase || r.phase || 'normal';
+
     document.getElementById('badgeStep').textContent     = `Step ${state.step || 0}`;
     document.getElementById('badgeCoverage').textContent  = `${(m.exploration_pct || 0).toFixed(1)}%`;
     document.getElementById('badgeEntropy').textContent   = `H = ${(m.mean_entropy || 0).toFixed(3)}`;
+
+    const badgePhase = document.getElementById('badgePhase');
+    badgePhase.textContent = phase.toUpperCase();
+    badgePhase.setAttribute('data-phase', phase);
 }
 
 function updateDroneTable(state) {
@@ -245,13 +264,20 @@ function updateDroneTable(state) {
     tbody.innerHTML = '';
     for (const d of (state.drones || [])) {
         const color = DRONE_COLORS[d.id % DRONE_COLORS.length];
+        const isActive = d.active !== false;
+        const statusCls = isActive ? 'active' : 'landed';
+        const statusTxt = isActive ? 'ACTIVE' : 'LANDED';
+        const innov = (d.innovation !== undefined) ? d.innovation.toFixed(4) : '—';
         const row = document.createElement('tr');
+        if (!isActive) row.style.opacity = '0.5';
         row.innerHTML = `
             <td><span style="color:${color};font-weight:700">●</span> ${d.id}</td>
+            <td><span class="drone-status ${statusCls}">${statusTxt}</span></td>
             <td>(${d.x.toFixed(1)}, ${d.y.toFixed(1)})</td>
             <td>${d.action}</td>
             <td>${d.free_energy.toFixed(3)}</td>
             <td>${d.info_gain.toFixed(3)}</td>
+            <td>${innov}</td>
             <td>${d.total_distance.toFixed(1)} m</td>
             <td>${d.local_entropy.toFixed(3)}</td>
         `;
@@ -306,6 +332,21 @@ function initCharts() {
         data: { labels: [], datasets: [{ label: 'Step IG', data: [], backgroundColor: 'rgba(167,139,250,.5)', borderColor: '#a78bfa', borderWidth: 1 }] },
         options: { ...CHART_DEFAULTS },
     });
+
+    chartInnovation = new Chart(document.getElementById('chartInnovation'), {
+        type: 'line',
+        data: { labels: [], datasets: [
+            { label: 'Innovation Mean', data: [], borderColor: '#f472b6', backgroundColor: 'rgba(244,114,182,.1)', fill: false, tension: .3, pointRadius: 0, borderWidth: 1.5 },
+            { label: 'Innovation EMA', data: [], borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,.1)', fill: true, tension: .3, pointRadius: 0, borderWidth: 2 },
+        ] },
+        options: { ...CHART_DEFAULTS, plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 10 } } } } },
+    });
+
+    chartActiveDrones = new Chart(document.getElementById('chartActiveDrones'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Active Drones', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,.1)', fill: true, tension: 0, pointRadius: 0, borderWidth: 2, stepped: true }] },
+        options: { ...CHART_DEFAULTS, scales: { ...CHART_DEFAULTS.scales, y: { ...CHART_DEFAULTS.scales.y, min: 0, beginAtZero: true } } },
+    });
 }
 
 function updateCharts(history, state) {
@@ -356,4 +397,51 @@ function updateCharts(history, state) {
         );
     }
     chartFE.update();
+
+    // Innovation (mean + EMA)
+    chartInnovation.data.labels = labels;
+    chartInnovation.data.datasets[0].data = sampled.map(h => h.innovation_mean || 0);
+    chartInnovation.data.datasets[1].data = sampled.map(h => h.innovation_ema || 0);
+    chartInnovation.update();
+
+    // Active Drones
+    chartActiveDrones.data.labels = labels;
+    chartActiveDrones.data.datasets[0].data = sampled.map(h => h.active_drones !== undefined ? h.active_drones : numDrones);
+    chartActiveDrones.update();
+}
+
+// ════════════════════════════════════════════════════
+// Resilience Events
+// ════════════════════════════════════════════════════
+
+function updateResilienceEvents(state) {
+    const r = state.resilience || {};
+    const events = r.events || [];
+    const emptyEl = document.getElementById('eventsEmpty');
+    const listEl = document.getElementById('eventsList');
+
+    if (events.length === 0) {
+        emptyEl.style.display = '';
+        listEl.innerHTML = '';
+        return;
+    }
+    emptyEl.style.display = 'none';
+
+    // Build HTML (newest first)
+    const reversed = [...events].reverse();
+    listEl.innerHTML = reversed.map(ev => {
+        let iconCls = 'stress';
+        let icon = '⚠';
+        if (ev.event === 'recovered') { iconCls = 'recovered'; icon = '✓'; }
+        else if (ev.event === 'resolved') { iconCls = 'resolved'; icon = '✓'; }
+        const cause = ev.cause ? `<span class="event-cause">${ev.cause}</span>` : '';
+        const detail = ev.entropy !== undefined ? `<span class="event-detail">H=${ev.entropy} innov=${ev.innovation || '—'}</span>` : '';
+        return `<div class="event-item">
+            <span class="event-icon ${iconCls}">${icon}</span>
+            <span class="event-step">step ${ev.step}</span>
+            <span>${ev.event}</span>
+            ${cause}
+            ${detail}
+        </div>`;
+    }).join('');
 }

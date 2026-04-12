@@ -22,6 +22,7 @@
         <span class="badge" id="badgeStep">Step 0</span>
         <span class="badge badge-green" id="badgeCoverage">0 %</span>
         <span class="badge badge-blue" id="badgeEntropy">H = 0.693</span>
+        <span class="badge badge-phase" id="badgePhase">NORMAL</span>
     </div>
     <div class="topbar-right">
         <div class="status-pill" id="statusPill">
@@ -76,6 +77,18 @@
             <div class="kpi-value" id="kpiInfoGain">0</div>
             <div class="kpi-label">Step IG</div>
         </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiActiveDrones">0/0</div>
+            <div class="kpi-label">Active Drones</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiInnovation">0.000</div>
+            <div class="kpi-label">Innovation EMA</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value phase-value" id="kpiPhase">NORMAL</div>
+            <div class="kpi-label">Resilience Phase</div>
+        </div>
     </section>
 
     <!-- ── CHARTS 2×2 ── -->
@@ -96,6 +109,14 @@
             <div class="card-header"><h3>Information Gain (per step)</h3></div>
             <div class="chart-wrap"><canvas id="chartIG"></canvas></div>
         </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Innovation (mean vs EMA)</h3></div>
+            <div class="chart-wrap"><canvas id="chartInnovation"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Active Drones</h3></div>
+            <div class="chart-wrap"><canvas id="chartActiveDrones"></canvas></div>
+        </div>
     </section>
 
     <!-- ── DRONE INFO TABLE ── -->
@@ -106,13 +127,24 @@
                 <table id="droneTable">
                     <thead>
                         <tr>
-                            <th>ID</th><th>Position</th><th>Action</th>
-                            <th>Free Energy</th><th>Info Gain</th>
+                            <th>ID</th><th>Status</th><th>Position</th><th>Action</th>
+                            <th>Free Energy</th><th>Info Gain</th><th>Innovation</th>
                             <th>Distance</th><th>Local H</th>
                         </tr>
                     </thead>
                     <tbody id="droneTableBody"></tbody>
                 </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── RESILIENCE EVENTS LOG ── -->
+    <section class="resilience-section">
+        <div class="card">
+            <div class="card-header"><h3>Resilience Events</h3></div>
+            <div class="events-wrap" id="eventsWrap">
+                <div class="events-empty" id="eventsEmpty">No resilience events yet</div>
+                <div id="eventsList"></div>
             </div>
         </div>
     </section>

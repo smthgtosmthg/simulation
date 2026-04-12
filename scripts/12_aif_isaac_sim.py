@@ -65,6 +65,23 @@ class SimConfig:
     kp_yaw: float = 2.0 # le drone corrige plus fort les erreurs de lorientation
     waypoint_tol: float = 0.3      # tolérance pour considérer qu'on est arrivé à un waypoint (en mètres)
 
+    # resilience (adapté de AIF_controller)
+    alpha: int = 30            # durée phase recovery (steps)
+    beta: int = 60             # durée phase durable (steps)
+    H_target: float = 0.44    # entropie cible pour considérer recovery OK
+    innov_target: float = 0.16 # innovation cible
+    k_sigma: float = 2.0      # seuil spike = EMA + k_σ·σ
+    ema_alpha: float = 0.05   # lissage EMA
+    # poids recovery
+    w_entropy_recover: float = 3.0
+    w_innov_recover: float = 1.2
+    w_deadline: float = 12.0
+    # poids durable
+    w_entropy_durable: float = 1.2
+    w_innov_durable: float = 0.8
+    w_churn_durable: float = 2.2
+    w_maintain: float = 10.0
+
     # simulation
     headless: bool = False
     max_steps: int = 500 #combien de fois on décide
@@ -286,6 +303,83 @@ def mix_beliefs(local: BeliefGrid, fused: BeliefGrid, lam: float) -> BeliefGrid:
 
 
 # ════════════════════════════════════════════════════════════════
+# 4b. Resilience State (adapté de AIF_controller)
+# ════════════════════════════════════════════════════════════════
+
+@dataclass
+class ResilienceState:
+    """Tracks stress/recovery phases for the swarm."""
+    stress_active: bool = False
+    stress_t0: int = -1          # step quand le stress a commencé
+    recovered_at: int = -1       # step quand H < H_target pour la 1ère fois
+    durable_count: int = 0       # compteur de steps consécutifs post-recovery
+    cause: str = ""              # "drone_lost" | "innovation_spike"
+    events: List[Dict] = None    # log des événements pour le dashboard
+
+    def __post_init__(self):
+        if self.events is None:
+            self.events = []
+
+    def trigger(self, step: int, cause: str):
+        self.stress_active = True
+        self.stress_t0 = step
+        self.recovered_at = -1
+        self.durable_count = 0
+        self.cause = cause
+        self.events.append({
+            "step": step, "type": "stress_start", "cause": cause,
+        })
+        print(f"  [RESILIENCE] ⚠ STRESS ACTIVATED at step {step}: {cause}")
+
+    def update(self, step: int, H: float, innov: float, cfg: SimConfig):
+        if not self.stress_active:
+            return
+        recovered_now = (H <= cfg.H_target) and (innov <= cfg.innov_target)
+        if self.recovered_at < 0:
+            if recovered_now:
+                self.recovered_at = step
+                self.durable_count = 0
+                self.events.append({
+                    "step": step, "type": "recovery_reached",
+                    "entropy": round(H, 4), "innovation": round(innov, 4),
+                })
+                print(f"  [RESILIENCE] ✓ Recovery reached at step {step} (H={H:.4f})")
+        else:
+            if recovered_now:
+                self.durable_count += 1
+            else:
+                self.durable_count = 0
+            if self.durable_count >= cfg.beta:
+                self.stress_active = False
+                self.events.append({
+                    "step": step, "type": "stress_resolved",
+                    "duration": step - self.stress_t0,
+                })
+                print(f"  [RESILIENCE] ✓ STRESS RESOLVED at step {step} "
+                      f"(duration={step - self.stress_t0} steps)")
+
+    def phase(self, step: int, cfg: SimConfig) -> str:
+        """'normal' | 'recovery' | 'durable'"""
+        if not self.stress_active:
+            return "normal"
+        elapsed = step - self.stress_t0
+        if elapsed <= cfg.alpha:
+            return "recovery"
+        return "durable"
+
+    def to_dict(self) -> Dict:
+        return {
+            "stress_active": self.stress_active,
+            "cause": self.cause,
+            "phase": "normal" if not self.stress_active else self.cause,
+            "stress_t0": self.stress_t0,
+            "recovered_at": self.recovered_at,
+            "durable_count": self.durable_count,
+            "events": self.events[-20:],  # last 20 events
+        }
+
+
+# ════════════════════════════════════════════════════════════════
 # 5. AIF: Expected Free Energy Minimization
 # ════════════════════════════════════════════════════════════════
 
@@ -343,9 +437,13 @@ def select_action(
     fused: Optional[BeliefGrid],
     cfg: SimConfig,
     rng: np.random.Generator,
+    resilience_phase: str = "normal",
 ) -> Tuple[Tuple[str, float, float], List[Dict], int]:
-    """Returns (action_tuple, candidates_diagnostics, selected_index)."""
+    """Returns (action_tuple, candidates_diagnostics, selected_index).
+    resilience_phase: 'normal' | 'recovery' | 'durable'
+    """
     plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
+    H = plan_belief.mean_entropy()
     n = len(ACTIONS)
     G = np.full(n, 1e6)
     valid = np.zeros(n, dtype=bool)
@@ -378,7 +476,40 @@ def select_action(
             1.0 / (math.hypot(nx - ox, ny - oy) + 0.1)
             for ox, oy in others if math.hypot(nx - ox, ny - oy) < 8.0
         )
-        G[i] = -cfg.w_epistemic * ig - cfg.w_pragmatic * fr + cfg.w_movement * move + cfg.w_collision * coll
+
+        # ── 3-phase G computation (adapté de AIF_controller) ──
+        if resilience_phase == "recovery":
+            # Phase recovery: boost exploration pour re-mapper rapidement
+            G[i] = (
+                - cfg.w_entropy_recover * H
+                - cfg.w_innov_recover * ig
+                + cfg.w_movement * move
+                + cfg.w_collision * coll
+                - cfg.w_epistemic * ig
+                - cfg.w_pragmatic * fr
+            )
+        elif resilience_phase == "durable":
+            # Phase durable: maintenir la qualité, pénaliser si H > target
+            maintain_pen = 0.0
+            if H > cfg.H_target:
+                maintain_pen += (H - cfg.H_target)
+            G[i] = (
+                - cfg.w_entropy_durable * H
+                - cfg.w_epistemic * ig
+                - cfg.w_pragmatic * fr
+                + cfg.w_movement * move
+                + cfg.w_collision * coll
+                + cfg.w_maintain * maintain_pen
+            )
+        else:
+            # Phase normale
+            G[i] = (
+                - cfg.w_epistemic * ig
+                - cfg.w_pragmatic * fr
+                + cfg.w_movement * move
+                + cfg.w_collision * coll
+            )
+
         entry.update({
             "valid": True, "reason": "ok",
             "ig": round(ig, 4), "frontier": round(fr, 4),
@@ -760,6 +891,9 @@ class DroneAgent:
         self._stag_pos = (sx, sy)
         self._stag_steps = 0
         self._STAG_THRESHOLD = 5  # steps stuck → force random move
+        # resilience
+        self.active: bool = True   # False = drone hors service (landed)
+        self.last_innovation: float = 0.0  # innovation mesurée au dernier step
 
     def setup_physical(self, backend: AifFlightBackend, lidar: LidarReader):
         self.backend = backend
@@ -778,12 +912,34 @@ class DroneAgent:
         return self.trail[-1][1]
 
     def perceive(self):
-        """Use accumulated LiDAR scans (full 360°) to update local belief grid."""
-        if self.lidar is None:
+        """Use accumulated LiDAR scans (full 360°) to update local belief grid.
+        Also compute innovation = how much observations differ from predicted."""
+        if not self.active or self.lidar is None:
             self.lidar_diag = None
+            self.last_innovation = 0.0
             return
         angles, ranges, hits = self.lidar.get_accumulated()
         self.lidar_diag = (angles.copy(), ranges.copy(), hits.copy())
+
+        # ── Compute innovation: mesure de surprise (adapté de AIF_controller) ──
+        # Compare les hits LiDAR avec la belief actuelle
+        n_compare = 0
+        innov_sum = 0.0
+        for i in range(len(angles)):
+            if not hits[i]:
+                continue
+            cos_a = math.cos(angles[i])
+            sin_a = math.sin(angles[i])
+            hx = self.x + float(ranges[i]) * cos_a
+            hy = self.y + float(ranges[i]) * sin_a
+            gx, gy = self.belief.world_to_grid(hx, hy)
+            if self.belief.in_bounds(gx, gy):
+                predicted_occ = self.belief.probability[gy, gx]
+                # Innovation = |observation(=1 hit) - prediction|
+                innov_sum += abs(1.0 - predicted_occ)
+                n_compare += 1
+        self.last_innovation = innov_sum / max(n_compare, 1)
+
         self.belief.update_from_lidar(
             self.x, self.y, angles, ranges, hits,
             self.cfg.lidar_max_range, self.cfg.lo_free, self.cfg.lo_occ,
@@ -791,11 +947,25 @@ class DroneAgent:
 
     def accumulate_lidar(self):
         """Called every physics tick to gather a partial LiDAR scan."""
-        if self.lidar is None or self.backend is None:
+        if not self.active or self.lidar is None or self.backend is None:
             return
         self.lidar.accumulate(self.backend.get_yaw())
 
-    def plan(self, others: List[Tuple[float, float]], fused: Optional[BeliefGrid]):
+    def land(self):
+        """Disable this drone (simulate out-of-service / landed)."""
+        self.active = False
+        self.last_action = "LANDED"
+        if self.backend:
+            # Set target to ground level at current position
+            wx = self.x + self.cfg.origin_x
+            wy = self.y + self.cfg.origin_y
+            self.backend.set_target(wx, wy, 0.1)
+        print(f"  [RESILIENCE] 🛬 Drone {self.id} LANDED (out of service)")
+
+    def plan(self, others: List[Tuple[float, float]], fused: Optional[BeliefGrid],
+             resilience_phase: str = "normal"):
+        if not self.active:
+            return
         cx, cy = self.x, self.y
 
         # ── Anti-stagnation: detect if drone hasn’t moved ──
@@ -824,6 +994,7 @@ class DroneAgent:
         else:
             (name, dx, dy), self.candidates_diag, self.selected_idx = select_action(
                 cx, cy, others, self.belief, fused, self.cfg, self.rng,
+                resilience_phase=resilience_phase,
             )
             # Update dashboard-exported diagnostics
             if self.candidates_diag and self.selected_idx < len(self.candidates_diag):
@@ -865,6 +1036,8 @@ class DroneAgent:
             "total_distance": round(self.total_dist, 2),
             "local_entropy": round(self.belief.mean_entropy(), 4),
             "trail": self.trail[-60:],
+            "active": self.active,
+            "innovation": round(self.last_innovation, 4),
         }
 
 
@@ -882,6 +1055,22 @@ class SwarmCoordinator:
         self.step_count = 0
         self.history: List[Dict] = []
         self.diag = diag_logger
+        # ── Resilience state ──
+        self.resilience = ResilienceState()
+        self.innov_ema = 0.0
+        self.innov_var = 0.0
+
+    @property
+    def active_agents(self) -> List[DroneAgent]:
+        return [a for a in self.agents if a.active]
+
+    def kill_drone(self, drone_id: int):
+        """Disable a drone and trigger resilience recovery."""
+        for a in self.agents:
+            if a.id == drone_id and a.active:
+                a.land()
+                self.resilience.trigger(self.step_count, f"drone_{drone_id}_lost")
+                return
 
     def step(self):
         h_before = self.fused_belief.mean_entropy()
@@ -889,33 +1078,60 @@ class SwarmCoordinator:
         if self.diag:
             self.diag.log_step_header(self.step_count + 1)
 
-        # perception
+        # perception (only active drones)
         for a in self.agents:
             a.perceive()
-            if self.diag and a.lidar_diag is not None:
+            if self.diag and a.active and a.lidar_diag is not None:
                 angles, ranges, hits = a.lidar_diag
                 self.diag.log_lidar(a.id, a.x, a.y, angles, ranges, hits)
 
-        # fusion
-        self.fused_belief = fuse_beliefs_logodds(
-            [a.belief for a in self.agents], self.prior_lo,
-        )
+        # ── Innovation monitoring (adapté de AIF_controller) ──
+        active = self.active_agents
+        if active:
+            innovations = [a.last_innovation for a in active]
+            innov_mean = sum(innovations) / len(innovations)
+        else:
+            innov_mean = 0.0
 
-        # planning
+        err = innov_mean - self.innov_ema
+        self.innov_ema += self.cfg.ema_alpha * err
+        self.innov_var += self.cfg.ema_alpha * ((err * err) - self.innov_var)
+        sigma = math.sqrt(max(self.innov_var, 1e-8))
+        spike = innov_mean > (self.innov_ema + self.cfg.k_sigma * sigma)
+
+        # Auto-detect stress from innovation spike (= new obstacle appeared)
+        if not self.resilience.stress_active and spike and self.step_count > 5:
+            self.resilience.trigger(self.step_count, "innovation_spike")
+
+        # fusion (only active drones' beliefs)
+        if active:
+            self.fused_belief = fuse_beliefs_logodds(
+                [a.belief for a in active], self.prior_lo,
+            )
+        # else: keep last fused belief
+
+        h_after = self.fused_belief.mean_entropy()
+
+        # Update resilience state
+        self.resilience.update(self.step_count, h_after, innov_mean, self.cfg)
+        phase = self.resilience.phase(self.step_count, self.cfg)
+
+        # planning (only active drones, pass resilience phase)
         for a in self.agents:
-            others = [(o.x, o.y) for o in self.agents if o.id != a.id]
-            a.plan(others, self.fused_belief)
+            if not a.active:
+                continue
+            others = [(o.x, o.y) for o in active if o.id != a.id]
+            a.plan(others, self.fused_belief, resilience_phase=phase)
             if self.diag:
                 self.diag.log_candidates(a.id, a.x, a.y, others,
                                          a.candidates_diag, a.selected_idx)
                 self.diag.log_belief(a.id, a.belief, self.fused_belief)
 
-        h_after = self.fused_belief.mean_entropy()
         self.step_count += 1
-        drone_positions = [(a.x, a.y) for a in self.agents]
+        drone_positions = [(a.x, a.y) for a in active]
         interior_pct = self.fused_belief.interior_exploration_ratio(
             drone_positions, self.cfg.occ_threshold
-        ) * 100
+        ) * 100 if drone_positions else 0.0
         self.history.append({
             "step": self.step_count,
             "mean_entropy": round(h_after, 4),
@@ -924,11 +1140,20 @@ class SwarmCoordinator:
             "step_info_gain": round(max(0.0, h_before - h_after), 4),
             "free_energies": [round(a.last_G, 4) for a in self.agents],
             "info_gains": [round(a.last_ig, 4) for a in self.agents],
+            "innovation_mean": round(innov_mean, 4),
+            "innovation_ema": round(self.innov_ema, 4),
+            "resilience_phase": phase,
+            "active_drones": len(active),
         })
 
         if self.diag:
             self.diag.log_step_summary(self.step_count, self.agents,
                                        self.fused_belief)
+            if phase != "normal":
+                self.diag._w(f"    [RESILIENCE] phase={phase} "
+                             f"cause={self.resilience.cause} "
+                             f"innov_mean={innov_mean:.4f} "
+                             f"innov_ema={self.innov_ema:.4f}\n")
 
     def get_full_state(self, obstacles: List[Dict]) -> Dict:
         eb = self.fused_belief.effective_bounds(self.cfg.occ_threshold)
@@ -947,6 +1172,7 @@ class SwarmCoordinator:
             "drones": [a.get_state() for a in self.agents],
             "fused_belief": self.fused_belief.to_list(),
             "metrics": self.history[-1] if self.history else {},
+            "resilience": self.resilience.to_dict(),
         }
 
 
@@ -1167,11 +1393,16 @@ def parse_args() -> SimConfig:
     p.add_argument("--max-steps", type=int, default=500)
     p.add_argument("--env-width", type=float, default=30.0)
     p.add_argument("--env-height", type=float, default=20.0)
+    # ── resilience demo events ──
+    p.add_argument("--kill-drone-at-step", type=int, default=-1,
+                   help="Step at which to land (disable) drone 0 to test resilience")
     a = p.parse_args()
-    return SimConfig(
+    cfg = SimConfig(
         num_drones=a.num_drones, headless=a.headless,
         max_steps=a.max_steps, env_width=a.env_width, env_height=a.env_height,
     )
+    cfg._kill_drone_at = a.kill_drone_at_step
+    return cfg
 
 
 def create_sim_app(cfg: SimConfig):
@@ -1449,9 +1680,24 @@ def main():
             agent.accumulate_lidar()
     print("[INFO] Take-off complete.\n")
 
+    # ── Resilience demo events ──
+    kill_drone_at = getattr(cfg, '_kill_drone_at', -1)
+
+    if kill_drone_at >= 0:
+        print(f"[INFO] Resilience demo: drone 0 will be killed at step {kill_drone_at}")
+
     # ── AIF exploration loop ──
     aif_step = 0
     while running and aif_step < cfg.max_steps and sim_app.is_running():
+
+        # ── Resilience event: kill drone ──
+        if kill_drone_at >= 0 and aif_step == kill_drone_at:
+            coordinator.kill_drone(0)
+            print(f"\n{'='*60}")
+            print(f"  ⚠ RESILIENCE TEST: Drone 0 disabled at step {aif_step}")
+            print(f"  Remaining active drones: {len(coordinator.active_agents)}")
+            print(f"{'='*60}\n")
+
         # AIF cycle: perceive (real LiDAR) → fuse → plan (sets waypoints)
         coordinator.step()
 
@@ -1470,13 +1716,16 @@ def main():
 
         m = coordinator.history[-1]
         positions_str = " | ".join(
-            f"D{a.id}({a.x:.1f},{a.y:.1f})" for a in agents
+            f"D{a.id}({'X' if not a.active else f'{a.x:.1f},{a.y:.1f}'})" for a in agents
         )
+        phase_tag = f" [{m.get('resilience_phase','normal').upper()}]" if m.get('resilience_phase','normal') != 'normal' else ""
         print(
             f"  Step {aif_step:4d} | "
             f"H={m['mean_entropy']:.3f} | "
             f"Expl={m['exploration_pct']:5.1f}% | "
             f"ΔIG={m['step_info_gain']:.4f} | "
+            f"innov={m.get('innovation_mean',0):.3f} | "
+            f"active={m.get('active_drones', len(agents))}{phase_tag} | "
             f"{positions_str}"
         )
 

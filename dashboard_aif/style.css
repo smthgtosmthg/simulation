@@ -229,7 +229,7 @@ body {
 
 .charts-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: .75rem;
 }
 
@@ -270,7 +270,95 @@ td {
 
 tr:hover td { background: rgba(51,65,85,.2); }
 
+/* ── RESILIENCE PHASE BADGE ── */
+
+.badge-phase {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    transition: background .3s, color .3s;
+}
+.badge-phase[data-phase="normal"]   { background: rgba(16,185,129,.15); color: var(--green); }
+.badge-phase[data-phase="recovery"] { background: rgba(239,68,68,.2);  color: var(--red); }
+.badge-phase[data-phase="durable"]  { background: rgba(251,191,36,.2); color: var(--yellow); }
+
+/* ── PHASE KPI ── */
+
+.phase-value {
+    font-size: 1.1rem !important;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.phase-value[data-phase="normal"]   { color: var(--green) !important; }
+.phase-value[data-phase="recovery"] { color: var(--red) !important; }
+.phase-value[data-phase="durable"]  { color: var(--yellow) !important; }
+
+/* ── DRONE STATUS BADGES ── */
+
+.drone-status {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 600;
+    padding: .1rem .45rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.drone-status.active  { background: rgba(16,185,129,.18); color: var(--green); }
+.drone-status.landed  { background: rgba(239,68,68,.18);  color: var(--red); }
+
+/* ── RESILIENCE EVENTS ── */
+
+.resilience-section { width: 100%; }
+
+.events-wrap {
+    padding: .75rem 1rem 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.events-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: .8rem;
+    padding: .5rem;
+}
+
+.event-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .35rem 0;
+    border-bottom: 1px solid rgba(51,65,85,.3);
+    font-size: .78rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.event-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .65rem;
+    flex-shrink: 0;
+}
+.event-icon.stress    { background: rgba(239,68,68,.2); color: var(--red); }
+.event-icon.recovered { background: rgba(16,185,129,.2); color: var(--green); }
+.event-icon.resolved  { background: rgba(59,130,246,.2); color: var(--accent); }
+
+.event-step  { color: var(--text-dim); min-width: 60px; }
+.event-cause { color: var(--yellow); }
+.event-detail { color: var(--text-dim); }
+
+/* ── CHARTS GRID responsive override ── */
+
 /* ── RESPONSIVE ── */
+
+@media (max-width: 1200px) {
+    .charts-grid { grid-template-columns: 1fr 1fr; }
+}
 
 @media (max-width: 900px) {
     .charts-grid { grid-template-columns: 1fr; }

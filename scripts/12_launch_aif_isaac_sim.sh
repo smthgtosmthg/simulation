@@ -3,6 +3,8 @@
 set -euo pipefail
 
 N_DRONES=${1:-3}
+shift 2>/dev/null || true   # consume $1 so "$@" holds remaining flags
+EXTRA_ARGS="$@"
 VENV_DIR="${HOME}/isaac_sim_env"
 ACTIVATE_SCRIPT="${VENV_DIR}/activate_isaac.sh"
 WORKSPACE="$(cd "$(dirname "$0")/.." && pwd)"
@@ -68,4 +70,5 @@ log "Factory USD forced: ${AIF_FACTORY_USD}"
 # shellcheck disable=SC2086
 python "${WORKSPACE}/scripts/12_aif_isaac_sim.py" \
     --num-drones "${N_DRONES}" \
-    ${HEADLESS_FLAG}
+    ${HEADLESS_FLAG} \
+    ${EXTRA_ARGS}
