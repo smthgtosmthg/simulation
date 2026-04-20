@@ -236,8 +236,16 @@ class BeliefGrid:
     def interior_exploration_ratio(
         self, drone_positions: List[Tuple[float, float]], occ_threshold: float = 0.65
     ) -> float:
-        """Coverage basée sur le flood-fill intérieur (zone accessible depuis les drones)."""
+        """Coverage = cellules observées dans l'intérieur / taille intérieur.
+
+        1. Flood-fill depuis les drones à travers les cellules non-mur
+           (p < occ_threshold) → détermine la zone intérieure accessible.
+        2. Numérateur = cellules observées (|logodds| > seuil) dans cet intérieur.
+        Général : pas besoin de connaître la taille de l'environnement.
+        """
         from collections import deque
+
+        # --- flood-fill intérieur (bloqué par les murs détectés) ---
         visited = np.zeros((self.height, self.width), dtype=bool)
         queue: deque = deque()
         for wx, wy in drone_positions:
@@ -253,11 +261,16 @@ class BeliefGrid:
                     if not visited[ny, nx] and self.probability[ny, nx] < occ_threshold:
                         visited[ny, nx] = True
                         queue.append((nx, ny))
+
         interior = int(visited.sum())
         if interior == 0:
-            return self.exploration_ratio()
-        known = ((self.probability < 0.3) | (self.probability > 0.7)) & visited
-        return float(known.sum() / interior)
+            return 0.0
+
+        # --- numérateur : cellules observées au moins une fois dans l'intérieur ---
+        observed_interior = np.abs(self.logodds) > 0.01
+        observed_interior &= visited
+
+        return float(observed_interior.sum() / interior)
 
     def copy(self) -> "BeliefGrid":
         new = BeliefGrid.__new__(BeliefGrid)
@@ -1941,6 +1954,10 @@ def main():
 
     # ── AIF exploration loop ──
     aif_step = 0
+    plateau_counter = 0          # nombre de steps consécutifs sans progression
+    plateau_threshold = 0.3      # delta min (%) pour considérer une progression
+    plateau_patience = 12        # combien de steps sans progression avant d'arrêter
+    prev_coverage = 0.0
     while running and aif_step < cfg.max_steps and sim_app.is_running():
 
         # ── Resilience event: kill drone ──
@@ -1984,6 +2001,20 @@ def main():
 
         if m["exploration_pct"] >= cfg.target_coverage:
             print(f"\n[INFO] Target coverage {cfg.target_coverage}% reached!")
+            break
+
+        # ── Plateau detection: arrêter si le coverage ne progresse plus ──
+        cur_coverage = m["exploration_pct"]
+        if cur_coverage - prev_coverage < plateau_threshold:
+            plateau_counter += 1
+        else:
+            plateau_counter = 0
+        prev_coverage = cur_coverage
+
+        if plateau_counter >= plateau_patience and cur_coverage > 50.0:
+            print(f"\n[INFO] Coverage plateau detected at {cur_coverage:.1f}% "
+                  f"(no gain >{plateau_threshold}% for {plateau_patience} steps). "
+                  f"Exploration complete!")
             break
 
         aif_step += 1
