@@ -8,10 +8,38 @@ EXTRA_ARGS="$@"
 VENV_DIR="${HOME}/isaac_sim_env"
 ACTIVATE_SCRIPT="${VENV_DIR}/activate_isaac.sh"
 WORKSPACE="$(cd "$(dirname "$0")/.." && pwd)"
+ARDUPILOT_DIR="${HOME}/ardupilot"
 
 log()  { echo "[INFO] $*"; }
 warn() { echo "[WARN] $*"; }
 die()  { echo "[ERROR] $*"; exit 1; }
+
+# --- 0. Vérifier ArduPilot SITL ---
+[[ -d "${ARDUPILOT_DIR}" ]] \
+    || die "ArduPilot non trouvé dans ${ARDUPILOT_DIR}. Cloner avec : git clone https://github.com/ArduPilot/ardupilot.git ~/ardupilot"
+[[ -f "${ARDUPILOT_DIR}/build/sitl/bin/arducopter" ]] \
+    || die "ArduPilot SITL pas compilé. Lancer : cd ~/ardupilot && ./waf configure --board sitl && ./waf copter"
+
+# Nettoyer les processus SITL résiduels
+log "Nettoyage des processus SITL résiduels…"
+pkill -f "arducopter" 2>/dev/null || true
+pkill -f "sim_vehicle.py" 2>/dev/null || true
+pkill -f "mavproxy" 2>/dev/null || true
+sleep 1
+
+# Patcher gazebo-iris.parm pour le JSON backend Isaac Sim
+PARM_FILE="${ARDUPILOT_DIR}/Tools/autotest/default_params/gazebo-iris.parm"
+if [[ -f "${PARM_FILE}" ]]; then
+    for entry in "ARMING_CHECK 0" "SCHED_LOOP_RATE 50" "FS_THR_ENABLE 0" "FS_GCS_ENABLE 0" "FS_CRASH_CHECK 0"; do
+        pname="${entry%% *}"
+        if grep -q "^${pname} " "${PARM_FILE}"; then
+            sed -i "s/^${pname} .*/${entry}/" "${PARM_FILE}"
+        else
+            echo "${entry}" >> "${PARM_FILE}"
+        fi
+    done
+    log "Params SITL vérifiés dans ${PARM_FILE}"
+fi
 
 # --- Auto-detect display ---
 if [[ -z "${HEADLESS:-}" ]]; then
@@ -52,13 +80,15 @@ log "GPU : $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 # --- 3. Verify imports ---
 python -c "import isaacsim" 2>/dev/null || die "Isaac Sim not importable."
 python -c "import pegasus"  2>/dev/null || die "Pegasus not importable."
+python -c "from pymavlink import mavutil" 2>/dev/null \
+    || die "pymavlink not installed. Run: pip install pymavlink"
 
-# --- 4. Launch AIF simulation ---
+# --- 4. Launch AIF simulation (ArduPilot SITL) ---
 HEADLESS_FLAG=""
 if [[ "${HEADLESS}" == "1" ]]; then
     HEADLESS_FLAG="--headless"
 fi
-log "Launching AIF exploration: ${N_DRONES} drone(s), mode $([ "${HEADLESS}" == "1" ] && echo headless || echo GUI)"
+log "Launching AIF exploration (ArduPilot SITL): ${N_DRONES} drone(s), mode $([ "${HEADLESS}" == "1" ] && echo headless || echo GUI)"
 
 export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
 export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA

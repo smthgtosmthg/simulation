@@ -57,12 +57,7 @@ class SimConfig:
     softmax_temp: float = 0.3 #si on l'augumente on va aller vers des actions plus variées, sinon on va toujours choisir la même action
     fusion_mix: float = 0.3 #pour mélanger les croyances locales et fusionnées dans la planification
 
-    # le backend de contrôle de vol (PD controller)
-    kp_xy: float = 6.0 # le drone corrige plus fort les erreurs de position horizontale
-    kd_xy: float = 4.5 # le drone corrige plus fort les erreurs de vitesse horizontale
-    kp_z: float = 10.0
-    kd_z: float = 6.0
-    kp_yaw: float = 2.0 # le drone corrige plus fort les erreurs de lorientation
+    # SITL (ArduPilot contrôle le vol, tolérance pour l'AIF)
     waypoint_tol: float = 0.3      # tolérance pour considérer qu'on est arrivé à un waypoint (en mètres)
 
     # resilience (adapté de AIF_controller)
@@ -530,89 +525,75 @@ def select_action(
 
 
 # ════════════════════════════════════════════════════════════════
-# 6. Pegasus Flight Backend (PD Waypoint Controller)
+# 6. ArduPilot SITL Flight Backend (via Pegasus)
+# ════════════════════════════════════════════════════════════════
+#
+# Le vol est contrôlé par ArduPilot SITL : un vrai autopilote
+# tourne en arrière-plan, reçoit les capteurs simulés via JSON/UDP,
+# calcule les commandes moteurs, et les renvoie à Isaac Sim.
+#
+# Architecture par drone :
+#   Backend[0] = ArduPilotMavlinkBackend  → pont capteurs/moteurs vers SITL
+#   Backend[1] = AifStateTracker          → lit la pose pour la boucle AIF
+#
+# Le SitlController envoie les waypoints AIF vers ArduPilot via MAVLink
+# (SET_POSITION_TARGET_LOCAL_NED en mode GUIDED).
+#
+# Conversion de coordonnées Isaac Sim (ENU) ↔ ArduPilot (NED) :
+#   NED_north = Isaac_Y - home_Y
+#   NED_east  = Isaac_X - home_X
+#   NED_down  = -(Isaac_Z - home_Z)
+#   NED_yaw   = π/2 - Isaac_yaw
 # ════════════════════════════════════════════════════════════════
 
-def _lazy_import_backend():
-    from pegasus.simulator.logic.backends.backend import Backend, BackendConfig
-    from pegasus.simulator.logic.state import State
-    from scipy.spatial.transform import Rotation
-    return Backend, BackendConfig, State, Rotation
-
 _Backend = None
-_BackendConfig = None
-_State = None
 _Rotation = None
 
-def _ensure_backend_imports():
-    global _Backend, _BackendConfig, _State, _Rotation
+
+def _ensure_pegasus_imports():
+    global _Backend, _Rotation
     if _Backend is None:
-        _Backend, _BackendConfig, _State, _Rotation = _lazy_import_backend()
+        from pegasus.simulator.logic.backends.backend import Backend
+        from scipy.spatial.transform import Rotation
+        _Backend, _Rotation = Backend, Rotation
 
 
-AifFlightBackend = None  
+# ── AifStateTracker : Backend léger qui expose la pose au contrôleur AIF ──
+
+AifStateTracker = None  # peuplé par _create_state_tracker_class()
 
 
-def _create_backend_class():
-    global AifFlightBackend
-    _ensure_backend_imports()
+def _create_state_tracker_class():
+    global AifStateTracker
+    _ensure_pegasus_imports()
 
-    class _AifFlightBackend(_Backend):
-      
-        def __init__(self, drone_id: int, initial_target: np.ndarray, cfg: SimConfig):
-            #param decontrole de vol du drone 
+    class _AifStateTracker(_Backend):
+        """Pegasus Backend passif : ne commande aucun moteur, stocke
+        uniquement la position / attitude pour que le SitlController
+        et le DroneAgent puissent lire la pose courante."""
+
+        def __init__(self, drone_id: int):
             self.drone_id = drone_id
-            self.cfg = cfg
-            self.target = initial_target.copy()
-            self.target_yaw = 0.0
-            self.arrived = False #pour marquer si le drone est arrivé à sa cible, utilisé pour éviter de continuer à appliquer des commandes de mouvement une fois arrivé à la cible
-
-            # State from Pegasus
             self.p = np.zeros(3)
             self.v = np.zeros(3)
             self.R = np.eye(3)
             self.w = np.zeros(3)
-            self.received_first_state = False #
+            self.received_first_state = False
+            self._vehicle = None
 
-            self.input_ref = [0.0, 0.0, 0.0, 0.0] #
-            self._vehicle = None 
-            self._update_count = 0 
-
-            # PD gains (diagonal matrices)
-            self.Kp = np.diag([cfg.kp_xy, cfg.kp_xy, cfg.kp_z])
-            self.Kd = np.diag([cfg.kd_xy, cfg.kd_xy, cfg.kd_z])
-            # Attitude PD gains
-            self.Kr = np.diag([3.0, 3.0, cfg.kp_yaw])
-            self.Kw = np.diag([0.5, 0.5, 0.3])
-            self.mass = 1.5 
-            self.g = 9.81
-
-
-        def set_target(self, x: float, y: float, z: float, yaw: float = 0.0):
-            self.target = np.array([x, y, z])
-            self.target_yaw = yaw
-            self.arrived = False
-
+        # ── lectures utiles pour l'AIF ──
         def get_position(self) -> np.ndarray:
-            if self.received_first_state:
-                return self.p.copy()
-            return self.target.copy()
+            return self.p.copy()
 
         def get_position_xy(self) -> Tuple[float, float]:
-            p = self.get_position()
-            return float(p[0]), float(p[1])
+            return float(self.p[0]), float(self.p[1])
 
         def get_yaw(self) -> float:
-            """Extract current yaw from rotation matrix."""
             if not self.received_first_state:
-                return self.target_yaw
+                return 0.0
             return float(math.atan2(self.R[1, 0], self.R[0, 0]))
 
-        def is_at_target(self) -> bool:
-            return self.arrived
-
-        # ── Pegasus Backend interface ──
-
+        # ── interface Pegasus Backend ──
         @property
         def vehicle(self):
             return self._vehicle
@@ -634,66 +615,10 @@ def _create_backend_class():
             pass
 
         def input_reference(self):
-            return self.input_ref
+            return [0.0, 0.0, 0.0, 0.0]
 
         def update(self, dt: float):
-            if not self.received_first_state:
-                return
-
-            # ── Position PD ──
-            ep = self.p - self.target
-            ev = self.v 
-
-            self.arrived = np.linalg.norm(ep[:2]) < self.cfg.waypoint_tol #Si erreur XY < tolérance, drone considéré “arrivé”.
-
-            F_des = -(self.Kp @ ep) - (self.Kd @ ev) + np.array([0.0, 0.0, self.mass * self.g])
-
-            # Current body Z axis
-            Z_B = self.R[:, 2]
-
-            # Thrust = projection of desired force onto body Z axis
-            u_1 = float(F_des @ Z_B)
-
-            # ── Desired attitude ──
-            F_norm = np.linalg.norm(F_des)
-            if F_norm > 1e-3:
-                Z_b_des = F_des / F_norm
-            else:
-                Z_b_des = np.array([0.0, 0.0, 1.0])
-
-            X_c_des = np.array([math.cos(self.target_yaw), math.sin(self.target_yaw), 0.0])
-            Z_cross_X = np.cross(Z_b_des, X_c_des)
-            Z_cross_X_norm = np.linalg.norm(Z_cross_X)
-            if Z_cross_X_norm > 1e-6:
-                Y_b_des = Z_cross_X / Z_cross_X_norm
-            else:
-                Y_b_des = np.array([0.0, 1.0, 0.0])
-            X_b_des = np.cross(Y_b_des, Z_b_des)
-
-            R_des = np.column_stack([X_b_des, Y_b_des, Z_b_des])
-
-            # ── Attitude PD ──
-            # Rotation error (vee map of skew-symmetric error)
-            e_R_matrix = R_des.T @ self.R - self.R.T @ R_des
-            e_R = 0.5 * np.array([e_R_matrix[2, 1], e_R_matrix[0, 2], e_R_matrix[1, 0]])
-
-            # Angular velocity error (desired angular velocity ≈ 0 for waypoint tracking)
-            e_w = self.w
-
-            # Torque = attitude PD
-            tau = -(self.Kr @ e_R) - (self.Kw @ e_w)
-
-            # Convert to rotor angular velocities
-            if self.vehicle:
-                self.input_ref = self.vehicle.force_and_torques_to_velocities(u_1, tau)
-
-            # Debug: print first few updates
-            self._update_count += 1
-            if self._update_count <= 3 or self._update_count % 500 == 0:
-                print(f"  [PD] D{self.drone_id} tick={self._update_count} "
-                      f"pos={self.p.round(2)} target={self.target.round(2)} "
-                      f"u1={u_1:.2f} tau={tau.round(3)} "
-                      f"rotors={[round(r, 1) for r in self.input_ref]}")
+            pass
 
         def start(self):
             pass
@@ -702,11 +627,233 @@ def _create_backend_class():
             pass
 
         def reset(self):
-            self.input_ref = [0.0, 0.0, 0.0, 0.0]
             self.received_first_state = False
-            self.arrived = False
 
-    AifFlightBackend = _AifFlightBackend
+    AifStateTracker = _AifStateTracker
+
+
+# ── Patch des params SITL dans gazebo-iris.parm ──
+
+def _patch_sitl_defaults():
+    """Injecte les paramètres SITL nécessaires dans gazebo-iris.parm AVANT
+    le lancement d'ArduPilot.  Sans ces params, le JSON backend Isaac Sim
+    (qui tourne à ~250 Hz) provoque des PreArm impossibles à passer :
+      - Main loop slow (250 < 400)
+      - Gyro rate (250 < 720)
+    """
+    parm_file = os.path.expanduser(
+        "~/ardupilot/Tools/autotest/default_params/gazebo-iris.parm"
+    )
+    if not os.path.isfile(parm_file):
+        print(f"[WARN] gazebo-iris.parm introuvable : {parm_file}")
+        return
+
+    required = {
+        "ARMING_CHECK":    "0",     # désactiver tous les PreArm checks
+        "SCHED_LOOP_RATE": "50",    # permet au loop 250 Hz > 50*1.8 = 90 Hz
+        "FS_THR_ENABLE":   "0",     # pas de failsafe throttle (pas de RC)
+        "FS_GCS_ENABLE":   "0",     # pas de failsafe GCS
+        "FS_CRASH_CHECK":  "0",     # pas de crash-detect disarm (physique SITL imparfaite)
+    }
+
+    with open(parm_file) as f:
+        lines = f.readlines()
+
+    # indexer les params existants
+    idx_map: Dict[str, int] = {}
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            parts = stripped.split()
+            if len(parts) >= 2:
+                idx_map[parts[0]] = i
+
+    modified = False
+    for param, value in required.items():
+        if param in idx_map:
+            i = idx_map[param]
+            old = lines[i].strip().split()[1] if len(lines[i].strip().split()) >= 2 else ""
+            if old != value:
+                lines[i] = f"{param} {value}\n"
+                modified = True
+                print(f"  [SITL-PARM] {param}: {old} → {value}")
+        else:
+            lines.append(f"{param} {value}\n")
+            modified = True
+            print(f"  [SITL-PARM] ajouté {param} = {value}")
+
+    if modified:
+        with open(parm_file, "w") as f:
+            f.writelines(lines)
+        print(f"[INFO] Params SITL patchés dans {parm_file}")
+    else:
+        print(f"[INFO] {parm_file} — params SITL déjà corrects")
+
+
+# ── SitlController : envoie les waypoints AIF à ArduPilot via MAVLink ──
+
+class SitlController:
+    """Interface entre la boucle AIF et ArduPilot SITL.
+
+    Lit la pose depuis l'AifStateTracker et commande le drone via
+    SET_POSITION_TARGET_LOCAL_NED sur la connexion MAVLink du
+    ArduPilotMavlinkBackend (mode GUIDED).
+    """
+
+    # constantes MAVLink
+    GUIDED_MODE = 4                     # ArduCopter GUIDED
+    # type_mask : position + yaw, ignore velocity/accel/yaw_rate
+    POS_YAW_MASK = 0b0000_1011_1111_1000  # = 0x0BF8
+
+    def __init__(
+        self,
+        drone_id: int,
+        mavlink_backend,          # ArduPilotMavlinkBackend
+        state_tracker,            # AifStateTracker
+        spawn_pos: np.ndarray,    # position Isaac Sim au spawn [x, y, z]
+        cfg: SimConfig,
+    ):
+        self.drone_id = drone_id
+        self._mav = mavlink_backend
+        self._tracker = state_tracker
+        self._spawn = spawn_pos.copy()
+        self.cfg = cfg
+        self.target = spawn_pos.copy()
+        self.target_yaw = 0.0
+        self.arrived = False
+        self._armed = False
+        self._cmd_count = 0
+
+    # ── accès à la connexion pymavlink ──
+    def _conn(self):
+        return self._mav._connection
+
+    def _drain(self):
+        """Drainer tous les messages en attente sur la connexion."""
+        conn = self._conn()
+        if conn is None:
+            return
+        while conn.recv_match(blocking=False) is not None:
+            pass
+
+    # ── passer en mode GUIDED ──
+    def set_guided(self):
+        from pymavlink import mavutil as _mav
+        conn = self._conn()
+        if conn is None:
+            return
+        conn.target_system = self.drone_id + 1
+        conn.target_component = 1
+        conn.mav.set_mode_send(
+            conn.target_system,
+            _mav.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+            self.GUIDED_MODE,
+        )
+
+    # ── forcer l'armement (bypass tous les checks) ──
+    def force_arm(self):
+        from pymavlink import mavutil as _mav
+        conn = self._conn()
+        if conn is None:
+            return
+        conn.target_system = self.drone_id + 1
+        conn.target_component = 1
+        self._drain()
+        conn.mav.command_long_send(
+            conn.target_system, conn.target_component,
+            _mav.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+            0,
+            1,      # param1 = arm
+            21196,  # param2 = force arm magic
+            0, 0, 0, 0, 0,
+        )
+        self._armed = True
+
+    # ── vérifier si le drone vole (basé sur altitude du state tracker) ──
+    def is_flying(self, min_alt: float = 0.5) -> bool:
+        """True si le drone a décollé (altitude > min_alt).
+        N'utilise PAS la connexion MAVLink (race condition avec le backend)."""
+        if not self._tracker.received_first_state:
+            return False
+        return float(self._tracker.get_position()[2]) > min_alt
+
+    # ── commande de décollage ──
+    def takeoff(self, altitude: float):
+        from pymavlink import mavutil as _mav
+        conn = self._conn()
+        if conn is None:
+            return
+        conn.mav.command_long_send(
+            conn.target_system, conn.target_component,
+            _mav.mavlink.MAV_CMD_NAV_TAKEOFF,
+            0,
+            0, 0, 0, 0, 0, 0, altitude,
+        )
+
+    # ── envoyer les params SITL en backup (le parm file est la source primaire) ──
+    def send_backup_params(self):
+        from pymavlink import mavutil as _mav
+        conn = self._conn()
+        if conn is None:
+            return
+        conn.target_system = self.drone_id + 1
+        conn.target_component = 1
+        for name, value in [(b"ARMING_CHECK", 0), (b"SCHED_LOOP_RATE", 50),
+                            (b"FS_THR_ENABLE", 0)]:
+            conn.mav.param_set_send(
+                conn.target_system, conn.target_component,
+                name, float(value),
+                _mav.mavlink.MAV_PARAM_TYPE_REAL32,
+            )
+
+    # ── envoi d'un waypoint en coordonnées Isaac Sim ──
+    def set_target(self, x: float, y: float, z: float, yaw: float = 0.0):
+        from pymavlink import mavutil as _mav
+        self.target = np.array([x, y, z])
+        self.target_yaw = yaw
+        self.arrived = False
+
+        conn = self._conn()
+        if conn is None:
+            return
+
+        # conversion ENU (Isaac Sim) → NED (ArduPilot) relative au home
+        ned_n = y - self._spawn[1]
+        ned_e = x - self._spawn[0]
+        ned_d = -(z - self._spawn[2])
+        ned_yaw = math.pi / 2 - yaw
+
+        conn.mav.set_position_target_local_ned_send(
+            0,  # time_boot_ms
+            conn.target_system, conn.target_component,
+            _mav.mavlink.MAV_FRAME_LOCAL_NED,
+            self.POS_YAW_MASK,
+            ned_n, ned_e, ned_d,
+            0, 0, 0,   # velocity
+            0, 0, 0,   # acceleration
+            ned_yaw, 0, # yaw, yaw_rate
+        )
+
+        self._cmd_count += 1
+        if self._cmd_count <= 3 or self._cmd_count % 100 == 0:
+            print(f"  [SITL] D{self.drone_id} waypoint #{self._cmd_count} "
+                  f"isaac=({x:.1f},{y:.1f},{z:.1f}) "
+                  f"ned=({ned_n:.1f},{ned_e:.1f},{ned_d:.1f})")
+
+    # ── lectures de pose (délégué au state tracker) ──
+    def get_position(self) -> np.ndarray:
+        return self._tracker.get_position()
+
+    def get_position_xy(self) -> Tuple[float, float]:
+        return self._tracker.get_position_xy()
+
+    def get_yaw(self) -> float:
+        return self._tracker.get_yaw()
+
+    def is_at_target(self) -> bool:
+        pos = self.get_position()
+        self.arrived = np.linalg.norm(pos[:2] - self.target[:2]) < self.cfg.waypoint_tol
+        return self.arrived
 
 
 # ════════════════════════════════════════════════════════════════
@@ -881,7 +1028,7 @@ class DroneAgent:
         self.last_ig = 0.0
         self.total_dist = 0.0
         self._prev_xy = (sx, sy)
-        self.backend: Optional[AifFlightBackend] = None
+        self.backend: Optional["SitlController"] = None
         self.lidar: Optional[LidarReader] = None
         # diagnostic data (populated each step for logging)
         self.lidar_diag: Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]] = None
@@ -895,7 +1042,7 @@ class DroneAgent:
         self.active: bool = True   # False = drone hors service (landed)
         self.last_innovation: float = 0.0  # innovation mesurée au dernier step
 
-    def setup_physical(self, backend: AifFlightBackend, lidar: LidarReader):
+    def setup_physical(self, backend: "SitlController", lidar: LidarReader):
         self.backend = backend
         self.lidar = lidar
 
@@ -1568,28 +1715,46 @@ def setup_viewport_camera(cfg: SimConfig):
 
 
 def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
-    """Create Pegasus Multirotors with AIF flight backends + PhysX LiDAR sensors."""
+    """Crée les Multirotors Pegasus avec ArduPilot SITL + PhysX LiDAR."""
     from pegasus.simulator.params import ROBOTS
     from pegasus.simulator.logic.vehicles.multirotor import Multirotor, MultirotorConfig
     from pegasus.simulator.logic.sensors.barometer import Barometer
     from pegasus.simulator.logic.sensors.imu import IMU
     from pegasus.simulator.logic.sensors.gps import GPS
+    from pegasus.simulator.logic.backends.ardupilot_mavlink_backend import (
+        ArduPilotMavlinkBackend, ArduPilotMavlinkBackendConfig,
+    )
+    from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
-    # create AifFlightBackend as a proper Backend subclass
-    _create_backend_class()
+    # créer AifStateTracker comme sous-classe de Backend
+    _create_state_tracker_class()
+
+    ardupilot_dir = PegasusInterface().ardupilot_path
 
     multirotors = []
+    controllers: List[SitlController] = []
     for agent in agents:
         gx = agent.trail[0][0]
         gy = agent.trail[0][1]
 
         sx = gx + cfg.origin_x
         sy = gy + cfg.origin_y
+        spawn_pos = np.array([sx, sy, 0.1])
 
-        backend = AifFlightBackend(agent.id, np.array([sx, sy, cfg.fly_altitude]), cfg)
+        # Backend 0 : pont capteurs/moteurs vers SITL
+        mav_cfg = ArduPilotMavlinkBackendConfig({
+            "vehicle_id": agent.id,
+            "ardupilot_autolaunch": True,
+            "ardupilot_dir": ardupilot_dir,
+            "ardupilot_vehicle_model": "gazebo-iris",
+        })
+        mav_backend = ArduPilotMavlinkBackend(config=mav_cfg)
+
+        # Backend 1 : lecture de pose pour la boucle AIF
+        tracker = AifStateTracker(agent.id)
 
         mc = MultirotorConfig()
-        mc.backends = [backend]
+        mc.backends = [mav_backend, tracker]
         mc.sensors = [Barometer(), IMU(), GPS()]
 
         prim_path = f"/World/Drone_{agent.id:02d}"
@@ -1599,16 +1764,20 @@ def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
         )
         multirotors.append(drone)
 
-        # attach real PhysX LiDAR
+        # contrôleur SITL (envoie les waypoints AIF via MAVLink)
+        controller = SitlController(agent.id, mav_backend, tracker, spawn_pos, cfg)
+        controllers.append(controller)
+
+        # LiDAR PhysX
         lidar = LidarReader(agent.id, prim_path, cfg)
-        agent.setup_physical(backend, lidar)
+        agent.setup_physical(controller, lidar)
 
         print(
             f"[INFO] Drone {agent.id} — grid({gx:.1f},{gy:.1f}) "
-            f"→ world({sx:.1f},{sy:.1f}) — PD backend + PhysX LiDAR"
+            f"→ world({sx:.1f},{sy:.1f}) — ArduPilot SITL + PhysX LiDAR"
         )
 
-    return multirotors
+    return multirotors, controllers
 
 
 def main():
@@ -1652,7 +1821,10 @@ def main():
         gy = max(8.0, cfg.env_height * 0.20)
         agents.append(DroneAgent(i, gx, gy, cfg))
 
-    create_physical_drones(agents, cfg)
+    # ── Patcher les params SITL AVANT de créer les drones (= avant le launch SITL) ──
+    _patch_sitl_defaults()
+
+    multirotors, controllers = create_physical_drones(agents, cfg)
     diag_logger = DiagnosticLogger(cfg.output_dir, cfg)
     coordinator = SwarmCoordinator(agents, cfg, diag_logger=diag_logger)
     logger = DataLogger(cfg.output_dir)
@@ -1669,16 +1841,97 @@ def main():
     print(f"[INFO] {cfg.sim_steps_per_aif} physics ticks per AIF decision")
     print(f"[INFO] Dashboard → {cfg.output_dir}/aif_state.json")
 
-    # ── take-off: let PD controllers lift drones to altitude ──
-    print("[INFO] Taking off…")
-    for _ in range(300):
+    # ══════════════════════════════════════════════════════════════
+    # Séquence de décollage ArduPilot SITL
+    #
+    # Le JSON backend d'Isaac Sim tourne à ~250 Hz. Les params
+    # gazebo-iris.parm (patchés ci-dessus) fixent SCHED_LOOP_RATE=50
+    # et ARMING_CHECK=0 pour que les PreArm passent.
+    #
+    # Phase 1 : laisser SITL initialiser (baro, EKF, GPS)
+    # Phase 2 : envoyer params backup + GUIDED + force arm
+    # Phase 3 : vérifier armement avec retry
+    # Phase 4 : takeoff + attendre altitude
+    # ══════════════════════════════════════════════════════════════
+
+    # ── Phase 1 : laisser SITL s'initialiser (baro, EKF, GPS) ──
+    #    2500 ticks ≈ 25 s en simulation. Nécessaire pour que l'EKF ait
+    #    un GPS fix et puisse estimer la position (sinon « Need Position
+    #    Estimate » empêche d'armer même avec force_arm en mode GUIDED).
+    print("[INFO] Phase 1/3 : initialisation ArduPilot SITL + EKF (2500 ticks) …")
+    for _ in range(2500):
         if not running or not sim_app.is_running():
             break
         world.step(render=not cfg.headless)
-        # Start accumulating LiDAR scans during takeoff
+
+    # ── Phase 2 : GUIDED + ARM + TAKEOFF (séquentiel par drone) ──
+    #    On envoie arm ET takeoff dans la même « respiration » pour
+    #    minimiser le temps armé au sol (crash-detect).
+    print("[INFO] Phase 2/3 : GUIDED + ARM + TAKEOFF …")
+    for ctrl in controllers:
+        ctrl.send_backup_params()
+    for _ in range(100):
+        world.step(render=not cfg.headless)
+
+    for ctrl in controllers:
+        ctrl.set_guided()
+        for _ in range(30):
+            world.step(render=not cfg.headless)
+        ctrl.force_arm()
+        for _ in range(10):
+            world.step(render=not cfg.headless)
+        ctrl.takeoff(cfg.fly_altitude)
+        print(f"  [SITL] D{ctrl.drone_id} → GUIDED + ARM + TAKEOFF({cfg.fly_altitude:.1f}m)")
+        # petit gap entre les drones pour que SITL traite
+        for _ in range(200):
+            world.step(render=not cfg.headless)
+
+    # ── Phase 3 : attente altitude + retry ciblé ──
+    #    On surveille l'altitude via le state tracker (pas de heartbeat =
+    #    pas de race condition avec le backend Pegasus).
+    #    Retry arm+takeoff uniquement pour les drones qui ne montent pas.
+    print(f"[INFO] Phase 3/3 : attente altitude ({cfg.fly_altitude:.1f} m) …")
+    drone_flying = [False] * len(controllers)
+    RETRY_TICKS = (500, 1000, 1500, 2000, 2500)
+
+    for tick in range(3000):
+        if not running or not sim_app.is_running():
+            break
+        world.step(render=not cfg.headless)
         for agent in agents:
             agent.accumulate_lidar()
-    print("[INFO] Take-off complete.\n")
+
+        # vérifier altitude
+        for i, ctrl in enumerate(controllers):
+            if not drone_flying[i] and ctrl.is_flying(cfg.fly_altitude * 0.5):
+                drone_flying[i] = True
+                print(f"  [TAKEOFF] D{ctrl.drone_id} en vol ✓")
+
+        # retry ciblé pour les drones pas encore en vol
+        if tick in RETRY_TICKS:
+            for i, ctrl in enumerate(controllers):
+                if not drone_flying[i]:
+                    ctrl.set_guided()
+                    ctrl.force_arm()
+                    ctrl.takeoff(cfg.fly_altitude)
+                    print(f"  [RETRY] D{ctrl.drone_id} re-arm+takeoff (tick={tick})")
+
+        # monitoring périodique
+        if tick % 300 == 299:
+            positions = [a.backend.get_position() for a in agents if a.backend]
+            alts = [p[2] for p in positions]
+            alt_str = ", ".join(f"D{i}={a:.2f}m" for i, a in enumerate(alts))
+            n_fly = sum(drone_flying)
+            print(f"  [TAKEOFF] tick={tick} {n_fly}/{len(controllers)} en vol | {alt_str}")
+
+        if all(drone_flying):
+            print("[INFO] Tous les drones en vol !")
+            break
+
+    if not all(drone_flying):
+        not_fly = [i for i, f in enumerate(drone_flying) if not f]
+        print(f"[WARN] Drones pas en vol après 3000 ticks : {not_fly}")
+    print("[INFO] Décollage terminé.\n")
 
     # ── Resilience demo events ──
     kill_drone_at = getattr(cfg, '_kill_drone_at', -1)
