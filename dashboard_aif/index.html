@@ -91,7 +91,54 @@
         </div>
     </section>
 
-    <!-- ── CHARTS 2×2 ── -->
+    <!-- ══════════════════════════════════════════════════════════
+         CAMERA FEEDS + QR DETECTION
+         ══════════════════════════════════════════════════════════ -->
+    <section class="camera-section">
+        <div class="card">
+            <div class="card-header">
+                <h2>📷 Drone Camera Feeds — QR Code Detection</h2>
+                <div class="qr-global-stats" id="qrGlobalStats">
+                    <span class="badge badge-qr-success" id="badgeQrDecoded">✓ 0</span>
+                    <span class="badge badge-qr-fail" id="badgeQrFailed">✗ 0</span>
+                    <span class="badge badge-qr-rate" id="badgeQrRate">0%</span>
+                </div>
+            </div>
+            <div class="camera-feeds" id="cameraFeeds">
+                <div class="camera-empty">Waiting for camera frames…</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── QR KPI ROW ── -->
+    <section class="kpi-row kpi-row-qr">
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" id="kpiQrTotal">0</div>
+            <div class="kpi-label">Frames Processed</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--green)" id="kpiQrDecoded">0</div>
+            <div class="kpi-label">QR Decoded</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--red)" id="kpiQrFailed">0</div>
+            <div class="kpi-label">QR Failed</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--yellow)" id="kpiQrCacheHits">0</div>
+            <div class="kpi-label">Cache Hits</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" id="kpiQrRate">0%</div>
+            <div class="kpi-label">Success Rate</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--purple)" id="kpiQrData">—</div>
+            <div class="kpi-label">Last QR Data</div>
+        </div>
+    </section>
+
+    <!-- ── CHARTS 2×3 ── -->
     <section class="charts-grid">
         <div class="card card-chart">
             <div class="card-header"><h3>Entropy Over Time</h3></div>
@@ -114,8 +161,8 @@
             <div class="chart-wrap"><canvas id="chartInnovation"></canvas></div>
         </div>
         <div class="card card-chart">
-            <div class="card-header"><h3>Active Drones</h3></div>
-            <div class="chart-wrap"><canvas id="chartActiveDrones"></canvas></div>
+            <div class="card-header"><h3>QR Detection Success Rate (%)</h3></div>
+            <div class="chart-wrap"><canvas id="chartQrRate"></canvas></div>
         </div>
     </section>
 
@@ -130,6 +177,7 @@
                             <th>ID</th><th>Status</th><th>Position</th><th>Action</th>
                             <th>Free Energy</th><th>Info Gain</th><th>Innovation</th>
                             <th>Distance</th><th>Local H</th>
+                            <th>QR Status</th><th>QR Rate</th>
                         </tr>
                     </thead>
                     <tbody id="droneTableBody"></tbody>

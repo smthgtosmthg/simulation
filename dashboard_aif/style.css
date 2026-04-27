@@ -17,6 +17,7 @@
     --purple:     #a78bfa;
     --yellow:     #fbbf24;
     --pink:       #f472b6;
+    --orange:     #fb923c;
     --radius:     10px;
     --shadow:     0 2px 12px rgba(0,0,0,.35);
 }
@@ -352,15 +353,178 @@ tr:hover td { background: rgba(51,65,85,.2); }
 .event-cause { color: var(--yellow); }
 .event-detail { color: var(--text-dim); }
 
-/* ── CHARTS GRID responsive override ── */
+/* ══════════════════════════════════════════
+   CAMERA FEEDS + QR DETECTION
+   ══════════════════════════════════════════ */
+
+.camera-section { width: 100%; }
+
+.qr-global-stats {
+    display: flex;
+    gap: .4rem;
+}
+
+.badge-qr-success { background: rgba(16,185,129,.18); color: var(--green); }
+.badge-qr-fail    { background: rgba(239,68,68,.18);  color: var(--red); }
+.badge-qr-rate    { background: rgba(167,139,250,.18); color: var(--purple); }
+
+.camera-feeds {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.camera-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: .85rem;
+    padding: 2rem;
+    grid-column: 1 / -1;
+}
+
+/* ── Single camera feed card ── */
+
+.cam-card {
+    background: #0a0f1a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color .3s;
+}
+.cam-card[data-status="success"] { border-color: var(--green); }
+.cam-card[data-status="failed"]  { border-color: var(--red); }
+.cam-card[data-status="cached"]  { border-color: var(--yellow); }
+
+.cam-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .5rem .75rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+}
+
+.cam-drone-label {
+    font-weight: 600;
+    font-size: .82rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.cam-status-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .68rem;
+    font-weight: 600;
+    padding: .15rem .5rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.cam-status-badge.success { background: rgba(16,185,129,.2); color: var(--green); }
+.cam-status-badge.failed  { background: rgba(239,68,68,.2);  color: var(--red); }
+.cam-status-badge.cached  { background: rgba(251,191,36,.2); color: var(--yellow); }
+.cam-status-badge.none    { background: var(--bg-hover);      color: var(--text-dim); }
+
+.cam-frame-wrap {
+    position: relative;
+    width: 100%;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.cam-frame-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.cam-frame-placeholder {
+    color: var(--text-dim);
+    font-size: .8rem;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+/* Tabs: Raw / Annotated */
+.cam-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--bg-card);
+}
+
+.cam-tab {
+    flex: 1;
+    text-align: center;
+    padding: .35rem 0;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+}
+.cam-tab:hover { color: var(--text); background: var(--bg-hover); }
+.cam-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+.cam-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .4rem .75rem;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    font-size: .7rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim);
+}
+
+.cam-qr-data {
+    color: var(--purple);
+    font-weight: 600;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cam-method {
+    font-size: .65rem;
+}
+
+.cam-stats {
+    display: flex;
+    gap: .75rem;
+}
+
+.cam-stat-ok   { color: var(--green); }
+.cam-stat-fail { color: var(--red); }
+.cam-stat-rate { color: var(--text-dim); }
+
+/* ── QR KPI Row ── */
+
+.kpi-row-qr .kpi-qr {
+    border: 1px solid rgba(167,139,250,.2);
+}
+
+.kpi-qr-val {
+    font-size: 1.3rem !important;
+    color: var(--purple) !important;
+}
 
 /* ── RESPONSIVE ── */
 
 @media (max-width: 1200px) {
     .charts-grid { grid-template-columns: 1fr 1fr; }
+    .camera-feeds { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 }
 
 @media (max-width: 900px) {
     .charts-grid { grid-template-columns: 1fr; }
+    .camera-feeds { grid-template-columns: 1fr; }
     .topbar-center { display: none; }
 }

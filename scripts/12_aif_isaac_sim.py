@@ -1842,12 +1842,40 @@ def main():
     coordinator = SwarmCoordinator(agents, cfg, diag_logger=diag_logger)
     logger = DataLogger(cfg.output_dir)
 
+    # ── QR Code System : génération + panneau 3D + caméras ──
+    from qr_code_system import setup_qr_system, initialize_cameras
+    qr_data = os.getenv("QR_CODE_DATA", "DRONE_WAREHOUSE_INSPECTION_001")
+    # Position confirmed optimal by simulation:
+    # - X=0   : centre du couloir principal (aucune étagère devant)
+    # - Y=-5  : face à la zone de spawn des drones (Y≈-2), en espace ouvert
+    # - Z=2   : exactement à la hauteur de vol (fly_altitude=2.0m)
+    # Rotation (-90,0,0) : normale du panneau pointe +Y → face aux drones
+    # qui arrivent depuis Y=-2 en direction Y=-5.
+    qr_panel_pos = (0.0, -5.0, 2.0)
+    drone_prim_paths = [f"/World/Drone_{a.id:02d}" for a in agents]
+    drone_ids = [a.id for a in agents]
+    qr_sys = setup_qr_system(
+        qr_data=qr_data,
+        output_dir=cfg.output_dir,
+        drone_prim_paths=drone_prim_paths,
+        drone_ids=drone_ids,
+        panel_position=qr_panel_pos,
+        panel_size=2.5,             # large panel for reliable detection
+        cache_ttl=3.0,
+        capture_interval=5,
+        camera_resolution=(640, 480),
+    )
+    print(f"[INFO] QR code system ready — data='{qr_data}'")
+
     world.reset()
 
     # ── Initialize LiDAR sensors (must happen after world.reset) ──
     for agent in agents:
         if agent.lidar is not None:
             agent.lidar.initialize()
+
+    # ── Initialize cameras (must happen after world.reset) ──
+    initialize_cameras(qr_sys["cameras"])
 
     print(f"[INFO] {cfg.num_drones} drones | grid {cfg.grid_width}×{cfg.grid_height}")
     print("[INFO] Using factory template colliders from USD scene")
@@ -1952,6 +1980,12 @@ def main():
     if kill_drone_at >= 0:
         print(f"[INFO] Resilience demo: drone 0 will be killed at step {kill_drone_at}")
 
+    # ── Start QR decoder thread ──
+    qr_decoder = qr_sys["decoder_thread"]
+    qr_decoder.start()
+    qr_capture = qr_sys["capture_helper"]
+    print("[INFO] QR decoder thread started")
+
     # ── AIF exploration loop ──
     aif_step = 0
     plateau_counter = 0          # nombre de steps consécutifs sans progression
@@ -1979,6 +2013,8 @@ def main():
             # Accumulate partial LiDAR scans each physics tick
             for agent in agents:
                 agent.accumulate_lidar()
+            # Capture camera frames (every N ticks, handled internally)
+            qr_capture.tick()
 
         # log for dashboard
         state = coordinator.get_full_state(obstacles)
@@ -2023,6 +2059,14 @@ def main():
     logger.log(state, coordinator.history)
     m = coordinator.history[-1] if coordinator.history else {}
     print(f"\n[INFO] Done — step {aif_step} | entropy {m.get('mean_entropy','?')} | coverage {m.get('exploration_pct','?')}%")
+
+    # ── Stop QR decoder thread and log stats ──
+    qr_decoder.stop()
+    qr_stats = qr_decoder.stats()
+    print(f"[QR] Final stats: decoded={qr_stats['decoded']} "
+          f"failed={qr_stats['failed']} total={qr_stats['total']}")
+    print(f"[QR] Cache: {qr_stats['cache']}")
+
     sim_app.close()
 
 
