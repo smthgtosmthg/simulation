@@ -23,6 +23,8 @@
         <span class="badge badge-green" id="badgeCoverage">0 %</span>
         <span class="badge badge-blue" id="badgeEntropy">H = 0.693</span>
         <span class="badge badge-phase" id="badgePhase">NORMAL</span>
+        <span class="badge" id="badgePlanner">planner: aif</span>
+        <span class="badge" id="badgeArch">arch: centralized</span>
     </div>
     <div class="topbar-right">
         <div class="status-pill" id="statusPill">
@@ -33,8 +35,18 @@
     </div>
 </header>
 
-<!-- ── MAIN CONTENT ── -->
-<main class="dashboard">
+<!-- ── TABS NAV ── -->
+<nav class="tabs-nav" id="tabsNav">
+    <button class="tab-btn active" data-tab="live">● Live</button>
+    <button class="tab-btn" data-tab="resilience">Resilience</button>
+    <button class="tab-btn" data-tab="ns3">NS-3</button>
+    <button class="tab-btn" data-tab="runs">Runs</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : LIVE  (contenu existant)
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel active" id="tab-live">
 
     <!-- ── BIG MAP ── -->
     <section class="map-section">
@@ -195,6 +207,127 @@
                 <div id="eventsList"></div>
             </div>
         </div>
+    </section>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : RESILIENCE
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel" id="tab-resilience">
+    <section class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value phase-value" id="resPhaseValue">NORMAL</div>
+            <div class="kpi-label">Current phase</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="resStressT0">—</div>
+            <div class="kpi-label">stress_t0 step</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="resDurable">0</div>
+            <div class="kpi-label">durable streak</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="resCause">—</div>
+            <div class="kpi-label">cause</div>
+        </div>
+    </section>
+    <section class="charts-grid charts-grid-2">
+        <div class="card card-chart"><div class="card-header"><h3>Entropy + phase bands</h3></div>
+            <div class="chart-wrap"><canvas id="chartResEntropy"></canvas></div>
+        </div>
+        <div class="card card-chart"><div class="card-header"><h3>Coverage + phase bands</h3></div>
+            <div class="chart-wrap"><canvas id="chartResCoverage"></canvas></div>
+        </div>
+        <div class="card card-chart"><div class="card-header"><h3>Innovation (mean + EMA + spike)</h3></div>
+            <div class="chart-wrap"><canvas id="chartResInnovation"></canvas></div>
+        </div>
+        <div class="card card-chart"><div class="card-header"><h3>Active drones</h3></div>
+            <div class="chart-wrap"><canvas id="chartResActive"></canvas></div>
+        </div>
+    </section>
+    <section class="resilience-section">
+        <div class="card">
+            <div class="card-header"><h3>Resilience events (timeline)</h3></div>
+            <div class="events-wrap" id="resEventsWrap"><div id="resEventsList"></div></div>
+        </div>
+    </section>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : NS-3 NETWORK
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel" id="tab-ns3">
+    <section class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Mode">none</div>
+            <div class="kpi-label">NS-3 mode</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Cloud">UP</div>
+            <div class="kpi-label">Cloud link</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3QueueSize">0</div>
+            <div class="kpi-label">Queue size</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Dropped">0</div>
+            <div class="kpi-label">Msgs dropped</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Sent">0</div>
+            <div class="kpi-label">Msgs sent</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Delivered">0</div>
+            <div class="kpi-label">Msgs delivered</div>
+        </div>
+    </section>
+    <section class="charts-grid charts-grid-2">
+        <div class="card">
+            <div class="card-header"><h3>Latency matrix (ms)</h3></div>
+            <div class="ns3-heatmap-wrap"><canvas id="ns3Heatmap"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Latency time-series (per pair)</h3></div>
+            <div class="chart-wrap"><canvas id="ns3TimeSeries"></canvas></div>
+        </div>
+    </section>
+    <section class="drone-table-section">
+        <div class="card">
+            <div class="card-header"><h3>Pairs detail</h3></div>
+            <div class="table-wrap">
+                <table id="ns3Table">
+                    <thead><tr><th>Pair</th><th>Latency (ms)</th><th>Jitter (ms)</th><th>RX packets</th><th>Link</th></tr></thead>
+                    <tbody id="ns3TableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : RUNS
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel" id="tab-runs">
+    <section class="runs-layout">
+        <aside class="runs-list-card card">
+            <div class="card-header">
+                <h3>Recorded runs</h3>
+                <button class="btn-refresh" id="btnRefreshRuns" title="Refresh">⟳</button>
+            </div>
+            <div class="runs-list" id="runsList"><div class="runs-empty">Loading…</div></div>
+        </aside>
+        <section class="runs-detail card">
+            <div class="card-header">
+                <h3 id="runDetailTitle">Select a run</h3>
+                <span id="runDetailMeta" class="badge">—</span>
+            </div>
+            <div class="runs-gallery" id="runsGallery">
+                <div class="runs-empty">Click a run on the left to view its artifacts.</div>
+            </div>
+        </section>
     </section>
 </main>
 

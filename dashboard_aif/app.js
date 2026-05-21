@@ -41,15 +41,17 @@ function togglePause() {
 async function poll() {
     if (paused) return;
     try {
-        const [stateRes, histRes, qrRes] = await Promise.all([
+        const [stateRes, histRes, qrRes, ns3Res] = await Promise.all([
             fetch('/api/state'),
             fetch('/api/history'),
             fetch('/api/qr_state'),
+            fetch('/api/ns3'),
         ]);
         if (!stateRes.ok || !histRes.ok) { setOffline(); return; }
         const state = await stateRes.json();
         const history = await histRes.json();
         const qrState = qrRes.ok ? await qrRes.json() : null;
+        const ns3Data = ns3Res && ns3Res.ok ? await ns3Res.json() : null;
 
         const isNew = state.step !== lastStep;
         lastStep = state.step;
@@ -62,6 +64,9 @@ async function poll() {
             updateDroneTable(state, qrState);
             updateCharts(history, state);
             updateResilienceEvents(state);
+            // ── New tabs (rendent même si invisibles, négligeable en CPU) ──
+            updateResilienceTab(state, history);
+            updateNs3Tab(state, ns3Data);
         }
 
         // QR state updates independently (from decoder thread)
@@ -274,6 +279,17 @@ function updateBadges(state) {
     const badgePhase = document.getElementById('badgePhase');
     badgePhase.textContent = phase.toUpperCase();
     badgePhase.setAttribute('data-phase', phase);
+
+    // Planner / arch badges (Tâches 1 et 2)
+    const planner = state.planner || 'aif';
+    const archCfg = state.arch_configured || 'centralized';
+    const archEff = state.arch_effective || archCfg;
+    const bp = document.getElementById('badgePlanner');
+    if (bp) bp.textContent = `planner: ${planner}`;
+    const ba = document.getElementById('badgeArch');
+    if (ba) {
+        ba.textContent = archEff === archCfg ? `arch: ${archCfg}` : `arch: ${archCfg}→${archEff}`;
+    }
 }
 
 // ════════════════════════════════════════════════════
@@ -679,18 +695,483 @@ function updateResilienceEvents(state) {
     // Build HTML (newest first)
     const reversed = [...events].reverse();
     listEl.innerHTML = reversed.map(ev => {
+        const evType = ev.type || ev.event || 'evt';
         let iconCls = 'stress';
         let icon = '⚠';
-        if (ev.event === 'recovered') { iconCls = 'recovered'; icon = '✓'; }
-        else if (ev.event === 'resolved') { iconCls = 'resolved'; icon = '✓'; }
+        if (evType === 'recovery_reached' || evType === 'recovered') { iconCls = 'recovered'; icon = '✓'; }
+        else if (evType === 'stress_resolved' || evType === 'resolved') { iconCls = 'resolved'; icon = '✓'; }
         const cause = ev.cause ? `<span class="event-cause">${ev.cause}</span>` : '';
         const detail = ev.entropy !== undefined ? `<span class="event-detail">H=${ev.entropy} innov=${ev.innovation || '—'}</span>` : '';
         return `<div class="event-item">
             <span class="event-icon ${iconCls}">${icon}</span>
             <span class="event-step">step ${ev.step}</span>
-            <span>${ev.event}</span>
+            <span>${evType}</span>
             ${cause}
             ${detail}
         </div>`;
     }).join('');
+}
+
+// ════════════════════════════════════════════════════
+// ══════════  TABS + RESILIENCE + NS-3 + RUNS  ════════
+// ════════════════════════════════════════════════════
+
+const PHASE_COLORS = {
+    normal:   'rgba(16,185,129,0.0)',  // transparent: pas de bande
+    recovery: 'rgba(239,68,68,0.18)',
+    durable:  'rgba(251,191,36,0.18)',
+};
+
+// ── Plugin Chart.js : bandes verticales colorées selon resilience_phase ──
+const phaseBandsPlugin = {
+    id: 'phaseBands',
+    beforeDatasetsDraw(chart, args, opts) {
+        const phases = (opts && opts.phases) || [];
+        if (!phases.length) return;
+        const { ctx, scales: { x }, chartArea } = chart;
+        if (!x || !chartArea) return;
+        ctx.save();
+        for (const band of phases) {
+            const color = PHASE_COLORS[band.phase] || 'transparent';
+            if (color === 'transparent' || color === PHASE_COLORS.normal) continue;
+            const sx = x.getPixelForValue(band.start);
+            const ex = x.getPixelForValue(band.end);
+            if (!Number.isFinite(sx) || !Number.isFinite(ex)) continue;
+            ctx.fillStyle = color;
+            ctx.fillRect(sx, chartArea.top, ex - sx, chartArea.bottom - chartArea.top);
+        }
+        ctx.restore();
+    }
+};
+if (typeof Chart !== 'undefined') Chart.register(phaseBandsPlugin);
+
+// ── Phase bands extraction from history ──
+function extractPhaseBands(history) {
+    if (!history || !history.length) return [];
+    const bands = [];
+    let curPhase = history[0].resilience_phase || 'normal';
+    let start = history[0].step;
+    for (let i = 1; i < history.length; i++) {
+        const ph = history[i].resilience_phase || 'normal';
+        if (ph !== curPhase) {
+            bands.push({ phase: curPhase, start, end: history[i].step });
+            curPhase = ph;
+            start = history[i].step;
+        }
+    }
+    bands.push({ phase: curPhase, start, end: history[history.length - 1].step });
+    return bands;
+}
+
+let chartResEntropy, chartResCoverage, chartResInnovation, chartResActive;
+
+function initResilienceCharts() {
+    const baseOpts = JSON.parse(JSON.stringify(CHART_DEFAULTS));
+    baseOpts.plugins = {
+        legend: { display: true, labels: { color: '#94a3b8', font: { size: 10 } } },
+        phaseBands: { phases: [] },
+    };
+
+    chartResEntropy = new Chart(document.getElementById('chartResEntropy'), {
+        type: 'line',
+        data: { labels: [], datasets: [
+            { label: 'mean entropy', data: [], borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59,130,246,.08)', fill: true,
+              tension: .3, pointRadius: 0, borderWidth: 2 },
+        ]},
+        options: JSON.parse(JSON.stringify(baseOpts)),
+    });
+
+    chartResCoverage = new Chart(document.getElementById('chartResCoverage'), {
+        type: 'line',
+        data: { labels: [], datasets: [
+            { label: 'coverage %', data: [], borderColor: '#10b981',
+              backgroundColor: 'rgba(16,185,129,.08)', fill: true,
+              tension: .3, pointRadius: 0, borderWidth: 2 },
+        ]},
+        options: (function(){
+            const o = JSON.parse(JSON.stringify(baseOpts));
+            o.scales.y.min = 0; o.scales.y.max = 100;
+            return o;
+        })(),
+    });
+
+    chartResInnovation = new Chart(document.getElementById('chartResInnovation'), {
+        type: 'line',
+        data: { labels: [], datasets: [
+            { label: 'mean', data: [], borderColor: '#f472b6',
+              backgroundColor: 'rgba(244,114,182,.08)', fill: false,
+              tension: .3, pointRadius: 0, borderWidth: 1.5 },
+            { label: 'EMA', data: [], borderColor: '#fbbf24',
+              backgroundColor: 'rgba(251,191,36,.12)', fill: true,
+              tension: .3, pointRadius: 0, borderWidth: 2 },
+            { label: 'spike (EMA + kσ)', data: [], borderColor: '#ef4444',
+              borderDash: [4, 3], fill: false,
+              tension: 0, pointRadius: 0, borderWidth: 1.2 },
+        ]},
+        options: JSON.parse(JSON.stringify(baseOpts)),
+    });
+
+    chartResActive = new Chart(document.getElementById('chartResActive'), {
+        type: 'line',
+        data: { labels: [], datasets: [
+            { label: 'active drones', data: [], borderColor: '#22d3ee',
+              backgroundColor: 'rgba(34,211,238,.12)', fill: true,
+              tension: 0, pointRadius: 0, borderWidth: 2, stepped: true },
+        ]},
+        options: JSON.parse(JSON.stringify(baseOpts)),
+    });
+}
+
+function updateResilienceTab(state, history) {
+    if (!chartResEntropy) return;  // not initialized yet
+    if (!history || !history.length) return;
+
+    const labels = history.map(h => h.step);
+    const ent = history.map(h => h.mean_entropy || 0);
+    const cov = history.map(h => h.exploration_pct || 0);
+    const innM = history.map(h => h.innovation_mean || 0);
+    const innE = history.map(h => h.innovation_ema || 0);
+    // Spike threshold approx : on n'a pas k·σ par step, on dessine EMA + 2·|EMA-mean|
+    const spike = history.map(h => {
+        const e = h.innovation_ema || 0;
+        const m = h.innovation_mean || 0;
+        return e + 2.0 * Math.abs(m - e);
+    });
+    const active = history.map(h => h.active_drones || 0);
+    const bands = extractPhaseBands(history);
+
+    [chartResEntropy, chartResCoverage, chartResInnovation, chartResActive].forEach(c => {
+        if (!c.options.plugins.phaseBands) c.options.plugins.phaseBands = {};
+        c.options.plugins.phaseBands.phases = bands;
+    });
+
+    chartResEntropy.data.labels = labels;
+    chartResEntropy.data.datasets[0].data = ent;
+    chartResEntropy.update();
+
+    chartResCoverage.data.labels = labels;
+    chartResCoverage.data.datasets[0].data = cov;
+    chartResCoverage.update();
+
+    chartResInnovation.data.labels = labels;
+    chartResInnovation.data.datasets[0].data = innM;
+    chartResInnovation.data.datasets[1].data = innE;
+    chartResInnovation.data.datasets[2].data = spike;
+    chartResInnovation.update();
+
+    chartResActive.data.labels = labels;
+    chartResActive.data.datasets[0].data = active;
+    chartResActive.update();
+
+    // KPI cards
+    const r = state.resilience || {};
+    const phase = (state.metrics && state.metrics.resilience_phase) || r.phase || 'normal';
+    const pv = document.getElementById('resPhaseValue');
+    if (pv) {
+        pv.textContent = phase.toUpperCase();
+        pv.setAttribute('data-phase', phase);
+    }
+    const stressT0 = document.getElementById('resStressT0');
+    if (stressT0) stressT0.textContent = (r.stress_t0 != null && r.stress_t0 >= 0) ? r.stress_t0 : '—';
+    const durable = document.getElementById('resDurable');
+    if (durable) durable.textContent = r.durable_count || 0;
+    const cause = document.getElementById('resCause');
+    if (cause) cause.textContent = r.cause || '—';
+
+    // Events timeline
+    const evList = document.getElementById('resEventsList');
+    if (evList) {
+        const events = r.events || [];
+        if (!events.length) {
+            evList.innerHTML = '<div class="runs-empty">No event yet</div>';
+        } else {
+            const sorted = [...events].sort((a, b) => (b.step || 0) - (a.step || 0));
+            evList.innerHTML = sorted.map(ev => {
+                const t = ev.type || ev.event || '?';
+                return `<div class="event-item">
+                    <span class="event-step">step ${ev.step}</span>
+                    <span>${t}</span>
+                    ${ev.cause ? `<span class="event-cause">${ev.cause}</span>` : ''}
+                </div>`;
+            }).join('');
+        }
+    }
+}
+
+// ══════════ NS-3 TAB ══════════
+
+let ns3TimeChart;
+const ns3HistoryByPair = {};  // "i-j" -> [{step, lat}, ...]
+const NS3_MAX_HIST = 200;
+
+function initNs3Charts() {
+    const opts = JSON.parse(JSON.stringify(CHART_DEFAULTS));
+    opts.plugins = { legend: { display: true, labels: { color: '#94a3b8', font: { size: 10 } } } };
+    ns3TimeChart = new Chart(document.getElementById('ns3TimeSeries'), {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: opts,
+    });
+}
+
+function pairKey(a, b) {
+    const i = Math.min(a, b), j = Math.max(a, b);
+    return `${i}-${j}`;
+}
+
+function pairColor(k) {
+    // deterministic color from string hash
+    let h = 0;
+    for (const c of k) h = (h * 31 + c.charCodeAt(0)) | 0;
+    const colors = ['#22d3ee', '#34d399', '#a78bfa', '#fbbf24', '#f472b6', '#fb923c', '#ef4444', '#3b82f6'];
+    return colors[Math.abs(h) % colors.length];
+}
+
+function updateNs3Tab(state, ns3Data) {
+    const net = (state && state.network) || {};
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('ns3Mode', state.ns3_mode || net.ns3_mode || 'none');
+    setText('ns3Cloud', net.cloud_link_active ? 'UP' : 'DOWN');
+    setText('ns3QueueSize', net.queue_size != null ? net.queue_size : 0);
+    setText('ns3Dropped', net.msg_dropped != null ? net.msg_dropped : 0);
+    setText('ns3Sent', net.msg_sent != null ? net.msg_sent : 0);
+    setText('ns3Delivered', net.msg_delivered != null ? net.msg_delivered : 0);
+
+    const cloudEl = document.getElementById('ns3Cloud');
+    if (cloudEl) {
+        cloudEl.style.color = net.cloud_link_active ? 'var(--green)' : 'var(--red)';
+    }
+
+    // Pairs : prendre depuis ns3Data si dispo (CSV NS-3) sinon depuis network.ns3_pairs
+    let pairs = [];
+    if (ns3Data && Array.isArray(ns3Data.pairs)) pairs = ns3Data.pairs;
+    else if (Array.isArray(net.ns3_pairs)) pairs = net.ns3_pairs;
+
+    // Table
+    const tbody = document.getElementById('ns3TableBody');
+    if (tbody) {
+        if (!pairs.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim)">No NS-3 data — start with --ns3 wifi|5g</td></tr>';
+        } else {
+            const cuts = new Set((net.cut_pairs || []).map(s => s.split('-').map(Number).sort().join('-')));
+            tbody.innerHTML = pairs.map(p => {
+                const a = p.a, b = p.b;
+                const k = pairKey(a, b);
+                const cut = cuts.has(k) || net.all_drone_links_cut;
+                return `<tr>
+                    <td>${a} ↔ ${b}</td>
+                    <td>${(p.latency_ms || 0).toFixed(2)}</td>
+                    <td>${(p.jitter_ms || 0).toFixed(2)}</td>
+                    <td>${p.rx_packets != null ? p.rx_packets : '—'}</td>
+                    <td>${cut ? '<span style="color:var(--red)">CUT</span>' : '<span style="color:var(--green)">OK</span>'}</td>
+                </tr>`;
+            }).join('');
+        }
+    }
+
+    // Heatmap
+    const nDrones = (state.drones || []).length;
+    renderNs3Heatmap(pairs, nDrones);
+
+    // Time-series : append current step latencies per pair
+    if (state.step != null && pairs.length) {
+        const labelSet = new Set();
+        for (const p of pairs) {
+            const k = pairKey(p.a, p.b);
+            if (!ns3HistoryByPair[k]) ns3HistoryByPair[k] = [];
+            ns3HistoryByPair[k].push({ step: state.step, lat: p.latency_ms || 0 });
+            if (ns3HistoryByPair[k].length > NS3_MAX_HIST) {
+                ns3HistoryByPair[k].splice(0, ns3HistoryByPair[k].length - NS3_MAX_HIST);
+            }
+            labelSet.add(state.step);
+        }
+        if (ns3TimeChart) {
+            const allSteps = new Set();
+            Object.values(ns3HistoryByPair).forEach(h => h.forEach(p => allSteps.add(p.step)));
+            const sortedSteps = [...allSteps].sort((a, b) => a - b);
+            ns3TimeChart.data.labels = sortedSteps;
+            ns3TimeChart.data.datasets = Object.keys(ns3HistoryByPair).map(k => {
+                const m = new Map(ns3HistoryByPair[k].map(p => [p.step, p.lat]));
+                return {
+                    label: k,
+                    data: sortedSteps.map(s => m.has(s) ? m.get(s) : null),
+                    borderColor: pairColor(k),
+                    backgroundColor: 'transparent',
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    tension: 0.2,
+                    spanGaps: true,
+                };
+            });
+            ns3TimeChart.update();
+        }
+    }
+}
+
+function renderNs3Heatmap(pairs, nDrones) {
+    const canvas = document.getElementById('ns3Heatmap');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const n = Math.max(nDrones || 0,
+        ...pairs.map(p => Math.max(p.a, p.b) + 1));
+    if (!n || !pairs.length) {
+        canvas.width = canvas.parentElement.clientWidth || 320;
+        canvas.height = 200;
+        ctx.fillStyle = '#0a0f1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '13px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No NS-3 data', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    const M = Array.from({ length: n }, () => Array(n).fill(null));
+    let maxLat = 0;
+    for (const p of pairs) {
+        const lat = p.latency_ms || 0;
+        M[p.a][p.b] = lat;
+        M[p.b][p.a] = lat;
+        if (lat > maxLat) maxLat = lat;
+    }
+    if (maxLat <= 0) maxLat = 1.0;
+
+    const wrap = canvas.parentElement;
+    const size = Math.min(wrap.clientWidth || 320, 320);
+    canvas.width = size;
+    canvas.height = size;
+    const cell = Math.floor((size - 30) / n);
+    const off = 25;
+
+    ctx.fillStyle = '#0a0f1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // labels
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < n; i++) {
+        ctx.fillText(`D${i}`, off + i * cell + cell / 2, 14);
+        ctx.fillText(`D${i}`, 12, off + i * cell + cell / 2 + 3);
+    }
+
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            const v = M[i][j];
+            const x = off + j * cell;
+            const y = off + i * cell;
+            if (v == null || i === j) {
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(x, y, cell - 1, cell - 1);
+            } else {
+                const t = Math.min(1, v / maxLat);
+                // colormap : bleu → violet → rouge
+                const r = Math.round(40 + 200 * t);
+                const g = Math.round(60 - 30 * t);
+                const b = Math.round(200 - 180 * t);
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.fillRect(x, y, cell - 1, cell - 1);
+                ctx.fillStyle = '#fff';
+                ctx.font = `${Math.max(8, cell/4)}px JetBrains Mono, monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(v.toFixed(1), x + cell / 2, y + cell / 2 + 3);
+            }
+        }
+    }
+}
+
+// ══════════ RUNS TAB ══════════
+
+let _runsCache = [];
+
+async function loadRunsList() {
+    const listEl = document.getElementById('runsList');
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="runs-empty">Loading…</div>';
+    try {
+        const r = await fetch('/api/runs');
+        if (!r.ok) throw new Error('runs not available');
+        const data = await r.json();
+        const runs = data.runs || [];
+        _runsCache = runs;
+        if (!runs.length) {
+            listEl.innerHTML = '<div class="runs-empty">No runs yet. Run scripts/run_all_experiments.sh.</div>';
+            return;
+        }
+        listEl.innerHTML = runs.map(run => {
+            const cfg = run.config || {};
+            const tag = cfg.run_tag || run.tag || '?';
+            const planner = cfg.planner || '?';
+            const arch = cfg.arch || '?';
+            const ns3 = cfg.ns3_mode || 'none';
+            return `<div class="run-item" data-tag="${run.tag}">
+                <div class="run-name">${run.tag}</div>
+                <div class="run-meta">
+                    <span class="badge">${planner}</span>
+                    <span class="badge">${arch}</span>
+                    <span class="badge">${ns3}</span>
+                </div>
+                <div class="run-time">${run.mtime || ''}</div>
+            </div>`;
+        }).join('');
+        listEl.querySelectorAll('.run-item').forEach(el => {
+            el.addEventListener('click', () => loadRunGallery(el.dataset.tag));
+        });
+    } catch (e) {
+        listEl.innerHTML = `<div class="runs-empty">Error loading runs: ${e.message}</div>`;
+    }
+}
+
+function loadRunGallery(tag) {
+    const run = _runsCache.find(r => r.tag === tag);
+    if (!run) return;
+    const titleEl = document.getElementById('runDetailTitle');
+    const metaEl  = document.getElementById('runDetailMeta');
+    const galleryEl = document.getElementById('runsGallery');
+    if (titleEl) titleEl.textContent = run.tag;
+    if (metaEl) {
+        const c = run.config || {};
+        metaEl.textContent = `${c.planner || '?'} · ${c.arch || '?'} · ns3=${c.ns3_mode || 'none'}`;
+    }
+    const images = run.images || [];
+    if (!images.length) {
+        galleryEl.innerHTML = '<div class="runs-empty">No images for this run.</div>';
+        return;
+    }
+    galleryEl.innerHTML = images.map(img => {
+        const src = `/api/run/${encodeURIComponent(run.tag)}/img/${encodeURIComponent(img)}`;
+        return `<div class="run-img-card">
+            <div class="run-img-name">${img}</div>
+            <img class="run-img" src="${src}" alt="${img}"
+                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'runs-empty',textContent:'(missing) '+'${img}'}))">
+        </div>`;
+    }).join('');
+}
+
+// ══════════ TAB SWITCHING ══════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+    // Init resilience + ns-3 charts (separate from main initCharts to avoid double)
+    if (typeof Chart !== 'undefined') {
+        try { initResilienceCharts(); } catch (e) { console.warn('initResilienceCharts:', e); }
+        try { initNs3Charts(); } catch (e) { console.warn('initNs3Charts:', e); }
+    }
+    const refresh = document.getElementById('btnRefreshRuns');
+    if (refresh) refresh.addEventListener('click', loadRunsList);
+    // Load runs list on first display
+    loadRunsList();
+});
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.tab-panel').forEach(p =>
+        p.classList.toggle('active', p.id === `tab-${tab}`));
+    // Re-fetch runs when switching to Runs tab (cheap)
+    if (tab === 'runs') loadRunsList();
 }

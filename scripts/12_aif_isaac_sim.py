@@ -10,7 +10,7 @@ import signal
 import sys
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -64,7 +64,9 @@ class SimConfig:
     alpha: int = 30            # durée phase recovery (steps)
     beta: int = 60             # durée phase durable (steps)
     H_target: float = 0.44    # entropie cible pour considérer recovery OK
-    innov_target: float = 0.16 # innovation cible
+    innov_target: float = 0.16 # innovation cible (fallback si pas de baseline pré-stress)
+    innov_recovery_ratio: float = 1.2  # multiplicateur sur la baseline innov pré-stress
+    innov_baseline_window: int = 5     # taille de la fenêtre glissante pré-stress
     k_sigma: float = 2.0      # seuil spike = EMA + k_σ·σ
     ema_alpha: float = 0.05   # lissage EMA
     # poids recovery
@@ -84,9 +86,32 @@ class SimConfig:
     target_coverage: float = 95.0
     output_dir: str = "/tmp"
 
+    # ── Planner (Tâche 1) ──
+    planner: str = "aif"              # "aif" | "heuristic"
+    heuristic_frontier_radius: int = 5  # rayon en cellules pour compter les frontières
+    heuristic_w_coll: float = 5.0     # poids collision (= w_collision par défaut)
 
-    world_origin_x: float = float("nan")  
-    world_origin_y: float = float("nan")   
+    # ── Architecture (Tâche 2) ──
+    arch: str = "centralized"         # "centralized" | "distributed"
+    neighbor_radius_m: float = 10.0   # rayon de fusion entre voisins (distribué)
+
+    # ── NS-3 (Tâche 3) ──
+    ns3_mode: str = "wifi"            # "none" | "wifi" | "5g"
+    cloud_latency_ms: float = 20.0    # latence drone↔cloud (centralisé)
+    ns3_sim_time: int = 600           # secondes que NS-3 simule
+    physics_dt_s: float = 1.0 / 60.0  # Isaac Sim ~60 Hz par défaut
+
+    # ── Cuts de liens (Tâche 4) ──
+    cut_cloud_at_step: int = -1       # step où on coupe le lien cloud (-1 = jamais)
+    cut_drone_link: str = ""          # "" | "0-1" | "all"
+    cut_drone_link_at_step: int = -1  # step où on applique cut_drone_link
+
+    # ── Run capture (Tâche 5) ──
+    run_tag: str = "default"          # nom du dossier logs/runs/run_*_<tag>/
+    runs_dir: str = ""                # racine où écrire (auto = <workspace>/logs/runs)
+
+    world_origin_x: float = float("nan")
+    world_origin_y: float = float("nan")
 
     @property
     def origin_x(self) -> float:
@@ -323,26 +348,45 @@ class ResilienceState:
     durable_count: int = 0       # compteur de steps consécutifs post-recovery
     cause: str = ""              # "drone_lost" | "innovation_spike"
     events: List[Dict] = None    # log des événements pour le dashboard
+    # Baseline pré-stress de innov_mean (médiane fenêtre glissante).
+    # Sert à dériver un innov_threshold adaptatif : la cible 0.16 du SimConfig
+    # initial est inatteignable car innov_mean reste à 0.5-0.8 même au repos.
+    innov_baseline: float = 0.0
 
     def __post_init__(self):
         if self.events is None:
             self.events = []
 
-    def trigger(self, step: int, cause: str):
+    def trigger(self, step: int, cause: str, innov_baseline: float = 0.0):
         self.stress_active = True
         self.stress_t0 = step
         self.recovered_at = -1
         self.durable_count = 0
         self.cause = cause
+        self.innov_baseline = innov_baseline
         self.events.append({
             "step": step, "type": "stress_start", "cause": cause,
+            "innov_baseline": round(innov_baseline, 4),
         })
-        print(f"  [RESILIENCE] ⚠ STRESS ACTIVATED at step {step}: {cause}")
+        print(f"  [RESILIENCE] ⚠ STRESS ACTIVATED at step {step}: {cause} "
+              f"(innov_baseline={innov_baseline:.3f})")
+
+    def _innov_threshold(self, cfg: SimConfig) -> float:
+        """Seuil d'innovation à atteindre pour déclarer recovery.
+
+        Si une baseline pré-stress a été capturée, on accepte tout ce qui est
+        ≤ baseline × ratio (retour proche du régime nominal). Sinon on retombe
+        sur la constante cfg.innov_target.
+        """
+        if self.innov_baseline > 0:
+            return self.innov_baseline * cfg.innov_recovery_ratio
+        return cfg.innov_target
 
     def update(self, step: int, H: float, innov: float, cfg: SimConfig):
         if not self.stress_active:
             return
-        recovered_now = (H <= cfg.H_target) and (innov <= cfg.innov_target)
+        innov_thr = self._innov_threshold(cfg)
+        recovered_now = (H <= cfg.H_target) and (innov <= innov_thr)
         if self.recovered_at < 0:
             if recovered_now:
                 self.recovered_at = step
@@ -350,8 +394,10 @@ class ResilienceState:
                 self.events.append({
                     "step": step, "type": "recovery_reached",
                     "entropy": round(H, 4), "innovation": round(innov, 4),
+                    "innov_threshold": round(innov_thr, 4),
                 })
-                print(f"  [RESILIENCE] ✓ Recovery reached at step {step} (H={H:.4f})")
+                print(f"  [RESILIENCE] ✓ Recovery reached at step {step} "
+                      f"(H={H:.4f}, innov={innov:.3f} ≤ {innov_thr:.3f})")
         else:
             if recovered_now:
                 self.durable_count += 1
@@ -383,6 +429,7 @@ class ResilienceState:
             "stress_t0": self.stress_t0,
             "recovered_at": self.recovered_at,
             "durable_count": self.durable_count,
+            "innov_baseline": round(self.innov_baseline, 4),
             "events": self.events[-20:],  # last 20 events
         }
 
@@ -534,6 +581,186 @@ def select_action(
             cand_diag[0]["reason"] = "forced-stay"
             cand_diag[0]["G"] = 0.0
     idx = softmax_sample(G, cfg.softmax_temp, rng)
+    return ACTIONS[idx], cand_diag, idx
+
+
+# ════════════════════════════════════════════════════════════════
+# 5b. Heuristique Yamauchi frontier-based (Tâche 1) — alternative à AIF
+# ════════════════════════════════════════════════════════════════
+# Approche Yamauchi 1997 — guidée par BFS multi-source au lieu d'un comptage
+# strictement local :
+#   1. Détection des cellules frontières : libre (p<0.4) adjacente à inconnu
+#      (0.4 ≤ p ≤ 0.6).
+#   2. BFS multi-source depuis TOUTES les frontières, propagation à travers
+#      les cellules navigables (p < occ_threshold) → carte dist_to_frontier.
+#   3. Pour chaque drone : score d'une action candidate = -dist[next_cell]
+#      (plus on est près d'une frontière, mieux c'est) - λ_coll · Σ(1/d_voisin).
+#   4. Fallback radius-local si pas de frontière atteignable (carte saturée
+#      ou drone dans une poche isolée).
+#
+# Multi-drones : pas d'assignation Hungarian explicite — le terme de
+# collision (rayon 8m, poids cfg.heuristic_w_coll) éloigne deux drones qui
+# convergeraient vers la même frontière.
+#
+# Même signature et même format de retour que select_action() pour pouvoir
+# switcher via cfg.planner sans rien casser ailleurs.
+
+def _count_frontiers(gx: int, gy: int, belief: BeliefGrid, radius: int) -> int:
+    """Compte les cellules-frontières dans un carré de demi-côté `radius`
+    autour de (gx, gy). Utilisé comme fallback Yamauchi quand aucune
+    frontière n'est atteignable par BFS (ex : carte fully-explored).
+    """
+    n = 0
+    p = belief.probability
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            nx, ny = gx + dx, gy + dy
+            if not belief.in_bounds(nx, ny):
+                continue
+            pc = p[ny, nx]
+            if pc >= 0.4:           # pas libre → pas une frontière
+                continue
+            for ddx, ddy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                mx, my = nx + ddx, ny + ddy
+                if belief.in_bounds(mx, my):
+                    pm = p[my, mx]
+                    if 0.4 <= pm <= 0.6:
+                        n += 1
+                        break
+    return n
+
+
+def _build_frontier_distance_map(
+    belief: BeliefGrid, cfg: SimConfig
+) -> Tuple[np.ndarray, np.ndarray, int]:
+    """BFS multi-source Yamauchi.
+
+    - Frontière = cellule libre (p<0.4) avec ≥1 voisin 4-connecté inconnu
+      (0.4 ≤ p ≤ 0.6).
+    - BFS propagé à travers les cellules navigables (p < occ_threshold).
+    - dist[y,x] = nombre minimal de pas grille pour atteindre une frontière,
+      ou INF (= H*W + 1) si inatteignable.
+
+    Returns (dist_map[H,W] int32, frontier_mask[H,W] bool, n_frontiers).
+    """
+    from collections import deque
+
+    p = belief.probability
+    H, W = p.shape
+    free = p < 0.4
+    unknown = (p >= 0.4) & (p <= 0.6)
+    navigable = p < cfg.occ_threshold
+
+    # Frontier mask vectorisé : free + ≥1 voisin 4-connecté inconnu
+    frontier = np.zeros_like(free, dtype=bool)
+    frontier[:, :-1] |= free[:, :-1] & unknown[:,  1:]
+    frontier[:,  1:] |= free[:,  1:] & unknown[:, :-1]
+    frontier[:-1, :] |= free[:-1, :] & unknown[ 1:, :]
+    frontier[ 1:, :] |= free[ 1:, :] & unknown[:-1, :]
+
+    INF = H * W + 1
+    dist = np.full((H, W), INF, dtype=np.int32)
+    q: "deque[Tuple[int,int]]" = deque()
+    ys, xs = np.where(frontier)
+    for y, x in zip(ys.tolist(), xs.tolist()):
+        dist[y, x] = 0
+        q.append((x, y))
+    while q:
+        x, y = q.popleft()
+        d = int(dist[y, x]) + 1
+        for ddx, ddy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + ddx, y + ddy
+            if 0 <= nx < W and 0 <= ny < H and navigable[ny, nx] and dist[ny, nx] > d:
+                dist[ny, nx] = d
+                q.append((nx, ny))
+    return dist, frontier, int(frontier.sum())
+
+
+def select_action_heuristic(
+    pos_x: float, pos_y: float,
+    others: List[Tuple[float, float]],
+    belief: BeliefGrid,
+    fused: Optional[BeliefGrid],
+    cfg: SimConfig,
+    rng: np.random.Generator,
+    resilience_phase: str = "normal",
+) -> Tuple[Tuple[str, float, float], List[Dict], int]:
+    """Yamauchi frontier-based : BFS multi-source + collision avoidance.
+    Signature identique à select_action() pour switch transparent."""
+    plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
+    n = len(ACTIONS)
+    scores = np.full(n, -math.inf)
+    cand_diag: List[Dict] = []
+
+    dist_map, frontier_mask, n_frontiers = _build_frontier_distance_map(plan_belief, cfg)
+    H, W = plan_belief.probability.shape
+    INF = H * W + 1
+    drone_gx, drone_gy = plan_belief.world_to_grid(pos_x, pos_y)
+    # Yamauchi inutilisable si aucune frontière OU drone dans une poche isolée
+    use_bfs = n_frontiers > 0 and dist_map[drone_gy, drone_gx] < INF
+
+    for i, (name, dx, dy) in enumerate(ACTIONS):
+        nx = pos_x + dx * cfg.step_size
+        ny = pos_y + dy * cfg.step_size
+        entry: Dict[str, Any] = {
+            "idx": i, "name": name,
+            "nx": round(nx, 3), "ny": round(ny, 3),
+            "valid": False, "reason": "",
+            "ig": 0.0, "frontier": 0.0,
+            "move": 0.0, "coll": 0.0, "G": 1e6,
+        }
+        if not (0.5 <= nx < cfg.env_width - 0.5 and 0.5 <= ny < cfg.env_height - 0.5):
+            entry["reason"] = "out-of-bounds"
+            cand_diag.append(entry)
+            continue
+        gx, gy = plan_belief.world_to_grid(nx, ny)
+        if plan_belief.probability[gy, gx] >= cfg.occ_threshold:
+            entry["reason"] = f"occupied p={plan_belief.probability[gy, gx]:.2f}"
+            cand_diag.append(entry)
+            continue
+
+        if use_bfs:
+            d = int(dist_map[gy, gx])
+            if d >= INF:
+                # cellule navigable mais aucune frontière atteignable depuis ici
+                front_score = -1e4
+                front_log = float(d)  # = INF, marqueur isolé
+            else:
+                front_score = -float(d)
+                # bonus si la cellule next EST une frontière (pousse l'observation)
+                if frontier_mask[gy, gx]:
+                    front_score += 0.5
+                front_log = float(d)  # distance grille à la frontière la plus proche
+        else:
+            # Fallback radius-local (aucune frontière OU drone dans une poche)
+            front_score = float(_count_frontiers(
+                gx, gy, plan_belief, cfg.heuristic_frontier_radius
+            ))
+            front_log = front_score
+
+        coll = sum(
+            1.0 / (math.hypot(nx - ox, ny - oy) + 0.1)
+            for ox, oy in others if math.hypot(nx - ox, ny - oy) < 8.0
+        )
+        score = front_score - cfg.heuristic_w_coll * coll
+        scores[i] = score
+        entry.update({
+            "valid": True, "reason": "ok",
+            "ig": 0.0,
+            "frontier": round(front_log, 2),
+            "move": 0.0 if name == "stay" else 1.0,
+            "coll": round(coll, 4),
+            "G": round(-score, 4),
+        })
+        cand_diag.append(entry)
+
+    if not np.isfinite(scores).any():
+        cand_diag[0].update({"valid": True, "reason": "forced-stay", "G": 0.0})
+        return ACTIONS[0], cand_diag, 0
+
+    best = scores.max()
+    ties = [i for i in range(n) if scores[i] == best]
+    idx = int(rng.choice(ties)) if len(ties) > 1 else ties[0]
     return ACTIONS[idx], cand_diag, idx
 
 
@@ -1054,6 +1281,10 @@ class DroneAgent:
         # resilience
         self.active: bool = True   # False = drone hors service (landed)
         self.last_innovation: float = 0.0  # innovation mesurée au dernier step
+        # ── Tâche 2 (distributed) : belief fusionnée localement avec voisins ──
+        self.local_fused: Optional[BeliefGrid] = None
+        # ── Tâche 3 (NS-3) : cache des beliefs reçus avec latence ──
+        self.last_received_belief: Dict[int, BeliefGrid] = {}
 
     def setup_physical(self, backend: "SitlController", lidar: LidarReader):
         self.backend = backend
@@ -1122,6 +1353,24 @@ class DroneAgent:
             self.backend.set_target(wx, wy, 0.1)
         print(f"  [RESILIENCE] 🛬 Drone {self.id} LANDED (out of service)")
 
+    def fuse_with_neighbors(self, neighbors: List["DroneAgent"],
+                             prior_lo: float) -> BeliefGrid:
+        """Tâche 2 (distribué) : fusionne self.belief avec celles des voisins
+        (les beliefs sont prises dans le cache last_received_belief si la
+        latence NS-3 force un délai ; sinon on prend le snapshot courant).
+
+        Le résultat est stocké dans self.local_fused puis renvoyé pour
+        que SwarmCoordinator l'utilise comme `plan_belief` à la place du
+        fused_belief global (qui reste calculé pour le dashboard)."""
+        beliefs = [self.belief]
+        for n in neighbors:
+            # Si on a un belief en cache (reçu via la queue) pour ce voisin,
+            # on l'utilise (= belief retardée par NS-3). Sinon, snapshot direct.
+            cached = self.last_received_belief.get(n.id)
+            beliefs.append(cached if cached is not None else n.belief)
+        self.local_fused = fuse_beliefs_logodds(beliefs, prior_lo)
+        return self.local_fused
+
     def plan(self, others: List[Tuple[float, float]], fused: Optional[BeliefGrid],
              resilience_phase: str = "normal"):
         if not self.active:
@@ -1152,7 +1401,12 @@ class DroneAgent:
             self._stag_steps = 0
             print(f"  [STAG] D{self.id} stuck {self._STAG_THRESHOLD} steps → forced {name}")
         else:
-            (name, dx, dy), self.candidates_diag, self.selected_idx = select_action(
+            # ── Dispatch planner : AIF (free energy) ou heuristique frontier-based ──
+            if self.cfg.planner == "heuristic":
+                planner_fn = select_action_heuristic
+            else:
+                planner_fn = select_action
+            (name, dx, dy), self.candidates_diag, self.selected_idx = planner_fn(
                 cx, cy, others, self.belief, fused, self.cfg, self.rng,
                 resilience_phase=resilience_phase,
             )
@@ -1202,10 +1456,177 @@ class DroneAgent:
 
 
 # ════════════════════════════════════════════════════════════════
+# 10b. NS-3 Latency Reader (Tâche 3.3)
+# ════════════════════════════════════════════════════════════════
+#
+# Lit le CSV produit par scripts/12_ns3_bridge.py
+#   - WiFi : /tmp/ns3_output.csv             (drone_i, drone_j, latency_ms)
+#   - 5G   : /tmp/drone_latency_ns3.csv       (drone_a, drone_b, latency_ms, jitter_ms)
+# Robuste :
+#   - Fichier absent / NS-3 down → retourne {} + un warn unique
+#   - Le fichier peut être réécrit en parallèle : on ignore les lignes
+#     malformées.
+# ════════════════════════════════════════════════════════════════
+
+
+class NS3LatencyReader:
+    """Lit les latences inter-drone calculées par NS-3 en arrière-plan."""
+
+    # Fichiers que peut produire NS-3 (selon le scenario lancé par 12_ns3_bridge.py)
+    WIFI_CSV = "/tmp/ns3_output.csv"
+    LTE5G_CSV = "/tmp/drone_latency_ns3.csv"
+    LTE5G_METRICS_CSV = "/tmp/drone_5g_metrics.csv"
+
+    def __init__(self, mode: str = "none"):
+        self.mode = mode  # "none" | "wifi" | "5g"
+        self._warned_missing = False
+        # cache pour exposer au dashboard
+        self.last_pairs: Dict[Tuple[int, int], Dict[str, float]] = {}
+
+    @property
+    def active(self) -> bool:
+        return self.mode in ("wifi", "5g")
+
+    def _csv_path(self) -> str:
+        if self.mode == "wifi":
+            return self.WIFI_CSV
+        if self.mode == "5g":
+            # essayer drone_latency_ns3.csv d'abord, puis le format métrique
+            if os.path.exists(self.LTE5G_CSV):
+                return self.LTE5G_CSV
+            return self.LTE5G_METRICS_CSV
+        return ""
+
+    def read_latencies(self) -> Dict[Tuple[int, int], float]:
+        """Retourne dict {(i,j): latency_ms} avec i<j. Vide si NS-3 indispo."""
+        if not self.active:
+            return {}
+        path = self._csv_path()
+        if not path or not os.path.exists(path):
+            if not self._warned_missing:
+                print(f"  [NS-3] ⚠ Fichier latences absent ({path}) "
+                      f"→ utilisation latence=0 (dégradation gracieuse)")
+                self._warned_missing = True
+            return {}
+        import csv as _csv
+        latencies: Dict[Tuple[int, int], float] = {}
+        pairs_full: Dict[Tuple[int, int], Dict[str, float]] = {}
+        try:
+            with open(path) as f:
+                # auto-detect dialect : drone_i/drone_j ou drone_a/drone_b
+                reader = _csv.DictReader(f)
+                for row in reader:
+                    try:
+                        i_key = "drone_i" if "drone_i" in row else "drone_a"
+                        j_key = "drone_j" if "drone_j" in row else "drone_b"
+                        i = int(row[i_key])
+                        j = int(row[j_key])
+                        lat = float(row.get("latency_ms", 0.0))
+                        jitter = float(row.get("jitter_ms", 0.0)) if "jitter_ms" in row else 0.0
+                        rx = int(row.get("rx_packets", 0)) if "rx_packets" in row else 0
+                        key = (min(i, j), max(i, j))
+                        latencies[key] = lat
+                        pairs_full[key] = {
+                            "latency_ms": round(lat, 3),
+                            "jitter_ms": round(jitter, 3),
+                            "rx_packets": rx,
+                        }
+                    except (ValueError, KeyError, TypeError):
+                        continue
+        except (IOError, OSError):
+            return {}
+        self.last_pairs = pairs_full
+        return latencies
+
+    def pair_latency(self, i: int, j: int, fallback: float = 0.0) -> float:
+        """Retourne la latence pour la paire (i,j) ou fallback si absente."""
+        key = (min(i, j), max(i, j))
+        return self.last_pairs.get(key, {}).get("latency_ms", fallback)
+
+
+# ════════════════════════════════════════════════════════════════
+# 10c. Message Queue avec délais (Tâche 3.4)
+# ════════════════════════════════════════════════════════════════
+#
+# File FIFO horodatée : un message envoyé au step t avec latency_ms est
+# délivré au step t + ceil(latency_ms / step_dt_ms) - 1.
+#   - step_dt_ms = sim_steps_per_aif * physics_dt_s * 1000
+#     (≈ 1000 ms pour 60 ticks à 60 Hz)
+#   - latency_ms None ou < 0 → drop (lien coupé)
+# Les beliefs en attente restent dans le cache last_received_belief des
+# drones, qui utilisent la dernière belief reçue pour la fusion locale.
+# ════════════════════════════════════════════════════════════════
+
+
+class MessageQueue:
+    """File d'attente FIFO horodatée pour les broadcasts de beliefs.
+
+    Un message envoyé au step t avec latency_ms arrive seulement au
+    step t + ceil(latency_ms / step_dt_ms). Si latency_ms est None ou <0,
+    le message est droppé (compté pour le dashboard).
+    """
+
+    def __init__(self):
+        # entries : list of (arrival_step, src, dst, payload)
+        self._pending: List[Tuple[int, int, int, Any]] = []
+        self.dropped: int = 0       # cumul des messages droppés
+        self.sent: int = 0          # cumul des envois acceptés
+        self.delivered: int = 0     # cumul livrés
+
+    def send(self, src: int, dst: int, payload: Any,
+             current_step: int, latency_ms: Optional[float],
+             step_dt_ms: float):
+        if latency_ms is None or latency_ms < 0:
+            self.dropped += 1
+            return
+        # 0 ms → délivré dès ce step (équivalent à pas de réseau)
+        steps_delay = max(0, math.ceil(latency_ms / max(step_dt_ms, 1e-3)))
+        arrival = current_step + steps_delay
+        self._pending.append((arrival, src, dst, payload))
+        self.sent += 1
+
+    def deliver(self, current_step: int) -> List[Tuple[int, int, Any]]:
+        """Retourne tous les messages dont arrival <= current_step et les
+        retire de la queue. Liste de (src, dst, payload)."""
+        ready: List[Tuple[int, int, Any]] = []
+        remaining: List[Tuple[int, int, int, Any]] = []
+        for entry in self._pending:
+            arr, src, dst, payload = entry
+            if arr <= current_step:
+                ready.append((src, dst, payload))
+            else:
+                remaining.append(entry)
+        self._pending = remaining
+        self.delivered += len(ready)
+        return ready
+
+    @property
+    def size(self) -> int:
+        return len(self._pending)
+
+    def stats(self) -> Dict[str, int]:
+        return {
+            "queue_size": self.size,
+            "sent": self.sent,
+            "delivered": self.delivered,
+            "dropped": self.dropped,
+        }
+
+
+# ════════════════════════════════════════════════════════════════
 # 11. Swarm Coordinator
 # ════════════════════════════════════════════════════════════════
 
 class SwarmCoordinator:
+    """Coordonne perception/fusion/planification. Selon `cfg.arch`,
+    la fusion peut être centralisée (un seul fused global) ou distribuée
+    (chaque drone fusionne avec ses voisins dans un rayon).
+    Intègre les latences NS-3 (Tâche 3) et les cuts de liens (Tâche 4)."""
+
+    # sentinelles pour les broadcasts (utilisés dans MessageQueue)
+    CLOUD_SRC = -99
+    CLOUD_DST_ALL = -1
+
     def __init__(self, agents: List[DroneAgent], cfg: SimConfig,
                  diag_logger: Optional["DiagnosticLogger"] = None):
         self.agents = agents
@@ -1219,18 +1640,150 @@ class SwarmCoordinator:
         self.resilience = ResilienceState()
         self.innov_ema = 0.0
         self.innov_var = 0.0
+        # Buffer glissant d'innov_mean pré-stress : sert à fixer
+        # innov_baseline au moment où trigger() est appelé. Tant qu'on est
+        # 'normal', on continue de le remplir ; au trigger, on capture la
+        # médiane.
+        from collections import deque
+        self._innov_pre_stress = deque(maxlen=max(1, cfg.innov_baseline_window))
+        # ── Tâche 3 : NS-3 + message queue ──
+        self.ns3 = NS3LatencyReader(cfg.ns3_mode)
+        self.msg_queue = MessageQueue()
+        # belief reçue du cloud (centralisé) après latence
+        self._cloud_belief: Optional[BeliefGrid] = None
+        # ── Tâche 4 : état des cuts ──
+        self.cloud_link_active: bool = True
+        self.cut_pairs: Set[frozenset] = set()
+        self.all_drone_links_cut: bool = False
 
     @property
     def active_agents(self) -> List[DroneAgent]:
         return [a for a in self.agents if a.active]
+
+    def _trigger_stress(self, cause: str):
+        """Centralise tous les triggers : capture la baseline pré-stress."""
+        if self._innov_pre_stress:
+            sorted_vals = sorted(self._innov_pre_stress)
+            n = len(sorted_vals)
+            baseline = sorted_vals[n // 2] if n % 2 else \
+                0.5 * (sorted_vals[n // 2 - 1] + sorted_vals[n // 2])
+        else:
+            baseline = 0.0
+        self.resilience.trigger(self.step_count, cause, innov_baseline=baseline)
 
     def kill_drone(self, drone_id: int):
         """Disable a drone and trigger resilience recovery."""
         for a in self.agents:
             if a.id == drone_id and a.active:
                 a.land()
-                self.resilience.trigger(self.step_count, f"drone_{drone_id}_lost")
+                self._trigger_stress(f"drone_{drone_id}_lost")
                 return
+
+    # ── Tâche 2 / 4 : architecture effective ──
+    def effective_arch(self) -> str:
+        """Si le cloud est coupé et qu'on était centralized → fallback distribué."""
+        if self.cfg.arch == "centralized" and not self.cloud_link_active:
+            return "distributed"
+        return self.cfg.arch
+
+    def _is_link_cut(self, a: int, b: int) -> bool:
+        if self.all_drone_links_cut:
+            return True
+        return frozenset({a, b}) in self.cut_pairs
+
+    def _step_dt_ms(self) -> float:
+        return self.cfg.sim_steps_per_aif * self.cfg.physics_dt_s * 1000.0
+
+    # ── Tâche 4 : appliquer les cuts programmés à temps ──
+    def _apply_scheduled_cuts(self):
+        if (self.cfg.cut_cloud_at_step >= 0 and
+                self.step_count == self.cfg.cut_cloud_at_step and
+                self.cloud_link_active):
+            self.cloud_link_active = False
+            self._trigger_stress("cloud_link_lost")
+            print(f"\n  [CUT] ☁ Cloud link CUT at step {self.step_count}")
+            if self.cfg.arch == "centralized":
+                print(f"  [CUT] Auto-failover centralized → distributed")
+
+        if (self.cfg.cut_drone_link and
+                self.cfg.cut_drone_link_at_step >= 0 and
+                self.step_count == self.cfg.cut_drone_link_at_step):
+            spec = self.cfg.cut_drone_link.strip()
+            if spec == "all":
+                if not self.all_drone_links_cut:
+                    self.all_drone_links_cut = True
+                    self._trigger_stress("all_drone_links_lost")
+                    print(f"\n  [CUT] ✂ ALL drone↔drone links CUT at step {self.step_count}")
+            elif "-" in spec:
+                try:
+                    a, b = spec.split("-")
+                    i, j = int(a), int(b)
+                    pair = frozenset({i, j})
+                    if pair not in self.cut_pairs:
+                        self.cut_pairs.add(pair)
+                        self._trigger_stress(f"drone_link_{i}-{j}_lost")
+                        print(f"\n  [CUT] ✂ Drone link {i}↔{j} CUT at step {self.step_count}")
+                except ValueError:
+                    print(f"  [WARN] Invalid --cut-drone-link spec: {spec!r}")
+
+    # ── Tâche 3 : envoi des beliefs dans la queue ──
+    def _broadcast_beliefs(self, active: List[DroneAgent]):
+        step_dt_ms = self._step_dt_ms()
+        eff = self.effective_arch()
+
+        if eff == "centralized":
+            if not self.cloud_link_active:
+                return
+            # Régression-free : sans NS-3, pas de latence cloud → bypass de la
+            # queue, _cloud_belief = fused_belief instantanément. Identique
+            # au comportement avant Tâche 3.
+            if not self.ns3.active:
+                self._cloud_belief = self.fused_belief
+                return
+            # Avec NS-3 actif : latence = cloud_latency_ms + médiane(latences NS-3)
+            median_pair_lat = 0.0
+            if self.ns3.last_pairs:
+                lats = sorted(v["latency_ms"] for v in self.ns3.last_pairs.values())
+                if lats:
+                    median_pair_lat = lats[len(lats) // 2]
+            total_lat = self.cfg.cloud_latency_ms + median_pair_lat
+            self.msg_queue.send(
+                src=self.CLOUD_SRC, dst=self.CLOUD_DST_ALL,
+                payload=self.fused_belief.copy(),
+                current_step=self.step_count, latency_ms=total_lat,
+                step_dt_ms=step_dt_ms,
+            )
+        else:
+            # distribué : chaque drone broadcast à ses voisins dans neighbor_radius_m.
+            # On utilise la queue même sans NS-3 pour gérer proprement les cuts
+            # (drop instantané sur lien coupé) et alimenter last_received_belief.
+            R = self.cfg.neighbor_radius_m
+            for src in active:
+                for dst in active:
+                    if dst.id == src.id:
+                        continue
+                    if math.hypot(src.x - dst.x, src.y - dst.y) > R:
+                        continue
+                    # drop si lien coupé
+                    if self._is_link_cut(src.id, dst.id):
+                        self.msg_queue.send(src.id, dst.id, src.belief,
+                                            self.step_count, None, step_dt_ms)
+                        continue
+                    lat = self.ns3.pair_latency(src.id, dst.id, fallback=0.0) \
+                        if self.ns3.active else 0.0
+                    self.msg_queue.send(src.id, dst.id, src.belief.copy(),
+                                        self.step_count, lat, step_dt_ms)
+
+    def _deliver_and_cache(self):
+        """Délivre les messages prêts et met à jour les caches des drones."""
+        delivered = self.msg_queue.deliver(self.step_count)
+        agents_by_id = {a.id: a for a in self.agents}
+        for src, dst, payload in delivered:
+            if src == self.CLOUD_SRC and dst == self.CLOUD_DST_ALL:
+                # message du cloud : on stocke la dernière fused reçue
+                self._cloud_belief = payload
+            elif dst in agents_by_id:
+                agents_by_id[dst].last_received_belief[src] = payload
 
     def step(self):
         h_before = self.fused_belief.mean_entropy()
@@ -1238,60 +1791,92 @@ class SwarmCoordinator:
         if self.diag:
             self.diag.log_step_header(self.step_count + 1)
 
-        # perception (only active drones)
+        # ── Tâche 4 : déclencher les cuts si on a atteint leur step ──
+        self._apply_scheduled_cuts()
+
+        # ── 1) Perception ──
         for a in self.agents:
             a.perceive()
             if self.diag and a.active and a.lidar_diag is not None:
                 angles, ranges, hits = a.lidar_diag
                 self.diag.log_lidar(a.id, a.x, a.y, angles, ranges, hits)
 
-        # ── Innovation monitoring (adapté de AIF_controller) ──
+        # ── 2) Innovation (EMA + spike) ──
         active = self.active_agents
         if active:
             innovations = [a.last_innovation for a in active]
             innov_mean = sum(innovations) / len(innovations)
         else:
             innov_mean = 0.0
-
         err = innov_mean - self.innov_ema
         self.innov_ema += self.cfg.ema_alpha * err
         self.innov_var += self.cfg.ema_alpha * ((err * err) - self.innov_var)
         sigma = math.sqrt(max(self.innov_var, 1e-8))
         spike = innov_mean > (self.innov_ema + self.cfg.k_sigma * sigma)
-
-        # Auto-detect stress from innovation spike (= new obstacle appeared)
         if not self.resilience.stress_active and spike and self.step_count > 5:
-            self.resilience.trigger(self.step_count, "innovation_spike")
+            self._trigger_stress("innovation_spike")
 
-        # fusion (only active drones' beliefs)
+        # ── Buffer pré-stress d'innov_mean : tant qu'on n'a pas été
+        # triggered, on alimente la fenêtre glissante. Au prochain trigger,
+        # sa médiane fixera innov_baseline (cf. _trigger_stress).
+        if not self.resilience.stress_active:
+            self._innov_pre_stress.append(innov_mean)
+
+        # ── 3) NS-3 : relire les latences inter-drones ──
+        if self.ns3.active:
+            self.ns3.read_latencies()
+
+        # ── 4) Fused belief global (passive observer pour le dashboard) ──
         if active:
             self.fused_belief = fuse_beliefs_logodds(
                 [a.belief for a in active], self.prior_lo,
             )
         # else: keep last fused belief
-
         h_after = self.fused_belief.mean_entropy()
 
-        # Update resilience state
+        # ── 5) Resilience update ──
         self.resilience.update(self.step_count, h_after, innov_mean, self.cfg)
         phase = self.resilience.phase(self.step_count, self.cfg)
 
-        # planning (only active drones, pass resilience phase)
+        # ── 6) Broadcast beliefs via MessageQueue + délivrer les arrivées ──
+        self._broadcast_beliefs(active)
+        self._deliver_and_cache()
+
+        # ── 7) Planning : chaque drone choisit sa plan_belief selon l'arch ──
+        eff_arch = self.effective_arch()
         for a in self.agents:
             if not a.active:
                 continue
             others = [(o.x, o.y) for o in active if o.id != a.id]
-            a.plan(others, self.fused_belief, resilience_phase=phase)
+
+            if eff_arch == "distributed":
+                # voisins actifs dans le rayon, hors liens coupés
+                neighbors = [
+                    o for o in active
+                    if o.id != a.id
+                    and not self._is_link_cut(a.id, o.id)
+                    and math.hypot(a.x - o.x, a.y - o.y) <= self.cfg.neighbor_radius_m
+                ]
+                plan_belief = a.fuse_with_neighbors(neighbors, self.prior_lo)
+            else:
+                # centralisé : on utilise la fused reçue du cloud si dispo,
+                # sinon la fused actuelle (warmup avant 1ère arrivée).
+                plan_belief = self._cloud_belief if self._cloud_belief is not None \
+                              else self.fused_belief
+
+            a.plan(others, plan_belief, resilience_phase=phase)
             if self.diag:
                 self.diag.log_candidates(a.id, a.x, a.y, others,
                                          a.candidates_diag, a.selected_idx)
-                self.diag.log_belief(a.id, a.belief, self.fused_belief)
+                self.diag.log_belief(a.id, a.belief, plan_belief)
 
+        # ── 8) Historique ──
         self.step_count += 1
         drone_positions = [(a.x, a.y) for a in active]
         interior_pct = self.fused_belief.interior_exploration_ratio(
             drone_positions, self.cfg.occ_threshold
         ) * 100 if drone_positions else 0.0
+        q = self.msg_queue.stats()
         self.history.append({
             "step": self.step_count,
             "mean_entropy": round(h_after, 4),
@@ -1304,6 +1889,13 @@ class SwarmCoordinator:
             "innovation_ema": round(self.innov_ema, 4),
             "resilience_phase": phase,
             "active_drones": len(active),
+            # ── Réseau / arch (Tâches 2-3-4) ──
+            "arch_effective": eff_arch,
+            "cloud_link_active": self.cloud_link_active,
+            "queue_size": q["queue_size"],
+            "msg_dropped": q["dropped"],
+            "msg_sent": q["sent"],
+            "msg_delivered": q["delivered"],
         })
 
         if self.diag:
@@ -1317,6 +1909,17 @@ class SwarmCoordinator:
 
     def get_full_state(self, obstacles: List[Dict]) -> Dict:
         eb = self.fused_belief.effective_bounds(self.cfg.occ_threshold)
+        q = self.msg_queue.stats()
+        # serialiser les pairs NS-3 pour le dashboard /api/ns3
+        ns3_pairs = []
+        for (i, j), info in sorted(self.ns3.last_pairs.items()):
+            ns3_pairs.append({
+                "a": i, "b": j,
+                "latency_ms": info.get("latency_ms", 0.0),
+                "jitter_ms": info.get("jitter_ms", 0.0),
+                "rx_packets": info.get("rx_packets", 0),
+            })
+        cut_pairs_list = ["-".join(str(x) for x in sorted(p)) for p in self.cut_pairs]
         return {
             "step": self.step_count,
             "timestamp": time.time(),
@@ -1333,6 +1936,23 @@ class SwarmCoordinator:
             "fused_belief": self.fused_belief.to_list(),
             "metrics": self.history[-1] if self.history else {},
             "resilience": self.resilience.to_dict(),
+            # ── Tâches 1-2-3 exposés au dashboard ──
+            "planner": self.cfg.planner,
+            "arch_configured": self.cfg.arch,
+            "arch_effective": self.effective_arch(),
+            "ns3_mode": self.cfg.ns3_mode,
+            "neighbor_radius_m": self.cfg.neighbor_radius_m,
+            "network": {
+                "ns3_mode": self.cfg.ns3_mode,
+                "cloud_link_active": self.cloud_link_active,
+                "all_drone_links_cut": self.all_drone_links_cut,
+                "cut_pairs": cut_pairs_list,
+                "queue_size": q["queue_size"],
+                "msg_sent": q["sent"],
+                "msg_delivered": q["delivered"],
+                "msg_dropped": q["dropped"],
+                "ns3_pairs": ns3_pairs,
+            },
         }
 
 
@@ -1546,6 +2166,48 @@ class DiagnosticLogger:
 # 13. Main — Isaac Sim Setup & AIF Loop
 # ════════════════════════════════════════════════════════════════
 
+def _import_ns3_bridge():
+    """Import du module scripts/12_ns3_bridge.py (nom commence par '12_'
+    donc 'import' direct impossible → importlib)."""
+    import importlib.util
+    here = os.path.dirname(os.path.abspath(__file__))
+    bridge_path = os.path.join(here, "12_ns3_bridge.py")
+    if not os.path.isfile(bridge_path):
+        return None
+    spec = importlib.util.spec_from_file_location("ns3_bridge", bridge_path)
+    mod = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _write_drone_positions(agents, cfg, path: str = "/tmp/drone_positions.csv"):
+    """Écrit le CSV des positions courantes (lu par NS-3 — cf. 12_ns3_bridge.py).
+
+    Le scénario drone-wifi-scenario.cc / drone-5g-nr-scenario.cc saute la
+    1ʳᵉ ligne (`// Skip header`) → on DOIT inclure un en-tête `drone_id,x,y,z`
+    sinon NS-3 perd le drone 0 et toutes les paires (0-i) sont calculées
+    avec une position figée à l'origine."""
+    try:
+        with open(path, "w") as f:
+            f.write("drone_id,x,y,z\n")
+            for a in agents:
+                if not a.active:
+                    continue
+                # Si le backend SITL est prêt, prendre la pose réelle.
+                # Sinon (avant 1er state MAVLink) → fallback sur la pose
+                # initiale connue de l'agent (sert au tout 1er write avant
+                # le lancement de NS-3).
+                if a.backend is not None:
+                    p = a.backend.get_position()
+                    x, y, z = float(p[0]), float(p[1]), float(p[2])
+                else:
+                    x, y, z = float(a.x), float(a.y), 2.0
+                f.write(f"{a.id},{x:.4f},{y:.4f},{z:.4f}\n")
+    except OSError:
+        pass
+
+
 def parse_args() -> SimConfig:
     p = argparse.ArgumentParser(description="Active Inference drones — Isaac Sim (real)")
     p.add_argument("--num-drones", type=int, default=3)
@@ -1556,10 +2218,44 @@ def parse_args() -> SimConfig:
     # ── resilience demo events ──
     p.add_argument("--kill-drone-at-step", type=int, default=-1,
                    help="Step at which to land (disable) drone 0 to test resilience")
+    # ── Tâche 1 : planner ──
+    p.add_argument("--planner", choices=["aif", "heuristic"], default="aif",
+                   help="Action selection strategy (default: aif)")
+    # ── Tâche 2 : architecture ──
+    p.add_argument("--arch", choices=["centralized", "distributed"], default="centralized",
+                   help="Belief fusion architecture (default: centralized)")
+    p.add_argument("--neighbor-radius-m", type=float, default=10.0,
+                   help="Neighbor radius for distributed fusion (m)")
+    # ── Tâche 3 : NS-3 ──
+    p.add_argument("--ns3", choices=["none", "wifi", "5g"], default="wifi",
+                   help="NS-3 network simulation mode (default: wifi)")
+    p.add_argument("--cloud-latency-ms", type=float, default=20.0,
+                   help="Extra latency for cloud link (centralized only)")
+    p.add_argument("--ns3-sim-time", type=int, default=600,
+                   help="NS-3 simulation duration (seconds)")
+    # ── Tâche 4 : cuts ──
+    p.add_argument("--cut-cloud-at-step", type=int, default=-1,
+                   help="Step at which cloud link is cut (auto cent→dist)")
+    p.add_argument("--cut-drone-link", default="",
+                   help="Drone link to cut: 'i-j' (e.g. '0-1') or 'all'")
+    p.add_argument("--cut-drone-link-at-step", type=int, default=-1,
+                   help="Step at which drone link is cut")
+    # ── Tâche 5 : run capture ──
+    p.add_argument("--run-tag", default="default",
+                   help="Tag suffix for logs/runs/run_<timestamp>_<tag>/")
+    p.add_argument("--runs-dir", default="",
+                   help="Override base directory for run artifacts (default: <workspace>/logs/runs)")
     a = p.parse_args()
     cfg = SimConfig(
         num_drones=a.num_drones, headless=a.headless,
         max_steps=a.max_steps, env_width=a.env_width, env_height=a.env_height,
+        planner=a.planner, arch=a.arch, neighbor_radius_m=a.neighbor_radius_m,
+        ns3_mode=a.ns3, cloud_latency_ms=a.cloud_latency_ms,
+        ns3_sim_time=a.ns3_sim_time,
+        cut_cloud_at_step=a.cut_cloud_at_step,
+        cut_drone_link=a.cut_drone_link,
+        cut_drone_link_at_step=a.cut_drone_link_at_step,
+        run_tag=a.run_tag, runs_dir=a.runs_dir,
     )
     cfg._kill_drone_at = a.kill_drone_at_step
     return cfg
@@ -1803,6 +2499,21 @@ def main():
     signal.signal(signal.SIGINT, _sig)
     signal.signal(signal.SIGTERM, _sig)
 
+    # Récap de la config active (pour traçabilité dans les logs)
+    print(f"[INFO] AIF config :")
+    print(f"  planner={cfg.planner}  arch={cfg.arch}  "
+          f"neighbor_radius_m={cfg.neighbor_radius_m}")
+    print(f"  ns3={cfg.ns3_mode}  cloud_latency_ms={cfg.cloud_latency_ms}")
+    print(f"  cut_cloud_at_step={cfg.cut_cloud_at_step}  "
+          f"cut_drone_link={cfg.cut_drone_link!r} @ step={cfg.cut_drone_link_at_step}")
+    print(f"  run_tag={cfg.run_tag!r}")
+
+    # ── Tâche 3 : NS-3 importé tôt mais lancé APRÈS création des agents
+    # (sinon NS-3 lit /tmp/drone_positions.csv stale/inexistant). ──
+    ns3_bridge = None
+    if cfg.ns3_mode != "none":
+        ns3_bridge = _import_ns3_bridge()
+
     print(f"[INFO] Isaac Sim — {'headless' if cfg.headless else 'GUI'}")
     sim_app = create_sim_app(cfg)
 
@@ -1833,6 +2544,18 @@ def main():
         # Spawn well inside factory walls (USD bbox extends beyond walls due to floor)
         gy = max(8.0, cfg.env_height * 0.20)
         agents.append(DroneAgent(i, gx, gy, cfg))
+
+    # ── Tâche 3 : positions initiales + lancement NS-3
+    # On écrit le CSV (avec header `drone_id,x,y,z`) AVANT de lancer NS-3
+    # pour que la 1ʳᵉ lecture du scénario ait des positions valides ; le
+    # main loop le réécrit ensuite à chaque step. ──
+    if ns3_bridge is not None:
+        _write_drone_positions(agents, cfg)
+        ns3_bridge.launch_ns3(
+            n_drones=cfg.num_drones,
+            sim_time=cfg.ns3_sim_time,
+            scenario=cfg.ns3_mode,
+        )
 
     # ── Patcher les params SITL AVANT de créer les drones (= avant le launch SITL) ──
     _patch_sitl_defaults()
@@ -1885,9 +2608,10 @@ def main():
     # ══════════════════════════════════════════════════════════════
     # Séquence de décollage ArduPilot SITL
     #
-    # Le JSON backend d'Isaac Sim tourne à ~250 Hz. Les params
+    # Le JSON backend Isaac Sim tourne à ~250 Hz. Les params
     # gazebo-iris.parm (patchés ci-dessus) fixent SCHED_LOOP_RATE=50
-    # et ARMING_CHECK=0 pour que les PreArm passent.
+    # pour que 50*1.8=90 < 250 → pas de PreArm "Main loop slow"
+    # ni "Gyro rate", et ARMING_CHECK=0 pour que les PreArm passent.
     #
     # Phase 1 : laisser SITL initialiser (baro, EKF, GPS)
     # Phase 2 : envoyer params backup + GUIDED + force arm
@@ -2016,6 +2740,10 @@ def main():
             # Capture camera frames (every N ticks, handled internally)
             qr_capture.tick()
 
+        # ── Tâche 3 : exposer les positions courantes à NS-3 ──
+        if cfg.ns3_mode != "none":
+            _write_drone_positions(agents, cfg)
+
         # log for dashboard
         state = coordinator.get_full_state(obstacles)
         logger.log(state, coordinator.history)
@@ -2066,6 +2794,29 @@ def main():
     print(f"[QR] Final stats: decoded={qr_stats['decoded']} "
           f"failed={qr_stats['failed']} total={qr_stats['total']}")
     print(f"[QR] Cache: {qr_stats['cache']}")
+
+    # ── Tâche 3 : stopper NS-3 si on l'a lancé ──
+    if ns3_bridge is not None:
+        try:
+            ns3_bridge.stop_ns3()
+        except Exception as e:
+            print(f"[WARN] stop_ns3 a échoué : {e}")
+
+    # ── Tâche 5 : générer les artefacts du run (PNG + JSON) ──
+    try:
+        from run_artifacts import generate_run_artifacts
+        run_dir = generate_run_artifacts(
+            cfg=cfg,
+            history=coordinator.history,
+            final_state=state,
+            fused_belief=coordinator.fused_belief,
+            agents=agents,
+            qr_stats=qr_stats,
+            ns3_pairs=coordinator.ns3.last_pairs,
+        )
+        print(f"[RUN] Artefacts → {run_dir}")
+    except Exception as e:
+        print(f"[WARN] run_artifacts generation failed: {e}")
 
     sim_app.close()
 

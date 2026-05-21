@@ -1,0 +1,51 @@
+{
+  "decoded": 4,
+  "failed": 2444,
+  "total": 2448,
+  "queue_size": 0,
+  "cache": {
+    "cached_data": "DRONE_WAREHOUSE_INSPECTION_001",
+    "ttl": 3.0,
+    "hits": 142,
+    "misses": 4746,
+    "age_seconds": 306.13
+  },
+  "drones": {
+    "0": {
+      "drone_id": 0,
+      "last_status": "failed",
+      "last_data": null,
+      "last_method": "none",
+      "last_frame_path": "frame_000815.png",
+      "last_annotated_path": "annotated_drone_0.jpg",
+      "decoded_count": 0,
+      "failed_count": 816,
+      "total_count": 816,
+      "success_rate": 0.0
+    },
+    "1": {
+      "drone_id": 1,
+      "last_status": "failed",
+      "last_data": null,
+      "last_method": "none",
+      "last_frame_path": "frame_000815.png",
+      "last_annotated_path": "annotated_drone_1.jpg",
+      "decoded_count": 4,
+      "failed_count": 812,
+      "total_count": 816,
+      "success_rate": 0.5
+    },
+    "2": {
+      "drone_id": 2,
+      "last_status": "failed",
+      "last_data": null,
+      "last_method": "none",
+      "last_frame_path": "frame_000815.png",
+      "last_annotated_path": "annotated_drone_2.jpg",
+      "decoded_count": 0,
+      "failed_count": 816,
+      "total_count": 816,
+      "success_rate": 0.0
+    }
+  }
+}
