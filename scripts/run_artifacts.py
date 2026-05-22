@@ -240,103 +240,6 @@ def _plot_resilience(history, run_dir: Path, events: List[Dict] = None):
     _save(fig, run_dir / "resilience_phases.png")
 
 
-def _rolling_mean(values: List[float], window: int) -> List[float]:
-    n = len(values)
-    if n == 0 or window <= 1:
-        return list(values)
-    out = []
-    for i in range(n):
-        a = max(0, i - window + 1)
-        chunk = values[a:i + 1]
-        out.append(sum(chunk) / len(chunk))
-    return out
-
-
-def _coverage_rate(history: List[Dict], window: int = 5) -> Tuple[List[int], List[float]]:
-    """Δcoverage/Δstep lissé sur une fenêtre glissante."""
-    xs, cov = _series(history, "exploration_pct")
-    n = len(cov)
-    rate = [0.0] * n
-    for i in range(n):
-        a = max(0, i - window)
-        dy = cov[i] - cov[a]
-        dx = max(1, xs[i] - xs[a])
-        rate[i] = dy / dx
-    return xs, rate
-
-
-def _delivery_ratio(history: List[Dict]) -> Tuple[List[int], List[float]]:
-    """msg_delivered / msg_sent cumulés. NaN → 1.0 (rien à délivrer ⇒ OK)."""
-    xs = [h.get("step", i) for i, h in enumerate(history)]
-    ratio = []
-    for h in history:
-        sent = float(h.get("msg_sent", 0) or 0)
-        deliv = float(h.get("msg_delivered", 0) or 0)
-        ratio.append(deliv / sent if sent > 0 else 1.0)
-    return xs, ratio
-
-
-def _plot_dynamics(history, run_dir: Path, events: List[Dict] = None):
-    """Métriques non-monotones — peuvent chuter au moment du stresseur.
-
-    4 sous-courbes : step_info_gain, Δcoverage/Δstep (rolling),
-    innovation_mean (brut, pas EMA), delivery ratio cumulé.
-    """
-    plt = _setup_matplotlib()
-    fig, axes = plt.subplots(4, 1, figsize=(8.5, 9.5), sharex=True)
-
-    xs_ig, ig = _series(history, "step_info_gain")
-    ig_smooth = _rolling_mean(ig, window=3)
-    ax0 = axes[0]
-    _phase_bands(ax0, history)
-    ax0.plot(xs_ig, ig, "-", color="#94a3b8", lw=0.8, alpha=0.5, label="raw")
-    ax0.plot(xs_ig, ig_smooth, "-", color="#22d3ee", lw=2.0, label="rolling(3)")
-    ax0.set_ylabel("info gain / step")
-    ax0.set_title("Per-step info gain — chute = perception/comms dégradées")
-    ax0.grid(True, axis="y"); ax0.legend(loc="upper right", fontsize=8)
-
-    xs_r, rate = _coverage_rate(history, window=5)
-    ax1 = axes[1]
-    _phase_bands(ax1, history)
-    ax1.plot(xs_r, rate, "-", color="#10b981", lw=2.0)
-    ax1.fill_between(xs_r, rate, alpha=0.15, color="#10b981")
-    ax1.set_ylabel("Δcoverage / step (%)")
-    ax1.set_title("Coverage rate (rolling 5) — chute = exploration ralentit")
-    ax1.grid(True, axis="y")
-
-    xs_in, innov = _series(history, "innovation_mean")
-    ax2 = axes[2]
-    _phase_bands(ax2, history)
-    ax2.plot(xs_in, innov, "-", color="#f472b6", lw=1.6)
-    ax2.set_ylabel("innovation (raw)")
-    ax2.set_title("Innovation mean (brut) — pic = surprise sur les obs")
-    ax2.grid(True, axis="y")
-
-    xs_d, ratio = _delivery_ratio(history)
-    ax3 = axes[3]
-    _phase_bands(ax3, history)
-    ax3.plot(xs_d, ratio, "-", color="#fbbf24", lw=2.0)
-    ax3.set_ylim(0.0, 1.05)
-    ax3.set_ylabel("delivered / sent")
-    ax3.set_xlabel("AIF step")
-    ax3.set_title("Delivery ratio cumulé — chute = liens coupés / drops")
-    ax3.grid(True, axis="y")
-
-    # marqueurs d'events de résilience sur les 4 axes
-    if events:
-        for ev in events:
-            step = ev.get("step", -1)
-            if step < 0:
-                continue
-            t = ev.get("type") or ev.get("event") or "evt"
-            for ax in axes:
-                ax.axvline(step, color="#ef4444", lw=1.0, alpha=0.6, ls="--")
-            axes[0].text(step, max(ig) if ig else 1.0, f" {t}",
-                         rotation=90, fontsize=7, va="top", color="#fbbf24")
-
-    _save(fig, run_dir / "dynamics.png")
-
-
 def _plot_ns3(ns3_pairs: Dict[Tuple[int, int], Dict[str, float]],
               n_drones: int, run_dir: Path):
     if not ns3_pairs:
@@ -412,10 +315,6 @@ def generate_run_artifacts(
                                           color="#10b981", y_range=(0, 100))),
         ("innovation", lambda: _plot_innovation(history, run_dir)),
         ("resilience", lambda: _plot_resilience(
-            history, run_dir,
-            events=(final_state.get("resilience", {}) or {}).get("events", []),
-        )),
-        ("dynamics", lambda: _plot_dynamics(
             history, run_dir,
             events=(final_state.get("resilience", {}) or {}).get("events", []),
         )),

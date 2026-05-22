@@ -64,9 +64,7 @@ class SimConfig:
     alpha: int = 30            # durée phase recovery (steps)
     beta: int = 60             # durée phase durable (steps)
     H_target: float = 0.44    # entropie cible pour considérer recovery OK
-    innov_target: float = 0.16 # innovation cible (fallback si pas de baseline pré-stress)
-    innov_recovery_ratio: float = 1.2  # multiplicateur sur la baseline innov pré-stress
-    innov_baseline_window: int = 5     # taille de la fenêtre glissante pré-stress
+    innov_target: float = 0.16 # innovation cible
     k_sigma: float = 2.0      # seuil spike = EMA + k_σ·σ
     ema_alpha: float = 0.05   # lissage EMA
     # poids recovery
@@ -348,45 +346,26 @@ class ResilienceState:
     durable_count: int = 0       # compteur de steps consécutifs post-recovery
     cause: str = ""              # "drone_lost" | "innovation_spike"
     events: List[Dict] = None    # log des événements pour le dashboard
-    # Baseline pré-stress de innov_mean (médiane fenêtre glissante).
-    # Sert à dériver un innov_threshold adaptatif : la cible 0.16 du SimConfig
-    # initial est inatteignable car innov_mean reste à 0.5-0.8 même au repos.
-    innov_baseline: float = 0.0
 
     def __post_init__(self):
         if self.events is None:
             self.events = []
 
-    def trigger(self, step: int, cause: str, innov_baseline: float = 0.0):
+    def trigger(self, step: int, cause: str):
         self.stress_active = True
         self.stress_t0 = step
         self.recovered_at = -1
         self.durable_count = 0
         self.cause = cause
-        self.innov_baseline = innov_baseline
         self.events.append({
             "step": step, "type": "stress_start", "cause": cause,
-            "innov_baseline": round(innov_baseline, 4),
         })
-        print(f"  [RESILIENCE] ⚠ STRESS ACTIVATED at step {step}: {cause} "
-              f"(innov_baseline={innov_baseline:.3f})")
-
-    def _innov_threshold(self, cfg: SimConfig) -> float:
-        """Seuil d'innovation à atteindre pour déclarer recovery.
-
-        Si une baseline pré-stress a été capturée, on accepte tout ce qui est
-        ≤ baseline × ratio (retour proche du régime nominal). Sinon on retombe
-        sur la constante cfg.innov_target.
-        """
-        if self.innov_baseline > 0:
-            return self.innov_baseline * cfg.innov_recovery_ratio
-        return cfg.innov_target
+        print(f"  [RESILIENCE] ⚠ STRESS ACTIVATED at step {step}: {cause}")
 
     def update(self, step: int, H: float, innov: float, cfg: SimConfig):
         if not self.stress_active:
             return
-        innov_thr = self._innov_threshold(cfg)
-        recovered_now = (H <= cfg.H_target) and (innov <= innov_thr)
+        recovered_now = (H <= cfg.H_target) and (innov <= cfg.innov_target)
         if self.recovered_at < 0:
             if recovered_now:
                 self.recovered_at = step
@@ -394,10 +373,8 @@ class ResilienceState:
                 self.events.append({
                     "step": step, "type": "recovery_reached",
                     "entropy": round(H, 4), "innovation": round(innov, 4),
-                    "innov_threshold": round(innov_thr, 4),
                 })
-                print(f"  [RESILIENCE] ✓ Recovery reached at step {step} "
-                      f"(H={H:.4f}, innov={innov:.3f} ≤ {innov_thr:.3f})")
+                print(f"  [RESILIENCE] ✓ Recovery reached at step {step} (H={H:.4f})")
         else:
             if recovered_now:
                 self.durable_count += 1
@@ -429,7 +406,6 @@ class ResilienceState:
             "stress_t0": self.stress_t0,
             "recovered_at": self.recovered_at,
             "durable_count": self.durable_count,
-            "innov_baseline": round(self.innov_baseline, 4),
             "events": self.events[-20:],  # last 20 events
         }
 
@@ -1640,12 +1616,6 @@ class SwarmCoordinator:
         self.resilience = ResilienceState()
         self.innov_ema = 0.0
         self.innov_var = 0.0
-        # Buffer glissant d'innov_mean pré-stress : sert à fixer
-        # innov_baseline au moment où trigger() est appelé. Tant qu'on est
-        # 'normal', on continue de le remplir ; au trigger, on capture la
-        # médiane.
-        from collections import deque
-        self._innov_pre_stress = deque(maxlen=max(1, cfg.innov_baseline_window))
         # ── Tâche 3 : NS-3 + message queue ──
         self.ns3 = NS3LatencyReader(cfg.ns3_mode)
         self.msg_queue = MessageQueue()
@@ -1660,23 +1630,12 @@ class SwarmCoordinator:
     def active_agents(self) -> List[DroneAgent]:
         return [a for a in self.agents if a.active]
 
-    def _trigger_stress(self, cause: str):
-        """Centralise tous les triggers : capture la baseline pré-stress."""
-        if self._innov_pre_stress:
-            sorted_vals = sorted(self._innov_pre_stress)
-            n = len(sorted_vals)
-            baseline = sorted_vals[n // 2] if n % 2 else \
-                0.5 * (sorted_vals[n // 2 - 1] + sorted_vals[n // 2])
-        else:
-            baseline = 0.0
-        self.resilience.trigger(self.step_count, cause, innov_baseline=baseline)
-
     def kill_drone(self, drone_id: int):
         """Disable a drone and trigger resilience recovery."""
         for a in self.agents:
             if a.id == drone_id and a.active:
                 a.land()
-                self._trigger_stress(f"drone_{drone_id}_lost")
+                self.resilience.trigger(self.step_count, f"drone_{drone_id}_lost")
                 return
 
     # ── Tâche 2 / 4 : architecture effective ──
@@ -1700,7 +1659,7 @@ class SwarmCoordinator:
                 self.step_count == self.cfg.cut_cloud_at_step and
                 self.cloud_link_active):
             self.cloud_link_active = False
-            self._trigger_stress("cloud_link_lost")
+            self.resilience.trigger(self.step_count, "cloud_link_lost")
             print(f"\n  [CUT] ☁ Cloud link CUT at step {self.step_count}")
             if self.cfg.arch == "centralized":
                 print(f"  [CUT] Auto-failover centralized → distributed")
@@ -1712,7 +1671,7 @@ class SwarmCoordinator:
             if spec == "all":
                 if not self.all_drone_links_cut:
                     self.all_drone_links_cut = True
-                    self._trigger_stress("all_drone_links_lost")
+                    self.resilience.trigger(self.step_count, "all_drone_links_lost")
                     print(f"\n  [CUT] ✂ ALL drone↔drone links CUT at step {self.step_count}")
             elif "-" in spec:
                 try:
@@ -1721,7 +1680,7 @@ class SwarmCoordinator:
                     pair = frozenset({i, j})
                     if pair not in self.cut_pairs:
                         self.cut_pairs.add(pair)
-                        self._trigger_stress(f"drone_link_{i}-{j}_lost")
+                        self.resilience.trigger(self.step_count, f"drone_link_{i}-{j}_lost")
                         print(f"\n  [CUT] ✂ Drone link {i}↔{j} CUT at step {self.step_count}")
                 except ValueError:
                     print(f"  [WARN] Invalid --cut-drone-link spec: {spec!r}")
@@ -1814,13 +1773,7 @@ class SwarmCoordinator:
         sigma = math.sqrt(max(self.innov_var, 1e-8))
         spike = innov_mean > (self.innov_ema + self.cfg.k_sigma * sigma)
         if not self.resilience.stress_active and spike and self.step_count > 5:
-            self._trigger_stress("innovation_spike")
-
-        # ── Buffer pré-stress d'innov_mean : tant qu'on n'a pas été
-        # triggered, on alimente la fenêtre glissante. Au prochain trigger,
-        # sa médiane fixera innov_baseline (cf. _trigger_stress).
-        if not self.resilience.stress_active:
-            self._innov_pre_stress.append(innov_mean)
+            self.resilience.trigger(self.step_count, "innovation_spike")
 
         # ── 3) NS-3 : relire les latences inter-drones ──
         if self.ns3.active:

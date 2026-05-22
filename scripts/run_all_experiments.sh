@@ -54,15 +54,15 @@ run_one() {
 # ───────────────── Matrice de 12 runs ─────────────────
 
 # 1-4 : baselines (NS-3 wifi activé partout, pas de cut)
-#run_one aif_cent_baseline      --planner aif       --arch centralized --ns3 wifi
-#run_one heur_cent_baseline     --planner heuristic --arch centralized --ns3 wifi
-#run_one aif_dist_baseline      --planner aif       --arch distributed --ns3 wifi
-#run_one heur_dist_baseline     --planner heuristic --arch distributed --ns3 wifi
+run_one aif_cent_baseline      --planner aif       --arch centralized --ns3 wifi
+run_one heur_cent_baseline     --planner heuristic --arch centralized --ns3 wifi
+run_one aif_dist_baseline      --planner aif       --arch distributed --ns3 wifi
+run_one heur_dist_baseline     --planner heuristic --arch distributed --ns3 wifi
 
 
 # 7-8 : résilience perte drone
-#run_one aif_cent_kill_d0_s20   --planner aif       --arch centralized --ns3 wifi --kill-drone-at-step 20
-#run_one heur_cent_kill_d0_s20  --planner heuristic --arch centralized --ns3 wifi --kill-drone-at-step 20
+run_one aif_cent_kill_d0_s20   --planner aif       --arch centralized --ns3 wifi --kill-drone-at-step 20
+run_one heur_cent_kill_d0_s20  --planner heuristic --arch centralized --ns3 wifi --kill-drone-at-step 20
 
 # 9-10 : résilience cut liens
 run_one aif_cent_cut_cloud_s20 --planner aif --arch centralized --ns3 wifi --cut-cloud-at-step 20

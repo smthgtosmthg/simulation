@@ -155,22 +155,13 @@ def _phase_bands(ax, history):
             ax.axvspan(st, en, color=cmap[ph], alpha=0.18)
 
 
-def _resilience_overlay(runs, key, title, ylabel, out_path, y_range=None,
-                        transform=None):
-    """Overlay une métrique pour plusieurs runs avec bandes de phase + events.
-
-    transform : optionnel, fonction (history) -> (xs, ys) pour calculer
-    une dérivée / rolling au lieu de lire `key` brut.
-    """
+def _resilience_overlay(runs, key, title, ylabel, out_path, y_range=None):
     if not runs:
         return False
     fig, ax = plt.subplots(figsize=(8, 4))
     for i, r in enumerate(runs):
         _phase_bands(ax, r["history"])  # phase bands per run (légère superposition)
-        if transform is not None:
-            xs, ys = transform(r["history"])
-        else:
-            xs, ys = _series(r["history"], key)
+        xs, ys = _series(r["history"], key)
         ax.plot(xs, ys, "-", color=PALETTE[i % len(PALETTE)],
                 lw=2.0, label=r["tag"])
         # marqueurs verticaux pour les events
@@ -186,137 +177,6 @@ def _resilience_overlay(runs, key, title, ylabel, out_path, y_range=None,
     if y_range:
         ax.set_ylim(*y_range)
     ax.legend(loc="best", fontsize=8)
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=120)
-    plt.close(fig)
-    return True
-
-
-# ──────────────────────────────────────────────────────────────────
-# Transforms : métriques non-monotones (peuvent chuter au stresseur)
-# ──────────────────────────────────────────────────────────────────
-
-
-def _coverage_rate_series(history, window: int = 5):
-    """Δcoverage / Δstep lissé sur fenêtre glissante."""
-    xs, cov = _series(history, "exploration_pct")
-    n = len(cov)
-    rate = [0.0] * n
-    for i in range(n):
-        a = max(0, i - window)
-        dy = cov[i] - cov[a]
-        dx = max(1, xs[i] - xs[a])
-        rate[i] = dy / dx
-    return xs, rate
-
-
-def _info_gain_smooth(history, window: int = 3):
-    xs, ig = _series(history, "step_info_gain")
-    n = len(ig)
-    out = [0.0] * n
-    for i in range(n):
-        a = max(0, i - window + 1)
-        chunk = ig[a:i + 1]
-        out[i] = sum(chunk) / len(chunk)
-    return xs, out
-
-
-def _delivery_ratio_series(history):
-    xs = [h.get("step", i) for i, h in enumerate(history)]
-    out = []
-    for h in history:
-        sent = float(h.get("msg_sent", 0) or 0)
-        deliv = float(h.get("msg_delivered", 0) or 0)
-        out.append(deliv / sent if sent > 0 else 1.0)
-    return xs, out
-
-
-# ──────────────────────────────────────────────────────────────────
-# Resilience triangle : R(t) = perf_stressed(t) / perf_baseline(t)
-# ──────────────────────────────────────────────────────────────────
-
-
-def _align_on_steps(hist_a, hist_b, key):
-    """Aligne deux séries sur leurs steps communs. Renvoie (steps, ya, yb)."""
-    xa, ya = _series(hist_a, key)
-    xb, yb = _series(hist_b, key)
-    map_b = dict(zip(xb, yb))
-    common = [s for s in xa if s in map_b]
-    aligned_a = [ya[xa.index(s)] for s in common]
-    aligned_b = [map_b[s] for s in common]
-    return common, aligned_a, aligned_b
-
-
-def _resilience_triangle(baseline_run, stressed_run, key, ylabel, out_path,
-                         title_suffix=""):
-    """Plot R(t) = perf_stressed(t) / perf_baseline(t) au même step.
-
-    R < 1 = chute par rapport à la baseline ; R = 1 = parité ; R > 1 = au-dessus.
-    L'aire ∫(1 − R(t))⁺ dt sur la période post-stress quantifie le « coût de
-    résilience » (resilience triangle de Bruneau et al., 2003).
-    """
-    steps, ys_str, ys_base = _align_on_steps(
-        stressed_run["history"], baseline_run["history"], key
-    )
-    if not steps:
-        return False
-    # R(t) = stressed / baseline (clampe denom à eps pour éviter div/0)
-    R = []
-    for a, b in zip(ys_str, ys_base):
-        denom = b if abs(b) > 1e-9 else 1e-9
-        R.append(a / denom)
-
-    # step où le stresseur s'active (premier event de stress_start)
-    events = (stressed_run.get("state_final", {}).get("resilience", {})
-              or {}).get("events", [])
-    t_stress = None
-    for ev in events:
-        if ev.get("type") == "stress_start":
-            t_stress = ev.get("step")
-            break
-
-    # cost = aire sous la ligne y=1 pour les steps post-stress où R < 1
-    cost = 0.0
-    if t_stress is not None and len(steps) > 1:
-        for i in range(1, len(steps)):
-            if steps[i] < t_stress:
-                continue
-            dx = steps[i] - steps[i - 1]
-            mid = 0.5 * (R[i] + R[i - 1])
-            deficit = max(0.0, 1.0 - mid)
-            cost += deficit * dx
-
-    fig, (ax_top, ax_bot) = plt.subplots(2, 1, figsize=(8.5, 6.5), sharex=True,
-                                          gridspec_kw={"height_ratios": [2, 1]})
-
-    # ── haut : valeurs absolues alignées ──
-    ax_top.plot(steps, ys_base, "-", color=PALETTE[0], lw=2.0,
-                label=f"{baseline_run['tag']} (baseline)")
-    ax_top.plot(steps, ys_str, "-", color=PALETTE[4], lw=2.0,
-                label=f"{stressed_run['tag']} (stressed)")
-    ax_top.fill_between(steps, ys_str, ys_base,
-                         where=[a < b for a, b in zip(ys_str, ys_base)],
-                         interpolate=True, color="#ef4444", alpha=0.18,
-                         label="déficit (chute)")
-    if t_stress is not None:
-        ax_top.axvline(t_stress, color="#ef4444", lw=1.2, ls="--",
-                       label=f"stress @ {t_stress}")
-    ax_top.set_ylabel(ylabel)
-    ax_top.set_title(f"Resilience triangle — {key}{title_suffix}")
-    ax_top.grid(True, axis="y"); ax_top.legend(loc="best", fontsize=8)
-
-    # ── bas : ratio R(t) ──
-    ax_bot.axhline(1.0, color="#94a3b8", lw=1.0, ls=":")
-    ax_bot.plot(steps, R, "-", color="#fbbf24", lw=2.0)
-    ax_bot.fill_between(steps, R, 1.0, where=[r < 1.0 for r in R],
-                         interpolate=True, color="#ef4444", alpha=0.25)
-    if t_stress is not None:
-        ax_bot.axvline(t_stress, color="#ef4444", lw=1.2, ls="--")
-    ax_bot.set_ylabel("R(t) = stressed/baseline")
-    ax_bot.set_xlabel("AIF step")
-    ax_bot.set_title(f"resilience cost ∫(1−R)⁺ dt = {cost:.2f}", fontsize=10)
-    ax_bot.grid(True, axis="y")
-
     fig.tight_layout()
     fig.savefig(out_path, dpi=120)
     plt.close(fig)
@@ -464,65 +324,12 @@ def build_report(runs_dir: Path) -> Path:
                             "entropy", ent_png)
         _resilience_overlay(sel, "innovation_ema", f"{title} — innovation (EMA)",
                             "innovation EMA", inn_png)
-
-        # ── métriques non-monotones (peuvent chuter au stresseur) ──
-        ig_png = runs_dir / f"resilience_{safe}_info_gain.png"
-        rate_png = runs_dir / f"resilience_{safe}_coverage_rate.png"
-        innov_raw_png = runs_dir / f"resilience_{safe}_innov_raw.png"
-        deliv_png = runs_dir / f"resilience_{safe}_delivery.png"
-        _resilience_overlay(sel, None,
-                            f"{title} — per-step info gain (rolling 3)",
-                            "info gain", ig_png,
-                            transform=_info_gain_smooth)
-        _resilience_overlay(sel, None,
-                            f"{title} — coverage rate (Δ%/step, rolling 5)",
-                            "Δcov / step", rate_png,
-                            transform=_coverage_rate_series)
-        _resilience_overlay(sel, "innovation_mean",
-                            f"{title} — innovation (raw)",
-                            "innov_mean", innov_raw_png)
-        _resilience_overlay(sel, None,
-                            f"{title} — delivery ratio",
-                            "delivered/sent", deliv_png,
-                            transform=_delivery_ratio_series,
-                            y_range=(0, 1.05))
-
         block = (
             f"### {title}\n\n"
-            f"**Cumulatif (monotone)** :\n\n"
             f"![coverage]({cov_png.name})\n\n"
             f"![entropy]({ent_png.name})\n\n"
-            f"![innovation_ema]({inn_png.name})\n\n"
-            f"**Métriques non-monotones — peuvent chuter au stresseur** :\n\n"
-            f"![info_gain]({ig_png.name})\n\n"
-            f"![coverage_rate]({rate_png.name})\n\n"
-            f"![innov_raw]({innov_raw_png.name})\n\n"
-            f"![delivery_ratio]({deliv_png.name})\n\n"
+            f"![innovation]({inn_png.name})\n\n"
         )
-
-        # ── resilience triangle : stressed vs baseline ──
-        # convention RESILIENCE_GROUPS : tags[0] = baseline, tags[1] = stressed
-        if len(sel) >= 2:
-            baseline_run, stressed_run = sel[0], sel[1]
-            tri_cov_png = runs_dir / f"resilience_{safe}_triangle_coverage.png"
-            tri_ig_png = runs_dir / f"resilience_{safe}_triangle_info_gain.png"
-            ok_cov = _resilience_triangle(
-                baseline_run, stressed_run, "exploration_pct",
-                "coverage (%)", tri_cov_png,
-                title_suffix=f" — {title}",
-            )
-            ok_ig = _resilience_triangle(
-                baseline_run, stressed_run, "step_info_gain",
-                "info gain / step", tri_ig_png,
-                title_suffix=f" — {title}",
-            )
-            tri_block = "**Resilience triangle (stressed / baseline)** :\n\n"
-            if ok_cov:
-                tri_block += f"![triangle_coverage]({tri_cov_png.name})\n\n"
-            if ok_ig:
-                tri_block += f"![triangle_info_gain]({tri_ig_png.name})\n\n"
-            block += tri_block
-
         res_sections.append(block)
 
     # ── 3) Tableau récapitulatif ──
