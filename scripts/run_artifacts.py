@@ -310,9 +310,14 @@ def generate_run_artifacts(
                                          "entropy", run_dir / "entropy.png",
                                          color="#3b82f6")),
         ("coverage", lambda: _plot_simple(history, "exploration_pct",
-                                          "Coverage (%)",
+                                          "Coverage — % bbox USD",
                                           "%", run_dir / "coverage.png",
                                           color="#10b981", y_range=(0, 100))),
+        ("coverage_interior", lambda: _plot_simple(
+            history, "exploration_pct_interior",
+            "Coverage intérieur — % bbox murs",
+            "%", run_dir / "coverage_interior.png",
+            color="#0ea5e9", y_range=(0, 100))),
         ("innovation", lambda: _plot_innovation(history, run_dir)),
         ("resilience", lambda: _plot_resilience(
             history, run_dir,
@@ -344,7 +349,8 @@ def generate_run_artifacts(
             f"- NS-3      : {getattr(cfg, 'ns3_mode', 'none')}\n"
             f"- Steps     : {len(history)}\n"
             f"- Final entropy  : {m.get('mean_entropy', '?')}\n"
-            f"- Final coverage : {m.get('exploration_pct', '?')} %\n"
+            f"- Final coverage (bbox USD)     : {m.get('exploration_pct', '?')} %\n"
+            f"- Final coverage (bbox murs)    : {m.get('exploration_pct_interior', '?')} %\n"
         )
         with open(run_dir / "README.md", "w") as f:
             f.write(readme)

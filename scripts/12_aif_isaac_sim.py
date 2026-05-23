@@ -81,7 +81,7 @@ class SimConfig:
     headless: bool = False
     max_steps: int = 500 #combien de fois on décide
     sim_steps_per_aif: int = 60   #combien de temps on laisse voler entre deux décisions.
-    target_coverage: float = 95.0
+    target_coverage: float = 93.0
     output_dir: str = "/tmp"
 
     # ── Planner (Tâche 1) ──
@@ -110,6 +110,8 @@ class SimConfig:
 
     world_origin_x: float = float("nan")
     world_origin_y: float = float("nan")
+    factory_bounds_world: Optional[Tuple[float, float, float, float]] = None
+    interior_inset_m: float = 2.5
 
     @property
     def origin_x(self) -> float:
@@ -120,6 +122,29 @@ class SimConfig:
     def origin_y(self) -> float:
         import math
         return -self.env_height / 2 if math.isnan(self.world_origin_y) else self.world_origin_y
+
+    def factory_bounds_grid(self) -> Optional[Tuple[int, int, int, int]]:
+
+        if self.factory_bounds_world is None:
+            return None
+        fx0w, fy0w, fx1w, fy1w = self.factory_bounds_world
+        gx0 = max(0, int((fx0w - self.origin_x) / self.grid_resolution))
+        gy0 = max(0, int((fy0w - self.origin_y) / self.grid_resolution))
+        gx1 = min(self.grid_width,
+                  int(math.ceil((fx1w - self.origin_x) / self.grid_resolution)))
+        gy1 = min(self.grid_height,
+                  int(math.ceil((fy1w - self.origin_y) / self.grid_resolution)))
+        return gx0, gy0, gx1, gy1
+
+    def interior_area_cells(self) -> int:
+        if self.factory_bounds_world is None:
+            return self.grid_width * self.grid_height
+        fx0w, fy0w, fx1w, fy1w = self.factory_bounds_world
+        inset = float(self.interior_inset_m)
+        interior_w = max(0.0, (fx1w - fx0w) - 2 * inset)
+        interior_h = max(0.0, (fy1w - fy0w) - 2 * inset)
+        cells = (interior_w * interior_h) / (self.grid_resolution ** 2)
+        return max(1, int(round(cells)))
 
     @property #nombre de collone 
     def grid_width(self) -> int:
@@ -257,43 +282,50 @@ class BeliefGrid:
         return cmin, rmin, cmax + 1, rmax + 1
 
     def interior_exploration_ratio(
-        self, drone_positions: List[Tuple[float, float]], occ_threshold: float = 0.65
+        self,
+        drone_positions: List[Tuple[float, float]],
+        occ_threshold: float = 0.65,
+        bounds_grid: Optional[Tuple[int, int, int, int]] = None,
+        interior_area_cells: int = 0,
     ) -> float:
-        """Coverage = cellules observées dans l'intérieur / taille intérieur.
+        del drone_positions, occ_threshold
+        if interior_area_cells <= 0:
+            interior_area_cells = self.width * self.height
+        if bounds_grid is None:
+            bx0, by0, bx1, by1 = 0, 0, self.width, self.height
+        else:
+            bx0, by0, bx1, by1 = bounds_grid
 
-        1. Flood-fill depuis les drones à travers les cellules non-mur
-           (p < occ_threshold) → détermine la zone intérieure accessible.
-        2. Numérateur = cellules observées (|logodds| > seuil) dans cet intérieur.
-        Général : pas besoin de connaître la taille de l'environnement.
-        """
-        from collections import deque
+        known = (self.probability < 0.3) | (self.probability > 0.7)
+        known_in_bbox = int(known[by0:by1, bx0:bx1].sum())
 
-        # --- flood-fill intérieur (bloqué par les murs détectés) ---
-        visited = np.zeros((self.height, self.width), dtype=bool)
-        queue: deque = deque()
-        for wx, wy in drone_positions:
-            gx, gy = self.world_to_grid(wx, wy)
-            if not visited[gy, gx]:
-                visited[gy, gx] = True
-                queue.append((gx, gy))
-        while queue:
-            x, y = queue.popleft()
-            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < self.width and 0 <= ny < self.height:
-                    if not visited[ny, nx] and self.probability[ny, nx] < occ_threshold:
-                        visited[ny, nx] = True
-                        queue.append((nx, ny))
+        return float(min(1.0, known_in_bbox / interior_area_cells))
 
-        interior = int(visited.sum())
-        if interior == 0:
+    def observed_inside_walls_ratio(
+        self,
+        occ_threshold: float = 0.65,
+        bounds_grid: Optional[Tuple[int, int, int, int]] = None,
+    ) -> float:
+
+        if bounds_grid is None:
+            bx0, by0, bx1, by1 = 0, 0, self.width, self.height
+        else:
+            bx0, by0, bx1, by1 = bounds_grid
+
+        ex0, ey0, ex1, ey1 = self.effective_bounds(occ_threshold)
+        walls_detected = (ex1 - ex0) < self.width and (ey1 - ey0) < self.height
+        if not walls_detected:
             return 0.0
 
-        # --- numérateur : cellules observées au moins une fois dans l'intérieur ---
-        observed_interior = np.abs(self.logodds) > 0.01
-        observed_interior &= visited
+        wx0 = max(bx0, ex0); wy0 = max(by0, ey0)
+        wx1 = min(bx1, ex1); wy1 = min(by1, ey1)
+        walls_area = max(0, (wx1 - wx0) * (wy1 - wy0))
+        if walls_area == 0:
+            return 0.0
 
-        return float(observed_interior.sum() / interior)
+        observed = np.abs(self.logodds) > 0.01
+        observed_in_walls = int(observed[wy0:wy1, wx0:wx1].sum())
+        return float(min(1.0, observed_in_walls / walls_area))
 
     def copy(self) -> "BeliefGrid":
         new = BeliefGrid.__new__(BeliefGrid)
@@ -740,27 +772,6 @@ def select_action_heuristic(
     return ACTIONS[idx], cand_diag, idx
 
 
-# ════════════════════════════════════════════════════════════════
-# 6. ArduPilot SITL Flight Backend (via Pegasus)
-# ════════════════════════════════════════════════════════════════
-#
-# Le vol est contrôlé par ArduPilot SITL : un vrai autopilote
-# tourne en arrière-plan, reçoit les capteurs simulés via JSON/UDP,
-# calcule les commandes moteurs, et les renvoie à Isaac Sim.
-#
-# Architecture par drone :
-#   Backend[0] = ArduPilotMavlinkBackend  → pont capteurs/moteurs vers SITL
-#   Backend[1] = AifStateTracker          → lit la pose pour la boucle AIF
-#
-# Le SitlController envoie les waypoints AIF vers ArduPilot via MAVLink
-# (SET_POSITION_TARGET_LOCAL_NED en mode GUIDED).
-#
-# Conversion de coordonnées Isaac Sim (ENU) ↔ ArduPilot (NED) :
-#   NED_north = Isaac_Y - home_Y
-#   NED_east  = Isaac_X - home_X
-#   NED_down  = -(Isaac_Z - home_Z)
-#   NED_yaw   = π/2 - Isaac_yaw
-# ════════════════════════════════════════════════════════════════
 
 _Backend = None
 _Rotation = None
@@ -1431,19 +1442,6 @@ class DroneAgent:
         }
 
 
-# ════════════════════════════════════════════════════════════════
-# 10b. NS-3 Latency Reader (Tâche 3.3)
-# ════════════════════════════════════════════════════════════════
-#
-# Lit le CSV produit par scripts/12_ns3_bridge.py
-#   - WiFi : /tmp/ns3_output.csv             (drone_i, drone_j, latency_ms)
-#   - 5G   : /tmp/drone_latency_ns3.csv       (drone_a, drone_b, latency_ms, jitter_ms)
-# Robuste :
-#   - Fichier absent / NS-3 down → retourne {} + un warn unique
-#   - Le fichier peut être réécrit en parallèle : on ignore les lignes
-#     malformées.
-# ════════════════════════════════════════════════════════════════
-
 
 class NS3LatencyReader:
     """Lit les latences inter-drone calculées par NS-3 en arrière-plan."""
@@ -1625,6 +1623,8 @@ class SwarmCoordinator:
         self.cloud_link_active: bool = True
         self.cut_pairs: Set[frozenset] = set()
         self.all_drone_links_cut: bool = False
+
+        self.interior_area_cells: int = cfg.interior_area_cells()
 
     @property
     def active_agents(self) -> List[DroneAgent]:
@@ -1826,14 +1826,25 @@ class SwarmCoordinator:
         # ── 8) Historique ──
         self.step_count += 1
         drone_positions = [(a.x, a.y) for a in active]
-        interior_pct = self.fused_belief.interior_exploration_ratio(
-            drone_positions, self.cfg.occ_threshold
+        bounds_grid = self.cfg.factory_bounds_grid()
+
+        coverage_pct = self.fused_belief.interior_exploration_ratio(
+            drone_positions, self.cfg.occ_threshold,
+            bounds_grid=bounds_grid,
+            interior_area_cells=self.interior_area_cells,
+        ) * 100 if drone_positions else 0.0
+
+        # Métrique secondaire : % de la zone intérieure aux murs
+        # détectés. Tend vers ~100 % quand le hangar est mappé.
+        interior_pct = self.fused_belief.observed_inside_walls_ratio(
+            self.cfg.occ_threshold, bounds_grid=bounds_grid,
         ) * 100 if drone_positions else 0.0
         q = self.msg_queue.stats()
         self.history.append({
             "step": self.step_count,
             "mean_entropy": round(h_after, 4),
-            "exploration_pct": round(interior_pct, 2),
+            "exploration_pct": round(coverage_pct, 2),
+            "exploration_pct_interior": round(interior_pct, 2),
             "exploration_pct_raw": round(self.fused_belief.exploration_ratio() * 100, 2),
             "step_info_gain": round(max(0.0, h_before - h_after), 4),
             "free_energies": [round(a.last_G, 4) for a in self.agents],
@@ -2474,7 +2485,7 @@ def main():
 
     # ── Auto-adjust env dimensions from factory USD bounding box ──
     if factory_bounds:
-        margin = 1.0  # 1 m padding around the factory
+        margin = 1.0  # 1 m padding around the factory (spawn safety only)
         bx0, by0, bx1, by1 = factory_bounds
         cfg.world_origin_x = bx0 - margin
         cfg.world_origin_y = by0 - margin
@@ -2483,6 +2494,11 @@ def main():
         # round to grid resolution
         cfg.env_width  = math.ceil(cfg.env_width  / cfg.grid_resolution) * cfg.grid_resolution
         cfg.env_height = math.ceil(cfg.env_height / cfg.grid_resolution) * cfg.grid_resolution
+        # Bbox réel SANS la marge — sert UNIQUEMENT pour le calcul de
+        # coverage (cf. BeliefGrid.interior_exploration_ratio) afin
+        # d'éviter les fuites de flood-fill par les trous des murs.
+        cfg.factory_bounds_world = (float(bx0), float(by0),
+                                    float(bx1), float(by1))
         print(f"[INFO] Env adapted to factory: "
               f"{cfg.env_width:.1f} × {cfg.env_height:.1f} m  "
               f"origin=({cfg.origin_x:.2f}, {cfg.origin_y:.2f})  "
@@ -2663,11 +2679,10 @@ def main():
     qr_capture = qr_sys["capture_helper"]
     print("[INFO] QR decoder thread started")
 
-    # ── AIF exploration loop ──
     aif_step = 0
-    plateau_counter = 0          # nombre de steps consécutifs sans progression
-    plateau_threshold = 0.3      # delta min (%) pour considérer une progression
-    plateau_patience = 12        # combien de steps sans progression avant d'arrêter
+    plateau_counter = 0
+    plateau_threshold = 0.1   # %/step minimum pour considérer une progression
+    plateau_patience = 15     # nb steps consécutifs sans progression
     prev_coverage = 0.0
     while running and aif_step < cfg.max_steps and sim_app.is_running():
 
@@ -2716,22 +2731,24 @@ def main():
             f"{positions_str}"
         )
 
-        if m["exploration_pct"] >= cfg.target_coverage:
-            print(f"\n[INFO] Target coverage {cfg.target_coverage}% reached!")
+        # ── Arrêt si target_coverage atteint ──
+        cur_coverage = m["exploration_pct"]
+        if cur_coverage >= cfg.target_coverage:
+            print(f"\n[INFO] Target coverage {cfg.target_coverage}% reached "
+                  f"at step {aif_step} (coverage={cur_coverage:.1f}%).")
             break
 
-        # ── Plateau detection: arrêter si le coverage ne progresse plus ──
-        cur_coverage = m["exploration_pct"]
+        # ── Arrêt sur plateau (drones bloqués, plus de progression) ──
         if cur_coverage - prev_coverage < plateau_threshold:
             plateau_counter += 1
         else:
             plateau_counter = 0
         prev_coverage = cur_coverage
 
-        if plateau_counter >= plateau_patience and cur_coverage > 50.0:
-            print(f"\n[INFO] Coverage plateau detected at {cur_coverage:.1f}% "
-                  f"(no gain >{plateau_threshold}% for {plateau_patience} steps). "
-                  f"Exploration complete!")
+        if plateau_counter >= plateau_patience:
+            print(f"\n[INFO] Coverage plateau at {cur_coverage:.1f}% "
+                  f"(<{plateau_threshold}%/step over {plateau_patience} steps). "
+                  f"Exploration considered complete.")
             break
 
         aif_step += 1
