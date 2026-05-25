@@ -86,8 +86,6 @@ class SimConfig:
 
     # ── Planner (Tâche 1) ──
     planner: str = "aif"              # "aif" | "heuristic"
-    heuristic_frontier_radius: int = 5  # rayon en cellules pour compter les frontières
-    heuristic_w_coll: float = 5.0     # poids collision (= w_collision par défaut)
 
     # ── Architecture (Tâche 2) ──
     arch: str = "centralized"         # "centralized" | "distributed"
@@ -593,95 +591,56 @@ def select_action(
 
 
 # ════════════════════════════════════════════════════════════════
-# 5b. Heuristique Yamauchi frontier-based (Tâche 1) — alternative à AIF
+# 5b. Heuristique naïve "drone idiot mais correct" — alternative à AIF
 # ════════════════════════════════════════════════════════════════
-# Approche Yamauchi 1997 — guidée par BFS multi-source au lieu d'un comptage
-# strictement local :
-#   1. Détection des cellules frontières : libre (p<0.4) adjacente à inconnu
-#      (0.4 ≤ p ≤ 0.6).
-#   2. BFS multi-source depuis TOUTES les frontières, propagation à travers
-#      les cellules navigables (p < occ_threshold) → carte dist_to_frontier.
-#   3. Pour chaque drone : score d'une action candidate = -dist[next_cell]
-#      (plus on est près d'une frontière, mieux c'est) - λ_coll · Σ(1/d_voisin).
-#   4. Fallback radius-local si pas de frontière atteignable (carte saturée
-#      ou drone dans une poche isolée).
+# Règles :
+#   1. Le drone ne bouge QUE vers une cellule confirmée libre dans la belief
+#      (p < HEUR_FREE_THR). Une cellule inconnue (p ≈ 0.5) est refusée → pas
+#      de fonçage à l'aveugle dans des murs non encore observés.
+#   2. On garde la direction courante TANT QU'ELLE EST VALIDE (cellule devant
+#      toujours confirmée libre, pas d'autre drone trop près). Pas de timer
+#      de commit : on ne change que quand on est obligé.
+#   3. Évitement collision : on refuse toute direction qui amènerait à moins
+#      de HEUR_COLL_RADIUS d'un autre drone.
+#   4. Re-choix de direction (uniquement quand la direction courante est
+#      bloquée) : parmi les directions valides, on filtre celles dont la
+#      cellule cible touche de l'inconnu (3×3) → on tire au sort uniformément
+#      parmi celles-là. Si AUCUNE direction valide ne touche d'inconnu (on est
+#      au milieu d'une zone déjà explorée), on tire au sort uniformément parmi
+#      toutes les directions valides.
+#   5. Si aucune direction n'est valide : on reste sur place et on attend que
+#      le LiDAR mette à jour la belief au step suivant.
 #
-# Multi-drones : pas d'assignation Hungarian explicite — le terme de
-# collision (rayon 8m, poids cfg.heuristic_w_coll) éloigne deux drones qui
-# convergeraient vers la même frontière.
+# Pas de softmax, pas d'expected_info_gain, pas de frontier_attraction. Juste
+# des if/else et un rng.choice() uniforme.
 #
-# Même signature et même format de retour que select_action() pour pouvoir
-# switcher via cfg.planner sans rien casser ailleurs.
+# Même signature et même format de retour que select_action() pour switch
+# transparent.
 
-def _count_frontiers(gx: int, gy: int, belief: BeliefGrid, radius: int) -> int:
-    """Compte les cellules-frontières dans un carré de demi-côté `radius`
-    autour de (gx, gy). Utilisé comme fallback Yamauchi quand aucune
-    frontière n'est atteignable par BFS (ex : carte fully-explored).
-    """
+# Constantes algorithme
+HEUR_FREE_THR = 0.4          # p < cette valeur ⇒ cellule confirmée libre
+HEUR_COLL_RADIUS = 1.5       # m : on refuse une case avec un drone plus près
+
+# État per-drone (direction courante). Indexé par id(rng) — chaque drone a une
+# instance rng unique, chaque run est un process Python séparé (voir
+# run_all_experiments.sh), donc pas de risque d'id réutilisé entre runs.
+_HEUR_STATE: Dict[int, Dict[str, Any]] = {}
+
+
+def _count_unknown_neighbors(gx: int, gy: int, belief: BeliefGrid) -> int:
+    """Compte les cellules inconnues (0.4 ≤ p ≤ 0.6) dans le 3×3 centré
+    sur (gx, gy). Utilisé pour biaiser le re-choix vers les zones non
+    encore explorées. Pas de raisonnement probabiliste : juste un comptage."""
     n = 0
     p = belief.probability
-    for dy in range(-radius, radius + 1):
-        for dx in range(-radius, radius + 1):
+    for dy in range(-1, 2):
+        for dx in range(-1, 2):
             nx, ny = gx + dx, gy + dy
-            if not belief.in_bounds(nx, ny):
-                continue
-            pc = p[ny, nx]
-            if pc >= 0.4:           # pas libre → pas une frontière
-                continue
-            for ddx, ddy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                mx, my = nx + ddx, ny + ddy
-                if belief.in_bounds(mx, my):
-                    pm = p[my, mx]
-                    if 0.4 <= pm <= 0.6:
-                        n += 1
-                        break
+            if belief.in_bounds(nx, ny):
+                pc = p[ny, nx]
+                if 0.4 <= pc <= 0.6:
+                    n += 1
     return n
-
-
-def _build_frontier_distance_map(
-    belief: BeliefGrid, cfg: SimConfig
-) -> Tuple[np.ndarray, np.ndarray, int]:
-    """BFS multi-source Yamauchi.
-
-    - Frontière = cellule libre (p<0.4) avec ≥1 voisin 4-connecté inconnu
-      (0.4 ≤ p ≤ 0.6).
-    - BFS propagé à travers les cellules navigables (p < occ_threshold).
-    - dist[y,x] = nombre minimal de pas grille pour atteindre une frontière,
-      ou INF (= H*W + 1) si inatteignable.
-
-    Returns (dist_map[H,W] int32, frontier_mask[H,W] bool, n_frontiers).
-    """
-    from collections import deque
-
-    p = belief.probability
-    H, W = p.shape
-    free = p < 0.4
-    unknown = (p >= 0.4) & (p <= 0.6)
-    navigable = p < cfg.occ_threshold
-
-    # Frontier mask vectorisé : free + ≥1 voisin 4-connecté inconnu
-    frontier = np.zeros_like(free, dtype=bool)
-    frontier[:, :-1] |= free[:, :-1] & unknown[:,  1:]
-    frontier[:,  1:] |= free[:,  1:] & unknown[:, :-1]
-    frontier[:-1, :] |= free[:-1, :] & unknown[ 1:, :]
-    frontier[ 1:, :] |= free[ 1:, :] & unknown[:-1, :]
-
-    INF = H * W + 1
-    dist = np.full((H, W), INF, dtype=np.int32)
-    q: "deque[Tuple[int,int]]" = deque()
-    ys, xs = np.where(frontier)
-    for y, x in zip(ys.tolist(), xs.tolist()):
-        dist[y, x] = 0
-        q.append((x, y))
-    while q:
-        x, y = q.popleft()
-        d = int(dist[y, x]) + 1
-        for ddx, ddy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            nx, ny = x + ddx, y + ddy
-            if 0 <= nx < W and 0 <= ny < H and navigable[ny, nx] and dist[ny, nx] > d:
-                dist[ny, nx] = d
-                q.append((nx, ny))
-    return dist, frontier, int(frontier.sum())
 
 
 def select_action_heuristic(
@@ -693,19 +652,20 @@ def select_action_heuristic(
     rng: np.random.Generator,
     resilience_phase: str = "normal",
 ) -> Tuple[Tuple[str, float, float], List[Dict], int]:
-    """Yamauchi frontier-based : BFS multi-source + collision avoidance.
+    """Heuristique naïve : commit-K + confirmed-free + bias inconnu.
     Signature identique à select_action() pour switch transparent."""
+    del resilience_phase  # ignoré : l'heuristique n'a pas de phases
     plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
-    n = len(ACTIONS)
-    scores = np.full(n, -math.inf)
-    cand_diag: List[Dict] = []
 
-    dist_map, frontier_mask, n_frontiers = _build_frontier_distance_map(plan_belief, cfg)
-    H, W = plan_belief.probability.shape
-    INF = H * W + 1
-    drone_gx, drone_gy = plan_belief.world_to_grid(pos_x, pos_y)
-    # Yamauchi inutilisable si aucune frontière OU drone dans une poche isolée
-    use_bfs = n_frontiers > 0 and dist_map[drone_gy, drone_gx] < INF
+    # État persistant par drone (direction courante) : indexé par id(rng)
+    key = id(rng)
+    state = _HEUR_STATE.get(key)
+    if state is None:
+        state = {"current_idx": None}
+        _HEUR_STATE[key] = state
+
+    cand_diag: List[Dict] = []
+    valid_indices: List[int] = []
 
     for i, (name, dx, dy) in enumerate(ACTIONS):
         nx = pos_x + dx * cfg.step_size
@@ -715,60 +675,74 @@ def select_action_heuristic(
             "nx": round(nx, 3), "ny": round(ny, 3),
             "valid": False, "reason": "",
             "ig": 0.0, "frontier": 0.0,
-            "move": 0.0, "coll": 0.0, "G": 1e6,
+            "move": 0.0, "coll": 0.0, "G": 0.0,
         }
+        if name == "stay":
+            # "stay" n'est jamais préférée mais reste un fallback si tout est bloqué
+            cand_diag.append(entry)
+            continue
         if not (0.5 <= nx < cfg.env_width - 0.5 and 0.5 <= ny < cfg.env_height - 0.5):
             entry["reason"] = "out-of-bounds"
             cand_diag.append(entry)
             continue
         gx, gy = plan_belief.world_to_grid(nx, ny)
-        if plan_belief.probability[gy, gx] >= cfg.occ_threshold:
-            entry["reason"] = f"occupied p={plan_belief.probability[gy, gx]:.2f}"
+        p = float(plan_belief.probability[gy, gx])
+        if p >= cfg.occ_threshold:
+            entry["reason"] = f"occupied p={p:.2f}"
             cand_diag.append(entry)
             continue
-
-        if use_bfs:
-            d = int(dist_map[gy, gx])
-            if d >= INF:
-                # cellule navigable mais aucune frontière atteignable depuis ici
-                front_score = -1e4
-                front_log = float(d)  # = INF, marqueur isolé
-            else:
-                front_score = -float(d)
-                # bonus si la cellule next EST une frontière (pousse l'observation)
-                if frontier_mask[gy, gx]:
-                    front_score += 0.5
-                front_log = float(d)  # distance grille à la frontière la plus proche
-        else:
-            # Fallback radius-local (aucune frontière OU drone dans une poche)
-            front_score = float(_count_frontiers(
-                gx, gy, plan_belief, cfg.heuristic_frontier_radius
-            ))
-            front_log = front_score
-
-        coll = sum(
-            1.0 / (math.hypot(nx - ox, ny - oy) + 0.1)
-            for ox, oy in others if math.hypot(nx - ox, ny - oy) < 8.0
-        )
-        score = front_score - cfg.heuristic_w_coll * coll
-        scores[i] = score
-        entry.update({
-            "valid": True, "reason": "ok",
-            "ig": 0.0,
-            "frontier": round(front_log, 2),
-            "move": 0.0 if name == "stay" else 1.0,
-            "coll": round(coll, 4),
-            "G": round(-score, 4),
-        })
+        if p >= HEUR_FREE_THR:
+            # cellule inconnue → on refuse (règle "confirmed-free only")
+            entry["reason"] = f"unknown p={p:.2f}"
+            cand_diag.append(entry)
+            continue
+        # collision avec autres drones
+        min_d = math.inf
+        for ox, oy in others:
+            d = math.hypot(nx - ox, ny - oy)
+            if d < min_d:
+                min_d = d
+        if min_d < HEUR_COLL_RADIUS:
+            entry["reason"] = f"neighbor d={min_d:.2f}"
+            entry["coll"] = round(1.0 / (min_d + 0.1), 3)
+            cand_diag.append(entry)
+            continue
+        # direction valide
+        entry["valid"] = True
+        entry["reason"] = "ok"
+        entry["move"] = 1.0
         cand_diag.append(entry)
+        valid_indices.append(i)
 
-    if not np.isfinite(scores).any():
-        cand_diag[0].update({"valid": True, "reason": "forced-stay", "G": 0.0})
+    # Aucune direction valide → on reste sur place (le LiDAR rafraîchira au step+1)
+    if not valid_indices:
+        cand_diag[0].update({"valid": True, "reason": "forced-stay (all blocked)"})
+        state["current_idx"] = None
         return ACTIONS[0], cand_diag, 0
 
-    best = scores.max()
-    ties = [i for i in range(n) if scores[i] == best]
-    idx = int(rng.choice(ties)) if len(ties) > 1 else ties[0]
+    # Direction courante encore valide → on la garde
+    if state["current_idx"] is not None and state["current_idx"] in valid_indices:
+        idx = state["current_idx"]
+        cand_diag[idx]["reason"] = "keep"
+        return ACTIONS[idx], cand_diag, idx
+
+    # Sinon (bloqué ou premier coup) : on choisit une nouvelle direction.
+    # Filtrer celles dont la cellule cible touche de l'inconnu (3×3).
+    unknown_touching: List[int] = []
+    for i in valid_indices:
+        _, dx, dy = ACTIONS[i]
+        nx = pos_x + dx * cfg.step_size
+        ny = pos_y + dy * cfg.step_size
+        gx, gy = plan_belief.world_to_grid(nx, ny)
+        unk = _count_unknown_neighbors(gx, gy, plan_belief)
+        cand_diag[i]["frontier"] = float(unk)
+        if unk > 0:
+            unknown_touching.append(i)
+
+    pool = unknown_touching if unknown_touching else valid_indices
+    idx = int(rng.choice(pool))
+    state["current_idx"] = idx
+    cand_diag[idx]["reason"] = "new-direction (unknown)" if unknown_touching else "new-direction (any)"
     return ACTIONS[idx], cand_diag, idx
 
 

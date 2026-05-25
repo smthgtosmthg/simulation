@@ -5,8 +5,6 @@ Generated from `/home/djihene_guitoun/simulation_mc02/logs/runs` (10 runs)
 
 | tag | planner | arch | ns3 | steps | coverage_final | entropy_final | innov_final | active_final | msg_dropped | queue_size | time_to_recovery | durable_count |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| aif_cent_baseline | aif | centralized | wifi | 80 | 100.00 | 0.31 | 0.51 | 3 | 0 | 1 | — | 0 |
-| aif_cent_baseline | aif | centralized | wifi | 74 | 95.06 | 0.30 | 0.68 | 3 | 0 | 1 | — | 0 |
 | aif_cent_baseline | aif | centralized | wifi | 44 | 93.23 | 0.32 | 0.70 | 3 | 0 | 1 | — | 0 |
 | heur_cent_baseline | heuristic | centralized | wifi | 80 | 61.44 | 0.45 | 0.25 | 3 | 0 | 1 | — | 0 |
 | aif_dist_baseline | aif | distributed | wifi | 47 | 93.00 | 0.32 | 0.69 | 3 | 0 | 6 | — | 0 |
@@ -15,6 +13,8 @@ Generated from `/home/djihene_guitoun/simulation_mc02/logs/runs` (10 runs)
 | heur_cent_kill_d0_s20 | heuristic | centralized | wifi | 80 | 33.00 | 0.56 | 0.12 | 2 | 0 | 1 | — | 0 |
 | aif_cent_cut_cloud_s20 | aif | centralized | wifi | 43 | 93.11 | 0.32 | 0.71 | 3 | 0 | 6 | — | 0 |
 | aif_dist_cut_links_s20 | aif | distributed | wifi | 64 | 93.04 | 0.31 | 0.58 | 3 | 258 | 0 | — | 0 |
+| heur_cent_baseline | heuristic | centralized | wifi | 80 | 68.87 | 0.42 | 0.69 | 3 | 0 | 1 | — | 0 |
+| heur_cent_baseline | heuristic | centralized | wifi | 70 | 93.04 | 0.32 | 0.73 | 3 | 0 | 1 | — | 0 |
 
 ## Comparaisons systématiques
 
