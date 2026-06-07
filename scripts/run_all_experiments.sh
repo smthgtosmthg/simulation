@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Plan d'exécution complet (Tâche 6 du PROMPT_CLAUDE_CODE.md)
+# Matrice complète des runs AIF — Plan d'expérimentation pour PFE.
 #
-# Lance séquentiellement 12 configurations couvrant :
-#   - Baseline AIF / Heuristique × Centralisé / Distribué
-#   - Impact de la latence NS-3 (WiFi puis 5G)
-#   - Résilience : perte drone, cut cloud, cut tous les liens drone↔drone
-#   - Multi-stress (full_chain)
+# Couvre 4 axes d'évaluation :
+#   1. AIF vs Heuristique (planificateur)
+#   2. Centralisé vs Distribué (architecture)
+#   3. Réseau (WiFi vs 5G, latence cloud chargé)
+#   4. Résilience aux stresseurs (kill drone, cut cloud, cut links, obstacle)
 #
-# Chaque run écrit ses artefacts dans :
-#   logs/runs/run_YYYYMMDD_HHMMSS_<tag>/
-# (cf. scripts/run_artifacts.py)
+# Chaque run produit `logs/runs/run_YYYYMMDD_HHMMSS_<tag>/` avec :
+#   - config.json, history.json, state_final.json
+#   - 10 PNG (coverage, entropy, innovation, discovery_rate,
+#     coverage_known_vs_global, decisions_per_min, resilience_phases,
+#     belief_map_final, trajectories, ns3_latencies)
 #
-# À la fin, génère le rapport comparatif :
-#   logs/runs/comparison_report.md
-#   logs/runs/comparison_*.png
+# Override via env :
+#   N_DRONES=3 MAX_STEPS=80 ./run_all_experiments.sh
+#   ONLY="aif_cent_baseline,aif_dist_baseline" ./run_all_experiments.sh
+#   HEADLESS=1 ./run_all_experiments.sh
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -24,12 +27,9 @@ LAUNCH="$SCRIPT_DIR/12_launch_aif_isaac_sim.sh"
 RUNS_DIR="$WORKSPACE/logs/runs"
 mkdir -p "$RUNS_DIR"
 
-# ── Paramètres communs (cap à 80 steps : exploration plateau ~step 52, cf. prompt §6) ──
 N_DRONES=${N_DRONES:-3}
 MAX_STEPS=${MAX_STEPS:-80}
-
-# ── Permettre d'override la liste via env ──
-ONLY="${ONLY:-}"   # ex: ONLY="aif_cent_baseline,heur_cent_baseline" pour ne lancer que ces deux
+ONLY="${ONLY:-}"
 
 run_one() {
     local TAG="$1"; shift
@@ -43,38 +43,63 @@ run_one() {
     echo "  Time : $(date '+%Y-%m-%d %H:%M:%S')"
     echo "  Flags: $*"
     echo "════════════════════════════════════════════════════════════════"
-    # GUI par défaut (Isaac Sim affiche sa fenêtre, GPU visible).
-    # Pour forcer headless sur cette batterie : `HEADLESS=1 ./run_all_experiments.sh`
     "$LAUNCH" "$N_DRONES" --max-steps "$MAX_STEPS" \
         --run-tag "$TAG" "$@" || {
         echo "  [WARN] run $TAG returned non-zero; continuing."
     }
 }
 
-# ───────────────── Matrice de 12 runs ─────────────────
+# ════════════════════════════════════════════════════════════════════
+# Baselines (4 runs)
+# ════════════════════════════════════════════════════════════════════
+#run_one aif_cent_baseline       --planner aif       --arch centralized --ns3 wifi
+#run_one aif_dist_baseline       --planner aif       --arch distributed --ns3 wifi
+#run_one heur_cent_baseline      --planner heuristic --arch centralized --ns3 wifi
+#run_one heur_dist_baseline      --planner heuristic --arch distributed --ns3 wifi
 
-# 1-4 : baselines (NS-3 wifi activé partout, pas de cut)
-#run_one aif_cent_baseline      --planner aif       --arch centralized --ns3 wifi
-run_one heur_cent_baseline     --planner heuristic --arch centralized --ns3 wifi
-#run_one aif_dist_baseline      --planner aif       --arch distributed --ns3 wifi
-#run_one heur_dist_baseline     --planner heuristic --arch distributed --ns3 wifi
+# ════════════════════════════════════════════════════════════════════
+# Charge réseau (latence cloud × 3 → 2 steps de retard)
+# ════════════════════════════════════════════════════════════════════
+#run_one aif_cent_cloud_loaded   --planner aif       --arch centralized --ns3 wifi \
+#                                --cloud-round-trip-ms 1500
+
+# ════════════════════════════════════════════════════════════════════
+# Résilience — stresseurs isolés
+# ════════════════════════════════════════════════════════════════════
+# Kill drone
+#run_one aif_cent_kill_d0_s20    --planner aif       --arch centralized --ns3 wifi \
+#                                --kill-drone-at-step 20 --kill-drone-id 0
+#run_one heur_cent_kill_d0_s20   --planner heuristic --arch centralized --ns3 wifi \
+#                                --kill-drone-at-step 20 --kill-drone-id 0
+
+# Cut cloud (centralisé → fallback local)
+#run_one aif_cent_cut_cloud_s20  --planner aif       --arch centralized --ns3 wifi \
+#                                --cut-cloud-at-step 20
 
 
-# 7-8 : résilience perte drone
-#run_one aif_cent_kill_d0_s20   --planner aif       --arch centralized --ns3 wifi --kill-drone-at-step 20
-#run_one heur_cent_kill_d0_s20  --planner heuristic --arch centralized --ns3 wifi --kill-drone-at-step 20
-
-# 9-10 : résilience cut liens
-#run_one aif_cent_cut_cloud_s20 --planner aif --arch centralized --ns3 wifi --cut-cloud-at-step 20
-#run_one aif_dist_cut_links_s20 --planner aif --arch distributed --ns3 wifi --cut-drone-link all --cut-drone-link-at-step 20
-
-# 11 : compare WiFi vs 5G
-#run_one aif_cent_ns3_5g        --planner aif --arch centralized --ns3 5g
+#run_one aif_dist_cut_links_s20  --planner aif       --arch distributed --ns3 wifi \
+#                                --neighbor-radius-m 12 \
+#                                --cut-drone-link all --cut-drone-link-at-step 20
 
 
+run_one aif_cent_obstacle_s20   --planner aif       --arch centralized --ns3 wifi \
+                                --drop-obstacle-at-step 20 --drop-obstacle-xy "0.0,2.0"
 
-# ───────────────── Rapport comparatif ─────────────────
+# ════════════════════════════════════════════════════════════════════
+# Multi-stress
+# ════════════════════════════════════════════════════════════════════
+#run_one aif_cent_full_chain     --planner aif       --arch centralized --ns3 wifi \
+#                                --cut-cloud-at-step 15 \
+#                                --kill-drone-at-step 30 --kill-drone-id 1
 
+# ════════════════════════════════════════════════════════════════════
+# Couche réseau alternative
+# ════════════════════════════════════════════════════════════════════
+#run_one aif_cent_ns3_5g         --planner aif       --arch centralized --ns3 5g
+
+# ════════════════════════════════════════════════════════════════════
+# Rapport comparatif
+# ════════════════════════════════════════════════════════════════════
 echo
 echo "  → Generating comparison report …"
 python3 "$SCRIPT_DIR/generate_comparison_report.py" --runs-dir "$RUNS_DIR"

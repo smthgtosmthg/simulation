@@ -207,8 +207,11 @@ def _summary_row(r) -> Dict[str, Any]:
         "ns3": cfg.get("ns3_mode", "none"),
         "steps": len(hist),
         "coverage_final": last.get("exploration_pct", 0.0),
+        "coverage_known_final": last.get("coverage_known_to_planner", 0.0),
         "entropy_final":  last.get("mean_entropy", 0.0),
         "innov_final":    last.get("innovation_mean", 0.0),
+        "discovery_rate_final": last.get("discovery_rate", 0.0),
+        "decisions_per_min_final": last.get("decisions_per_min", 0.0),
         "active_final":   last.get("active_drones", cfg.get("num_drones", 0)),
         "msg_dropped":    last.get("msg_dropped", 0),
         "queue_size":     last.get("queue_size", 0),
@@ -219,7 +222,9 @@ def _summary_row(r) -> Dict[str, Any]:
 
 def _md_table(rows: List[Dict[str, Any]]) -> str:
     cols = ["tag", "planner", "arch", "ns3", "steps",
-            "coverage_final", "entropy_final", "innov_final",
+            "coverage_final", "coverage_known_final",
+            "entropy_final", "innov_final",
+            "discovery_rate_final", "decisions_per_min_final",
             "active_final", "msg_dropped", "queue_size",
             "time_to_recovery", "durable_count"]
     head = "| " + " | ".join(cols) + " |\n"
@@ -318,15 +323,24 @@ def build_report(runs_dir: Path) -> Path:
         cov_png = runs_dir / f"resilience_{safe}_coverage.png"
         ent_png = runs_dir / f"resilience_{safe}_entropy.png"
         inn_png = runs_dir / f"resilience_{safe}_innovation.png"
-        _resilience_overlay(sel, "exploration_pct", f"{title} — coverage",
+        dr_png = runs_dir / f"resilience_{safe}_discovery_rate.png"
+        ck_png = runs_dir / f"resilience_{safe}_coverage_known.png"
+        _resilience_overlay(sel, "exploration_pct", f"{title} — coverage (global)",
                             "coverage (%)", cov_png, y_range=(0, 100))
         _resilience_overlay(sel, "mean_entropy", f"{title} — entropy",
                             "entropy", ent_png)
         _resilience_overlay(sel, "innovation_ema", f"{title} — innovation (EMA)",
                             "innovation EMA", inn_png)
+        _resilience_overlay(sel, "discovery_rate", f"{title} — discovery rate",
+                            "% / step", dr_png)
+        _resilience_overlay(sel, "coverage_known_to_planner",
+                            f"{title} — coverage known to planner",
+                            "coverage planner (%)", ck_png, y_range=(0, 100))
         block = (
             f"### {title}\n\n"
-            f"![coverage]({cov_png.name})\n\n"
+            f"![coverage global]({cov_png.name})\n\n"
+            f"![discovery rate]({dr_png.name})\n\n"
+            f"![coverage known to planner]({ck_png.name})\n\n"
             f"![entropy]({ent_png.name})\n\n"
             f"![innovation]({inn_png.name})\n\n"
         )

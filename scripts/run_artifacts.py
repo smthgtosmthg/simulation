@@ -186,6 +186,7 @@ def _plot_innovation(history, run_dir: Path):
     xs, mean = _series(history, "innovation_mean")
     _, ema = _series(history, "innovation_ema")
     fig, ax = plt.subplots(figsize=(8, 3.6))
+    _phase_bands(ax, history)
     ax.plot(xs, mean, "-", color="#f472b6", lw=1.2, label="mean")
     ax.plot(xs, ema, "-", color="#fbbf24", lw=2.0, label="EMA")
     ax.set_title("Innovation (mean + EMA)")
@@ -193,6 +194,58 @@ def _plot_innovation(history, run_dir: Path):
     ax.grid(True, axis="y")
     ax.legend(loc="upper right", fontsize=8)
     _save(fig, run_dir / "innovation.png")
+
+
+def _plot_discovery_rate(history, run_dir: Path):
+    """Δcoverage par step (5-step rolling window) — métrique 'vitesse d'exploration'.
+    Le coude au moment du stresseur est ICI ce qu'on cherche à voir."""
+    plt = _setup_matplotlib()
+    xs, ys = _series(history, "discovery_rate")
+    fig, ax = plt.subplots(figsize=(8, 3.6))
+    _phase_bands(ax, history)
+    ax.plot(xs, ys, "-", color="#10b981", lw=2.0)
+    ax.fill_between(xs, ys, alpha=0.15, color="#10b981")
+    ax.axhline(0, color="#94a3b8", lw=0.5, alpha=0.5)
+    ax.set_title("Discovery rate — Δcoverage / step (5-step window)")
+    ax.set_xlabel("AIF step"); ax.set_ylabel("% / step")
+    ax.grid(True, axis="y")
+    _save(fig, run_dir / "discovery_rate.png")
+
+
+def _plot_coverage_known_vs_global(history, run_dir: Path):
+    """Compare coverage globale (vue omnisciente du SwarmCoordinator) à
+    coverage_known_to_planner (ce que le drone *sait* au moment de décider).
+    Le DELTA entre les deux courbes = douleur du cut réseau."""
+    plt = _setup_matplotlib()
+    xs, global_cov = _series(history, "exploration_pct")
+    _, known_cov = _series(history, "coverage_known_to_planner")
+    fig, ax = plt.subplots(figsize=(8, 3.6))
+    _phase_bands(ax, history)
+    ax.plot(xs, global_cov, "-", color="#10b981", lw=2.0, label="global (omniscient)")
+    ax.plot(xs, known_cov, "-", color="#f472b6", lw=2.0, label="known to planner")
+    ax.fill_between(xs, known_cov, global_cov,
+                    where=[g > k for g, k in zip(global_cov, known_cov)],
+                    color="#ef4444", alpha=0.15, label="network knowledge gap")
+    ax.set_title("Coverage : globale vs connue par le drone planificateur")
+    ax.set_xlabel("AIF step"); ax.set_ylabel("%")
+    ax.set_ylim(0, 100)
+    ax.grid(True, axis="y")
+    ax.legend(loc="lower right", fontsize=8)
+    _save(fig, run_dir / "coverage_known_vs_global.png")
+
+
+def _plot_decisions_per_min(history, run_dir: Path):
+    """Vitesse de décision (fresh actions par minute, fenêtre glissante 10 steps)."""
+    plt = _setup_matplotlib()
+    xs, ys = _series(history, "decisions_per_min")
+    fig, ax = plt.subplots(figsize=(8, 3.6))
+    _phase_bands(ax, history)
+    ax.plot(xs, ys, "-", color="#a78bfa", lw=2.0)
+    ax.fill_between(xs, ys, alpha=0.15, color="#a78bfa")
+    ax.set_title("Vitesse de décision — actions fresh / min (fenêtre 10 steps)")
+    ax.set_xlabel("AIF step"); ax.set_ylabel("décisions / min")
+    ax.grid(True, axis="y")
+    _save(fig, run_dir / "decisions_per_min.png")
 
 
 def _phase_bands(ax, history):
@@ -323,6 +376,9 @@ def generate_run_artifacts(
             history, run_dir,
             events=(final_state.get("resilience", {}) or {}).get("events", []),
         )),
+        ("discovery_rate", lambda: _plot_discovery_rate(history, run_dir)),
+        ("coverage_known_vs_global", lambda: _plot_coverage_known_vs_global(history, run_dir)),
+        ("decisions_per_min", lambda: _plot_decisions_per_min(history, run_dir)),
     ]
     if ns3_pairs:
         plot_calls.append(
