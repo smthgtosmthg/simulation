@@ -1,24 +1,4 @@
 #!/usr/bin/env python3
-"""
-Génération des artefacts par run (Tâche 5.4 du PROMPT_CLAUDE_CODE.md).
-
-Appelé en fin de main() dans 12_aif_isaac_sim.py — produit un dossier
-logs/runs/run_YYYYMMDD_HHMMSS_<tag>/ contenant :
-    - config.json          : dump du SimConfig (params actifs)
-    - history.json         : courbes step-par-step
-    - state_final.json     : snapshot final
-    - belief_map_final.png : grille de croyance fusionnée (matplotlib)
-    - trajectories.png     : trajectoires des drones par couleur
-    - entropy.png          : courbe d'entropie
-    - coverage.png         : courbe de coverage interior
-    - innovation.png       : mean + EMA
-    - resilience_phases.png: entropie avec bandes de phases
-    - ns3_latencies.png    : (si NS-3 actif) heatmap latences inter-drones
-
-Toutes les figures utilisent matplotlib (déjà standard). Aucune dépendance
-externe ajoutée.
-"""
-
 from __future__ import annotations
 
 import json
@@ -31,30 +11,27 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-# ── Palette alignée sur le dashboard ──
+# palette alignée sur le dashboard
 DRONE_COLORS = ["#22d3ee", "#34d399", "#a78bfa", "#fbbf24", "#f472b6", "#fb923c"]
 PHASE_COLORS = {
-    "normal":   "#10b981",   # green
-    "recovery": "#ef4444",   # red
-    "durable":  "#fbbf24",   # yellow
+    "normal":   "#10b981",
+    "recovery": "#ef4444",
+    "durable":  "#fbbf24",
 }
 
 
 def _safe_cfg_dict(cfg) -> Dict[str, Any]:
-    """Sérialise un dataclass SimConfig (ignore les attrs internes)."""
     if is_dataclass(cfg):
         d = asdict(cfg)
     else:
         d = {k: v for k, v in vars(cfg).items() if not k.startswith("_")}
-    # Convertir les types non-JSON (float NaN, paths)
     for k, v in list(d.items()):
-        if isinstance(v, float) and (v != v):  # NaN
+        if isinstance(v, float) and (v != v):
             d[k] = None
     return d
 
 
 def _workspace_root() -> Path:
-    """Remonte au dossier du repo (parent du dossier scripts/)."""
     return Path(__file__).resolve().parent.parent
 
 
@@ -66,7 +43,6 @@ def _resolve_runs_dir(cfg) -> Path:
 
 
 def make_run_dir(cfg) -> Path:
-    """Crée le dossier run_YYYYMMDD_HHMMSS_<tag>/ et le retourne."""
     base = _resolve_runs_dir(cfg)
     base.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -76,13 +52,7 @@ def make_run_dir(cfg) -> Path:
     return run_dir
 
 
-# ──────────────────────────────────────────────────────────────────
-# Génération des figures
-# ──────────────────────────────────────────────────────────────────
-
-
 def _setup_matplotlib():
-    """Backend non-interactif + style sombre cohérent avec le dashboard."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -110,11 +80,9 @@ def _save(fig, path: Path):
 
 
 def _plot_belief_map(fused_belief, run_dir: Path, agents: List = None):
-    """Carte de croyance fusionnée (Y-flipped pour matcher le dashboard)."""
     plt = _setup_matplotlib()
     arr = np.asarray(fused_belief.probability, dtype=float)
     fig, ax = plt.subplots(figsize=(7, 5))
-    # Y-flip pour que (0,0) soit en bas (convention Isaac/dashboard)
     im = ax.imshow(arr, origin="lower", cmap="RdYlGn_r", vmin=0.0, vmax=1.0,
                    interpolation="nearest", aspect="equal")
     ax.set_title("Belief Map — Fused Occupancy (final)")
@@ -139,7 +107,6 @@ def _plot_belief_map(fused_belief, run_dir: Path, agents: List = None):
 def _plot_trajectories(agents: List, fused_belief, run_dir: Path):
     plt = _setup_matplotlib()
     fig, ax = plt.subplots(figsize=(7, 5))
-    # background = belief map en filigrane
     arr = np.asarray(fused_belief.probability, dtype=float)
     ax.imshow(arr, origin="lower", cmap="Greys", vmin=0.0, vmax=1.0,
               alpha=0.5, aspect="equal")
@@ -197,8 +164,6 @@ def _plot_innovation(history, run_dir: Path):
 
 
 def _plot_discovery_rate(history, run_dir: Path):
-    """Δcoverage par step (5-step rolling window) — métrique 'vitesse d'exploration'.
-    Le coude au moment du stresseur est ICI ce qu'on cherche à voir."""
     plt = _setup_matplotlib()
     xs, ys = _series(history, "discovery_rate")
     fig, ax = plt.subplots(figsize=(8, 3.6))
@@ -213,9 +178,6 @@ def _plot_discovery_rate(history, run_dir: Path):
 
 
 def _plot_coverage_known_vs_global(history, run_dir: Path):
-    """Compare coverage globale (vue omnisciente du SwarmCoordinator) à
-    coverage_known_to_planner (ce que le drone *sait* au moment de décider).
-    Le DELTA entre les deux courbes = douleur du cut réseau."""
     plt = _setup_matplotlib()
     xs, global_cov = _series(history, "exploration_pct")
     _, known_cov = _series(history, "coverage_known_to_planner")
@@ -235,7 +197,6 @@ def _plot_coverage_known_vs_global(history, run_dir: Path):
 
 
 def _plot_decisions_per_min(history, run_dir: Path):
-    """Vitesse de décision (fresh actions par minute, fenêtre glissante 10 steps)."""
     plt = _setup_matplotlib()
     xs, ys = _series(history, "decisions_per_min")
     fig, ax = plt.subplots(figsize=(8, 3.6))
@@ -249,10 +210,8 @@ def _plot_decisions_per_min(history, run_dir: Path):
 
 
 def _phase_bands(ax, history):
-    """Surimpose des bandes verticales colorées selon resilience_phase."""
     if not history:
         return
-    # On regroupe les indices consécutifs avec la même phase
     cur_phase = history[0].get("resilience_phase", "normal")
     start = history[0].get("step", 0)
     for h in history[1:]:
@@ -264,7 +223,6 @@ def _phase_bands(ax, history):
                            alpha=0.18)
             cur_phase = ph
             start = end
-    # dernière bande
     end = history[-1].get("step", start + 1)
     if cur_phase != "normal":
         ax.axvspan(start, end, color=PHASE_COLORS.get(cur_phase, "#888"),
@@ -277,7 +235,6 @@ def _plot_resilience(history, run_dir: Path, events: List[Dict] = None):
     fig, ax = plt.subplots(figsize=(8, 3.6))
     _phase_bands(ax, history)
     ax.plot(xs, ent, "-", color="#3b82f6", lw=1.8, label="entropy")
-    # marqueurs verticaux pour les events
     if events:
         for ev in events:
             step = ev.get("step", -1)
@@ -319,11 +276,6 @@ def _plot_ns3(ns3_pairs: Dict[Tuple[int, int], Dict[str, float]],
     _save(fig, run_dir / "ns3_latencies.png")
 
 
-# ──────────────────────────────────────────────────────────────────
-# Point d'entrée appelé depuis main()
-# ──────────────────────────────────────────────────────────────────
-
-
 def generate_run_artifacts(
     cfg,
     history: List[Dict],
@@ -333,11 +285,6 @@ def generate_run_artifacts(
     qr_stats: Optional[Dict] = None,
     ns3_pairs: Optional[Dict[Tuple[int, int], Dict[str, float]]] = None,
 ) -> Path:
-    """Produit le dossier run_YYYYMMDD_HHMMSS_<tag>/ et renvoie son chemin.
-
-    En cas d'échec d'un plot (matplotlib indispo, etc.), on continue : les
-    JSON sont toujours écrits — c'est le contrat minimal pour la page Runs.
-    """
     run_dir = make_run_dir(cfg)
 
     # 1) JSON : config + history + state final
@@ -354,7 +301,7 @@ def generate_run_artifacts(
     except Exception as e:
         print(f"  [run_artifacts] JSON dump warning: {e}")
 
-    # 2) PNGs — on isole chaque appel pour ne pas perdre les autres si un crash
+    # 2) PNGs — chaque appel isolé pour ne pas perdre les autres
     plot_calls = [
         ("belief map", lambda: _plot_belief_map(fused_belief, run_dir, agents)),
         ("trajectories", lambda: _plot_trajectories(agents, fused_belief, run_dir)),
@@ -392,7 +339,6 @@ def generate_run_artifacts(
         except Exception as e:
             print(f"  [run_artifacts] plot {name} skipped: {e}")
 
-    # 3) Petit README facile à lire pour le prof
     try:
         m = history[-1] if history else {}
         readme = (

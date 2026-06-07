@@ -1,17 +1,3 @@
-"""
-BeliefGrid — Carte d'occupation probabiliste (log-odds) + fusion entre drones.
-
-Représentation : pour chaque cellule, une probabilité d'occupation P(occupé)
-stockée sous forme de log-odds L = log(P / (1-P)).  Mise à jour bayésienne
-par addition de log-odds (filtrage de Bayes naïf indépendant cellule par
-cellule), avec saturation à ±lo_max.
-
-Fusion entre drones : Independent Opinion Pool en log-odds :
-    L_fused = L_prior + mean_i(L_i - L_prior)
-C'est commutatif (l'ordre des drones n'a pas d'impact) et symétrique
-(somme = somme dans n'importe quel ordre).
-"""
-
 from __future__ import annotations
 
 import math
@@ -28,7 +14,6 @@ from .math_utils import (
 
 
 class BeliefGrid:
-    """Grille d'occupation 2D en log-odds."""
 
     def __init__(self, cfg):
         self.width = cfg.grid_width
@@ -58,9 +43,6 @@ class BeliefGrid:
                           angles: np.ndarray, ranges: np.ndarray,
                           hits: np.ndarray, max_range: float,
                           lo_free: float, lo_occ: float):
-        """Inverse sensor model : pour chaque rayon LiDAR, parcourt les
-        cellules traversées, marque libres celles avant le hit et occupée
-        celle qui correspond au hit final."""
         ogx, ogy = self.world_to_grid(ox, oy)
         for i in range(len(angles)):
             cos_a = math.cos(angles[i])
@@ -82,18 +64,14 @@ class BeliefGrid:
                 if self.in_bounds(hgx, hgy) and (hgx, hgy) != (ogx, ogy):
                     self.update_cell(hgx, hgy, lo_occ)
 
-    # ── Métriques dérivées ──────────────────────────────────────────
-
     def mean_entropy(self) -> float:
         return float(bernoulli_entropy_v(self.probability).mean())
 
     def exploration_ratio(self) -> float:
-        """% de cellules avec une croyance franche (p<0.3 ou p>0.7)."""
         known = (self.probability < 0.3) | (self.probability > 0.7)
         return float(known.sum() / known.size)
 
     def effective_bounds(self, occ_threshold: float = 0.65) -> Tuple[int, int, int, int]:
-        """Bounding box des cellules occupées (utile pour cadrer la zone murs)."""
         occ = self.probability >= occ_threshold
         if not occ.any():
             return 0, 0, self.width, self.height
@@ -107,7 +85,6 @@ class BeliefGrid:
                                    occ_threshold: float = 0.65,
                                    bounds_grid: Optional[Tuple[int, int, int, int]] = None,
                                    interior_area_cells: int = 0) -> float:
-        """% de cellules connues dans la bbox intérieure (murs - inset)."""
         del drone_positions, occ_threshold
         if interior_area_cells <= 0:
             interior_area_cells = self.width * self.height
@@ -138,8 +115,6 @@ class BeliefGrid:
         observed_in_walls = int(observed[wy0:wy1, wx0:wx1].sum())
         return float(min(1.0, observed_in_walls / walls_area))
 
-    # ── Utilitaires ─────────────────────────────────────────────────
-
     def copy(self) -> "BeliefGrid":
         new = BeliefGrid.__new__(BeliefGrid)
         new.width, new.height = self.width, self.height
@@ -152,17 +127,7 @@ class BeliefGrid:
         return np.round(self.probability, 2).tolist()
 
 
-# ════════════════════════════════════════════════════════════════════
-# Fusion entre beliefs
-# ════════════════════════════════════════════════════════════════════
-
-
 def fuse_beliefs_logodds(beliefs: List[BeliefGrid], prior_lo: float) -> BeliefGrid:
-    """Independent Opinion Pool : L_fused = L0 + mean(L_i - L0).
-
-    Reflète : chaque drone fournit une "déviation" par rapport au prior,
-    on en fait la moyenne et on l'ajoute au prior.  Commutatif.
-    """
     fused = beliefs[0].copy()
     n = len(beliefs)
     fused.logodds[:] = prior_lo
@@ -174,11 +139,6 @@ def fuse_beliefs_logodds(beliefs: List[BeliefGrid], prior_lo: float) -> BeliefGr
 
 
 def mix_beliefs(local: BeliefGrid, fused: BeliefGrid, lam: float) -> BeliefGrid:
-    """Pondère local et fused : L = (1-λ)·L_local + λ·L_fused.
-
-    Utilisé dans select_action() pour mélanger la croyance locale du drone
-    avec la croyance fusionnée (cloud ou voisins).
-    """
     mixed = local.copy()
     mixed.logodds = (1 - lam) * local.logodds + lam * fused.logodds
     np.clip(mixed.logodds, -mixed.lo_max, mixed.lo_max, out=mixed.logodds)

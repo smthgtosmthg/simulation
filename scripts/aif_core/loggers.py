@@ -1,10 +1,3 @@
-"""
-Loggers — Écriture JSON pour le dashboard + log diagnostique humain.
-
-DataLogger        : écrit /tmp/aif_state.json + /tmp/aif_history.json (atomique)
-DiagnosticLogger  : log texte lisible (LiDAR par drone, table des candidats AIF…)
-"""
-
 from __future__ import annotations
 
 import json
@@ -14,11 +7,6 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-
-
-# ════════════════════════════════════════════════════════════════════
-# DataLogger — JSON pour le dashboard
-# ════════════════════════════════════════════════════════════════════
 
 
 class DataLogger:
@@ -39,13 +27,7 @@ class DataLogger:
         os.replace(tmp, path)
 
 
-# ════════════════════════════════════════════════════════════════════
-# DiagnosticLogger — Log texte lisible (debug)
-# ════════════════════════════════════════════════════════════════════
-
-
 class DiagnosticLogger:
-    """Trace humaine de chaque step : LiDAR, candidats AIF, belief, collisions."""
 
     def __init__(self, output_dir: str, cfg):
         self.cfg = cfg

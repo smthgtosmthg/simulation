@@ -1,22 +1,3 @@
-"""
-Résilience — Détection de stress, phases de récupération.
-
-Trois phases possibles :
-  - **normal**   : régime nominal, poids `select_action` par défaut.
-  - **recovery** : déclenchée par un trigger (innovation spike, drone perdu,
-                   lien coupé). Boost de l'exploration (w_entropy_recover,
-                   w_innov_recover) pour re-mapper rapidement.
-  - **durable**  : après α steps en recovery (ou recovered tôt), on entre en
-                   "maintien" — pénalité forte si l'entropie remonte.
-
-Transition recovery → durable :
-  Recovered ssi `H ≤ H_target` ET `innov ≤ innov_target`.
-  Au bout de β steps consécutifs en "recovered" → stress résolu, retour normal.
-
-Détection de spike (déclenche stress automatiquement) :
-  innov_mean > innov_ema + k_sigma · σ
-"""
-
 from __future__ import annotations
 
 import math
@@ -26,7 +7,6 @@ from typing import Dict, List
 
 @dataclass
 class ResilienceState:
-    """État brut de la résilience (sérialisé pour le dashboard)."""
 
     stress_active: bool = False
     stress_t0: int = -1
@@ -48,31 +28,16 @@ class ResilienceState:
 
 
 class ResilienceManager:
-    """Encapsule la machine à états + les stats EMA d'innovation.
-
-    Usage :
-        rm = ResilienceManager(cfg)
-        for step in range(...):
-            innov_mean = compute_innov(...)
-            spike = rm.update_innovation_stats(innov_mean)
-            if spike and step > 5:
-                rm.trigger(step, "innovation_spike")
-            rm.update_phase(step, h_mean, innov_mean)
-            phase = rm.current_phase(step)   # "normal" | "recovery" | "durable"
-    """
 
     def __init__(self, cfg):
         self.cfg = cfg
         self.state = ResilienceState()
-        # Stats d'innovation
         self.innov_ema: float = 0.0
         self.innov_var: float = 0.0
 
-    # ── Trigger explicite (stresseur connu : kill drone, cut cloud, …) ──
-
     def trigger(self, step: int, cause: str) -> None:
         if self.state.stress_active:
-            # Déjà en stress : on ajoute juste l'event (cause cumulative)
+            # Déjà en stress : on ajoute juste l'event
             self.state.events.append({
                 "step": step, "type": "stress_addon", "cause": cause,
             })
@@ -87,20 +52,14 @@ class ResilienceManager:
         })
         print(f"  [RESILIENCE] ⚠ STRESS ACTIVATED at step {step}: {cause}")
 
-    # ── Update innovation EMA et détection de spike ─────────────────
-
     def update_innovation_stats(self, innov_mean: float) -> bool:
-        """Met à jour EMA + variance de l'innovation, retourne True si spike."""
         err = innov_mean - self.innov_ema
         self.innov_ema += self.cfg.ema_alpha * err
         self.innov_var += self.cfg.ema_alpha * ((err * err) - self.innov_var)
         sigma = math.sqrt(max(self.innov_var, 1e-8))
         return innov_mean > (self.innov_ema + self.cfg.k_sigma * sigma)
 
-    # ── Update de phase (à appeler chaque step) ─────────────────────
-
     def update_phase(self, step: int, h_mean: float, innov_mean: float) -> None:
-        """Vérifie si on est recovered, si on quitte le stress."""
         if not self.state.stress_active:
             return
         cfg = self.cfg
@@ -129,10 +88,7 @@ class ResilienceManager:
                 print(f"  [RESILIENCE] ✓ STRESS RESOLVED at step {step} "
                       f"(duration={step - self.state.stress_t0} steps)")
 
-    # ── Phase courante (lecture seule) ──────────────────────────────
-
     def current_phase(self, step: int) -> str:
-        """'normal' | 'recovery' | 'durable'."""
         if not self.state.stress_active:
             return "normal"
         elapsed = step - self.state.stress_t0

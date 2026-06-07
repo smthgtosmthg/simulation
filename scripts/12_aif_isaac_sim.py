@@ -1,24 +1,4 @@
 #!/usr/bin/env python3
-"""
-Orchestrateur Isaac Sim de la simulation AIF multi-drones.
-
-Ce script est **le point d'entrée**. Il :
-  1. Démarre Isaac Sim et Pegasus
-  2. Charge l'environnement USD (warehouse)
-  3. Spawn N drones Pegasus avec ArduPilot SITL + LiDAR PhysX
-  4. Lance NS-3 en arrière-plan (optionnel)
-  5. Décolle les drones (séquence GUIDED → ARM → TAKEOFF)
-  6. Lance la boucle AIF : SwarmCoordinator.step() → ticks physiques
-
-Toute la **logique** (belief, planner, résilience, architecture, stresseurs,
-métriques) est dans le package `aif_core` — voir scripts/aif_core/README ou
-les docstrings de chaque module.
-
-Ce fichier ne contient que :
-  - L'intégration Pegasus (AifStateTracker, SitlController)
-  - L'intégration Isaac Sim (LidarReader, setup_world, setup_viewport_camera)
-  - Le parsing CLI et la boucle principale
-"""
 
 from __future__ import annotations
 
@@ -34,7 +14,6 @@ import numpy as np
 
 sys.stdout.reconfigure(line_buffering=True)
 
-# Le package aif_core est dans le même répertoire que ce script
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from aif_core.agent import DroneAgent
@@ -42,10 +21,6 @@ from aif_core.config import SimConfig
 from aif_core.loggers import DataLogger, DiagnosticLogger
 from aif_core.swarm import SwarmCoordinator
 
-
-# ════════════════════════════════════════════════════════════════════
-# 1. Pegasus AifStateTracker — Backend passif qui expose la pose au contrôleur
-# ════════════════════════════════════════════════════════════════════
 
 _Backend = None
 _Rotation = None
@@ -63,13 +38,10 @@ AifStateTracker = None
 
 
 def _create_state_tracker_class():
-    """Définit `AifStateTracker` comme sous-classe de Pegasus Backend.
-    Doit être appelé une fois après import de Pegasus (avant create_physical_drones)."""
     global AifStateTracker
     _ensure_pegasus_imports()
 
     class _AifStateTracker(_Backend):
-        """Backend Pegasus passif : ne commande rien, expose juste la pose."""
 
         def __init__(self, drone_id: int):
             self.drone_id = drone_id
@@ -116,15 +88,7 @@ def _create_state_tracker_class():
     AifStateTracker = _AifStateTracker
 
 
-# ════════════════════════════════════════════════════════════════════
-# 2. SITL params patcher + ArduPilot controller
-# ════════════════════════════════════════════════════════════════════
-
-
 def _patch_sitl_defaults():
-    """Injecte les params SITL nécessaires dans gazebo-iris.parm AVANT
-    le lancement d'ArduPilot. Sans ces params, le JSON backend Isaac Sim
-    (qui tourne à ~250 Hz) provoque des PreArm impossibles à passer."""
     parm_file = os.path.expanduser(
         "~/ardupilot/Tools/autotest/default_params/gazebo-iris.parm"
     )
@@ -174,12 +138,6 @@ def _patch_sitl_defaults():
 
 
 class SitlController:
-    """Interface entre la boucle AIF et ArduPilot SITL.
-
-    Lit la pose depuis l'AifStateTracker et commande le drone via
-    SET_POSITION_TARGET_LOCAL_NED sur la connexion MAVLink du
-    ArduPilotMavlinkBackend (mode GUIDED).
-    """
 
     GUIDED_MODE = 4
     POS_YAW_MASK = 0b0000_1011_1111_1000
@@ -312,13 +270,7 @@ class SitlController:
         return self.arrived
 
 
-# ════════════════════════════════════════════════════════════════════
-# 3. PhysX LiDAR reader (Isaac Sim)
-# ════════════════════════════════════════════════════════════════════
-
-
 class LidarReader:
-    """PhysX rotating LiDAR reader avec accumulation des scans partiels."""
 
     def __init__(self, drone_id: int, drone_prim_path: str, cfg: SimConfig):
         from isaacsim.sensors.physx import RotatingLidarPhysX
@@ -444,13 +396,7 @@ class LidarReader:
         return out_angles, out_depths, out_hits
 
 
-# ════════════════════════════════════════════════════════════════════
-# 4. NS-3 bridge helpers + position CSV writer
-# ════════════════════════════════════════════════════════════════════
-
-
 def _import_ns3_bridge():
-    """Import du module scripts/12_ns3_bridge.py via importlib (nom commence par '12_')."""
     import importlib.util
     here = os.path.dirname(os.path.abspath(__file__))
     bridge_path = os.path.join(here, "12_ns3_bridge.py")
@@ -465,7 +411,6 @@ def _import_ns3_bridge():
 
 def _write_drone_positions(agents: List[DroneAgent],
                            path: str = "/tmp/drone_positions.csv"):
-    """Écrit le CSV des positions courantes (lu par NS-3)."""
     try:
         with open(path, "w") as f:
             f.write("drone_id,x,y,z\n")
@@ -482,11 +427,6 @@ def _write_drone_positions(agents: List[DroneAgent],
         pass
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5. Isaac Sim setup
-# ════════════════════════════════════════════════════════════════════
-
-
 def parse_args() -> SimConfig:
     p = argparse.ArgumentParser(description="Active Inference drones — Isaac Sim")
     p.add_argument("--num-drones", type=int, default=3)
@@ -495,18 +435,15 @@ def parse_args() -> SimConfig:
     p.add_argument("--env-width", type=float, default=30.0)
     p.add_argument("--env-height", type=float, default=20.0)
 
-    # Planner & architecture
     p.add_argument("--planner", choices=["aif", "heuristic"], default="aif")
     p.add_argument("--arch", choices=["centralized", "distributed"], default="centralized")
     p.add_argument("--neighbor-radius-m", type=float, default=5.0)
 
-    # NS-3
     p.add_argument("--ns3", choices=["none", "wifi", "5g"], default="wifi")
     p.add_argument("--cloud-round-trip-ms", type=float, default=500.0,
                    help="Latence cloud aller-retour (upload belief + calcul + download action)")
     p.add_argument("--ns3-sim-time", type=int, default=600)
 
-    # Stressors
     p.add_argument("--kill-drone-at-step", type=int, default=-1)
     p.add_argument("--kill-drone-id", type=int, default=0)
     p.add_argument("--cut-cloud-at-step", type=int, default=-1)
@@ -517,7 +454,6 @@ def parse_args() -> SimConfig:
     p.add_argument("--drop-obstacle-xy", default="",
                    help="'x,y' coords monde de l'obstacle dynamique")
 
-    # Run capture
     p.add_argument("--run-tag", default="default")
     p.add_argument("--runs-dir", default="")
 
@@ -673,11 +609,6 @@ def setup_viewport_camera(cfg: SimConfig):
         print(f"[WARN] Could not configure viewport camera: {e}")
 
 
-# ════════════════════════════════════════════════════════════════════
-# 6. Création des drones physiques (Pegasus + SitlController + LiDAR)
-# ════════════════════════════════════════════════════════════════════
-
-
 def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
     from pegasus.simulator.params import ROBOTS
     from pegasus.simulator.logic.vehicles.multirotor import Multirotor, MultirotorConfig
@@ -737,23 +668,7 @@ def create_physical_drones(agents: List[DroneAgent], cfg: SimConfig):
     return multirotors, controllers
 
 
-# ════════════════════════════════════════════════════════════════════
-# 7. Obstacle dynamique (callback pour DynamicObstacleStressor)
-# ════════════════════════════════════════════════════════════════════
-
-
 def inject_dynamic_obstacle(wx: float, wy: float):
-    """Crée un obstacle USD avec collider PhysX à la position monde (wx, wy).
-
-    Dimensions : 3 m × 3 m × 4 m, centré à z=2 m (= altitude de vol des drones).
-
-    Le cube est :
-      - Coloré en rouge → visible à l'écran Isaac Sim
-      - Doté de UsdPhysics.CollisionAPI ET PhysxSchema.PhysxCollisionAPI →
-        détecté par les raycasts PhysX du RotatingLidarPhysX.  Sans la 2ème
-        API, le cube est INVISIBLE au LiDAR (apparaît visuellement mais
-        n'est pas raycasté).
-    """
     try:
         from pxr import Gf, UsdGeom, UsdPhysics, PhysxSchema
         import omni.usd
@@ -762,7 +677,6 @@ def inject_dynamic_obstacle(wx: float, wy: float):
         idx = int(time.time() * 1000) % 100000
         prim_path = f"/World/DynamicObstacles/Cube_{idx}"
 
-        # 1. Géométrie : cube unitaire mis à l'échelle 3,3,4
         cube = UsdGeom.Cube.Define(stage, prim_path)
         cube.GetSizeAttr().Set(1.0)
 
@@ -771,10 +685,9 @@ def inject_dynamic_obstacle(wx: float, wy: float):
         xf.AddTranslateOp().Set(Gf.Vec3d(wx, wy, 2.0))
         xf.AddScaleOp().Set(Gf.Vec3f(3.0, 3.0, 4.0))
 
-        # 2. Couleur rouge vive pour repérage visuel
         cube.GetDisplayColorAttr().Set([Gf.Vec3f(1.0, 0.15, 0.15)])
 
-        # 3. Physique : double API pour que le LiDAR PhysX détecte le cube
+        # double API requise pour que le LiDAR PhysX raycaste le cube
         prim = cube.GetPrim()
         UsdPhysics.CollisionAPI.Apply(prim)
         PhysxSchema.PhysxCollisionAPI.Apply(prim)
@@ -785,11 +698,6 @@ def inject_dynamic_obstacle(wx: float, wy: float):
         import traceback
         print(f"[OBSTACLE] échec injection : {e}")
         traceback.print_exc()
-
-
-# ════════════════════════════════════════════════════════════════════
-# 8. Main loop
-# ════════════════════════════════════════════════════════════════════
 
 
 def main():
@@ -814,7 +722,6 @@ def main():
           f"drop_obstacle_xy={cfg.drop_obstacle_xy!r}")
     print(f"  run_tag={cfg.run_tag!r}")
 
-    # NS-3 importé tôt mais lancé APRÈS création des agents
     ns3_bridge = None
     if cfg.ns3_mode != "none":
         ns3_bridge = _import_ns3_bridge()
@@ -860,11 +767,9 @@ def main():
     multirotors, controllers = create_physical_drones(agents, cfg)
     diag_logger = DiagnosticLogger(cfg.output_dir, cfg)
     coordinator = SwarmCoordinator(agents, cfg, diag_logger=diag_logger)
-    # Permet au DynamicObstacleStressor d'injecter dans Isaac Sim
     coordinator.inject_obstacle_fn = inject_dynamic_obstacle
     logger = DataLogger(cfg.output_dir)
 
-    # QR code system
     from qr_code_system import setup_qr_system, initialize_cameras
     qr_data = os.getenv("QR_CODE_DATA", "DRONE_WAREHOUSE_INSPECTION_001")
     qr_panel_pos = (0.0, -5.0, 2.0)
@@ -895,7 +800,6 @@ def main():
     print(f"[INFO] {cfg.sim_steps_per_aif} physics ticks per AIF decision")
     print(f"[INFO] Dashboard → {cfg.output_dir}/aif_state.json")
 
-    # ── Décollage SITL ─────────────────────────────────────────────
     print("[INFO] Phase 1/3 : initialisation ArduPilot SITL + EKF (2500 ticks)…")
     for _ in range(2500):
         if not running or not sim_app.is_running():
@@ -960,13 +864,11 @@ def main():
         print(f"[WARN] Drones pas en vol après 3000 ticks : {not_fly}")
     print("[INFO] Décollage terminé.\n")
 
-    # QR decoder thread
     qr_decoder = qr_sys["decoder_thread"]
     qr_decoder.start()
     qr_capture = qr_sys["capture_helper"]
     print("[INFO] QR decoder thread started")
 
-    # ── Boucle principale AIF ──────────────────────────────────────
     aif_step = 0
     plateau_counter = 0
     plateau_threshold = 0.1
@@ -974,10 +876,10 @@ def main():
     prev_coverage = 0.0
 
     while running and aif_step < cfg.max_steps and sim_app.is_running():
-        # AIF step : perception (LiDAR), fusion, planning, exécution
+        # perception, fusion, planning, exécution
         coordinator.step()
 
-        # Vol physique : N ticks de simulation pendant que les drones se déplacent
+        # vol physique : N ticks pendant que les drones se déplacent
         for _ in range(cfg.sim_steps_per_aif):
             if not running or not sim_app.is_running():
                 break
@@ -986,11 +888,9 @@ def main():
                 agent.accumulate_lidar()
             qr_capture.tick()
 
-        # Mise à jour positions pour NS-3
         if cfg.ns3_mode != "none":
             _write_drone_positions(agents)
 
-        # Logs dashboard
         state = coordinator.get_full_state(obstacles)
         logger.log(state, coordinator.history)
 
@@ -1050,7 +950,6 @@ def main():
         except Exception as e:
             print(f"[WARN] stop_ns3 a échoué : {e}")
 
-    # Génération des artefacts
     try:
         from run_artifacts import generate_run_artifacts
         run_dir = generate_run_artifacts(

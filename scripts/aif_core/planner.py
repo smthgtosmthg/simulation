@@ -1,13 +1,3 @@
-"""
-Sélection d'action — Active Inference (free energy minimization) + alternative
-heuristique frontier-based.
-
-Les deux fonctions ont la **même signature** pour qu'on puisse switcher
-entre elles via `cfg.planner = "aif" | "heuristic"`.
-
-Action space : 9 directions (stay + 8 voisinages de Moore), normalisées.
-"""
-
 from __future__ import annotations
 
 import math
@@ -18,8 +8,6 @@ import numpy as np
 from .belief import BeliefGrid, mix_beliefs
 from .math_utils import bernoulli_entropy, softmax_sample
 
-
-# ── Espace d'actions (normalisé en norme 1) ─────────────────────────
 
 def _build_actions() -> List[Tuple[str, float, float]]:
     raw = [
@@ -38,11 +26,7 @@ def _build_actions() -> List[Tuple[str, float, float]]:
 ACTIONS: List[Tuple[str, float, float]] = _build_actions()
 
 
-# ── Termes du free energy ───────────────────────────────────────────
-
-
 def expected_info_gain(wx: float, wy: float, belief: BeliefGrid, cfg) -> float:
-    """Score épistémique : combien d'incertitude on lèverait si on était là."""
     total = 0.0
     for angle in cfg.ray_angles:
         cos_a, sin_a = math.cos(angle), math.sin(angle)
@@ -62,7 +46,6 @@ def expected_info_gain(wx: float, wy: float, belief: BeliefGrid, cfg) -> float:
 
 
 def frontier_attraction(wx: float, wy: float, belief: BeliefGrid) -> float:
-    """Score pragmatique : combien de cellules incertaines dans le voisinage 5x5."""
     gx, gy = belief.world_to_grid(wx, wy)
     window = 5
     total, count = 0.0, 0
@@ -76,11 +59,7 @@ def frontier_attraction(wx: float, wy: float, belief: BeliefGrid) -> float:
     return total / max(count, 1)
 
 
-# ════════════════════════════════════════════════════════════════════
 # Sélection d'action — AIF (Free Energy Minimization)
-# ════════════════════════════════════════════════════════════════════
-
-
 def select_action(pos_x: float, pos_y: float,
                   others: List[Tuple[float, float]],
                   belief: BeliefGrid,
@@ -89,11 +68,6 @@ def select_action(pos_x: float, pos_y: float,
                   rng: np.random.Generator,
                   resilience_phase: str = "normal"
                   ) -> Tuple[Tuple[str, float, float], List[Dict], int]:
-    """Minimise l'Expected Free Energy G sur l'horizon 1 step.
-
-    G = - w_epistemic·IG - w_pragmatic·Frontier + w_movement·move + w_collision·coll
-    (poids modifiés en phase recovery / durable)
-    """
     plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
     H = plan_belief.mean_entropy()
     n = len(ACTIONS)
@@ -178,14 +152,10 @@ def select_action(pos_x: float, pos_y: float,
     return ACTIONS[idx], cand_diag, idx
 
 
-# ════════════════════════════════════════════════════════════════════
-# Sélection d'action — Heuristique (frontier-based, "drone idiot")
-# ════════════════════════════════════════════════════════════════════
-
+# Sélection d'action — Heuristique (frontier-based)
 HEUR_FREE_THR = 0.4
 HEUR_COLL_RADIUS = 1.5
 
-# État per-drone indexé par id(rng) — chaque drone a sa propre instance rng.
 _HEUR_STATE: Dict[int, Dict[str, Any]] = {}
 
 
@@ -210,10 +180,6 @@ def select_action_heuristic(pos_x: float, pos_y: float,
                             rng: np.random.Generator,
                             resilience_phase: str = "normal"
                             ) -> Tuple[Tuple[str, float, float], List[Dict], int]:
-    """Heuristique : commit-to-direction + confirmed-free + biais inconnu.
-
-    Mêmes args/return que select_action() pour swap transparent.
-    """
     del resilience_phase
     plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
 
@@ -298,7 +264,6 @@ def select_action_heuristic(pos_x: float, pos_y: float,
 
 
 def get_planner(name: str):
-    """Renvoie la fonction de sélection d'action correspondante."""
     if name == "heuristic":
         return select_action_heuristic
     return select_action

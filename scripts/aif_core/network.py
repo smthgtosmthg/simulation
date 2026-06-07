@@ -1,22 +1,3 @@
-"""
-Réseau : file de messages avec latence, lecteur de latences NS-3, état des liens.
-
-3 classes complémentaires :
-
-- **MessageQueue** : FIFO horodatée. Un message envoyé au step t avec
-  latency_ms arrive au step t + ceil(latency_ms / step_dt_ms). Si la latence
-  est None ou < 0, le message est droppé (compté pour les métriques).
-  Supporte deux types de payload :
-    * "belief" — la croyance brute d'un drone (envoyée à un voisin ou au cloud)
-    * "action" — une commande d'action calculée par le cloud, à envoyer à un drone
-
-- **NS3LatencyReader** : lit le CSV produit par le scénario NS-3 et expose les
-  latences inter-drone (paires i, j).  Cache pour le dashboard.
-
-- **LinkState** : drapeaux booléens du réseau — cloud_link_active, cut_pairs,
-  all_drone_links_cut.  Modifié par le StressorScheduler.
-"""
-
 from __future__ import annotations
 
 import csv as _csv
@@ -26,30 +7,18 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 
-# ════════════════════════════════════════════════════════════════════
-# MessageQueue — Latence et drop des messages
-# ════════════════════════════════════════════════════════════════════
-
-
 # Sentinelles pour identifier le "cloud" comme expéditeur/destinataire spécial
 CLOUD_SRC: int = -99
 CLOUD_DST_ALL: int = -1
 
 
 class MessageQueue:
-    """File FIFO de messages réseau avec latence et drop.
-
-    Un message a un type ("belief" ou "action") et un payload.  L'arrivée est
-    calculée en steps AIF : arrival_step = current_step + ceil(latency / step_dt).
-    """
 
     def __init__(self):
-        # entries: list of (arrival_step, src, dst, type, payload)
         self._pending: List[Tuple[int, int, int, str, Any]] = []
         self.dropped: int = 0
         self.sent: int = 0
         self.delivered: int = 0
-        # compteurs par type (pour debug / dashboard)
         self.sent_by_type: Dict[str, int] = {"belief": 0, "action": 0}
         self.dropped_by_type: Dict[str, int] = {"belief": 0, "action": 0}
         self.delivered_by_type: Dict[str, int] = {"belief": 0, "action": 0}
@@ -57,7 +26,6 @@ class MessageQueue:
     def send(self, src: int, dst: int, msg_type: str, payload: Any,
              current_step: int, latency_ms: Optional[float],
              step_dt_ms: float) -> None:
-        """Programme un envoi. Si latency_ms est None ou <0 → drop."""
         if latency_ms is None or latency_ms < 0:
             self.dropped += 1
             self.dropped_by_type[msg_type] = self.dropped_by_type.get(msg_type, 0) + 1
@@ -69,7 +37,6 @@ class MessageQueue:
         self.sent_by_type[msg_type] = self.sent_by_type.get(msg_type, 0) + 1
 
     def deliver(self, current_step: int) -> List[Tuple[int, int, str, Any]]:
-        """Retourne et retire les messages dont arrival <= current_step."""
         ready: List[Tuple[int, int, str, Any]] = []
         remaining: List[Tuple[int, int, int, str, Any]] = []
         for entry in self._pending:
@@ -100,22 +67,15 @@ class MessageQueue:
         }
 
 
-# ════════════════════════════════════════════════════════════════════
-# NS3LatencyReader — Lecture des latences inter-drones depuis NS-3
-# ════════════════════════════════════════════════════════════════════
-
-
 class NS3LatencyReader:
-    """Lit le CSV produit par NS-3 et expose les latences par paire (i, j)."""
 
     WIFI_CSV = "/tmp/ns3_output.csv"
     LTE5G_CSV = "/tmp/drone_latency_ns3.csv"
     LTE5G_METRICS_CSV = "/tmp/drone_5g_metrics.csv"
 
     def __init__(self, mode: str = "none"):
-        self.mode = mode  # "none" | "wifi" | "5g"
+        self.mode = mode
         self._warned_missing = False
-        # cache exposé au dashboard / aux artefacts
         self.last_pairs: Dict[Tuple[int, int], Dict[str, float]] = {}
 
     @property
@@ -174,20 +134,8 @@ class NS3LatencyReader:
         return self.last_pairs.get(key, {}).get("latency_ms", fallback)
 
 
-# ════════════════════════════════════════════════════════════════════
-# LinkState — État booléen du réseau (modifié par les Stressors)
-# ════════════════════════════════════════════════════════════════════
-
-
 @dataclass
 class LinkState:
-    """Drapeaux de connectivité réseau.
-
-    Cloud_link_active : True si le lien drone↔cloud est ouvert.
-    cut_pairs         : ensemble de paires drone↔drone coupées (frozenset).
-    all_drone_links_cut : True si tous les liens drone↔drone sont coupés
-                          (raccourci pour cut_drone_link="all").
-    """
 
     cloud_link_active: bool = True
     cut_pairs: Set[frozenset] = field(default_factory=set)

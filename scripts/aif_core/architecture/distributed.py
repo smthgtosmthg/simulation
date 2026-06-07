@@ -1,28 +1,3 @@
-"""
-Architecture distribuée — Chaque drone décide localement, fusion avec voisins.
-
-Pipeline par step :
-  1. broadcast_beliefs : chaque drone diffuse sa belief à tous ses voisins
-     dans `cfg.neighbor_radius_m`, à travers la MessageQueue (avec latence
-     NS-3 pair-à-pair).  Liens coupés → message droppé.
-  2. (entre les deux étapes, le SwarmCoordinator livre les messages prêts —
-     les beliefs sont stockées dans `agent.last_received_belief[src_id]`).
-  3. plan_step : chaque drone fait une fusion locale (self.belief +
-     last_received_belief de ses voisins actuels et non-coupés), puis
-     appelle select_action avec cette belief fusionnée.
-
-C'est l'architecture **autonome** : pas de point central.
-
-Cas particulier : **cut all drone↔drone links**.
-  Quand tous les liens sont coupés (`link_state.all_drone_links_cut`), on
-  matérialise une phase de **transition** de `switch_latency_ms` :
-    - Pendant la transition : drones gelés (pas de décision fresh, pas
-      d'exécution) → dec/min ↓, discovery_rate ↓, covKnown ↓.
-    - Après la transition : drones reprennent en mode "solo" (fusion avec
-      voisins = soi-même seul) → metrics remontent mais plafonnent en
-      dessous du niveau baseline.
-"""
-
 from __future__ import annotations
 
 import math
@@ -35,7 +10,6 @@ from ..planner import get_planner
 
 
 class DistributedPlanner:
-    """Stratégie distribuée : fusion par voisinage + décision locale."""
 
     def __init__(self, cfg, msg_queue: MessageQueue,
                  ns3: NS3LatencyReader, link_state: LinkState):
@@ -46,22 +20,16 @@ class DistributedPlanner:
         self.prior_lo = logit(cfg.prior_occupancy)
         self._plan_fn = get_planner(cfg.planner)
 
-        # État de transition en cas de cut total (analogue à CloudPlanner)
         self._switch_active_at_step: Optional[int] = None
 
-    # ── Phase courante ──────────────────────────────────────────────
-
     def _phase(self, current_step: int) -> str:
-        """'active' | 'switching' | 'solo' (après reconfig)."""
         if not self.link_state.all_drone_links_cut:
             return "active"
         if self._switch_active_at_step is None:
-            return "switching"  # cut juste détecté, transition non encore programmée
+            return "switching"
         if current_step < self._switch_active_at_step:
             return "switching"
         return "solo"
-
-    # ── Étape 1 : broadcasts entre voisins ──────────────────────────
 
     def broadcast_beliefs(self, active_agents: List, current_step: int) -> None:
         # Détection du cut total → programmer la transition
@@ -76,13 +44,10 @@ class DistributedPlanner:
                   f"(latence switch = {self.cfg.switch_latency_ms} ms = "
                   f"{switch_steps} step(s))")
 
-        # Pendant la transition, on ne broadcast pas
-        # (les drones sont en train de "réaliser" qu'ils sont seuls)
         if self._phase(current_step) == "switching":
             return
 
-        # Sinon broadcast normal (les cuts par paires sont gérés par send→None→drop)
-        step_dt_ms = self.cfg.step_dt_ms
+        step_dt_ms = self.cfg.step_dt_ms 
         R = self.cfg.neighbor_radius_m
         for src in active_agents:
             for dst in active_agents:
@@ -99,11 +64,9 @@ class DistributedPlanner:
                 self.msg_queue.send(src.id, dst.id, "belief", src.belief.copy(),
                                     current_step, lat, step_dt_ms)
 
-    # ── Étape 3 : planification locale par drone ────────────────────
-
     def plan_step(self, active_agents: List, global_fused_belief: BeliefGrid,
                   phase: str, current_step: int) -> None:
-        del global_fused_belief  # non utilisé en distribué
+        del global_fused_belief
         ph = self._phase(current_step)
 
         if ph == "switching":
@@ -111,11 +74,9 @@ class DistributedPlanner:
             for a in active_agents:
                 a.last_action_fresh = False
                 a.last_decision_source = "dist_switching"
-                a.last_plan_belief = a.belief  # ne sait plus rien d'autre
-                # Pas d'execute → drone garde son dernier waypoint
+                a.last_plan_belief = a.belief
             return
 
-        # Mode actif (avec voisins) ou solo (sans voisins après cut)
         for a in active_agents:
             others = [(o.x, o.y) for o in active_agents if o.id != a.id]
 

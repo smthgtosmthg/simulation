@@ -1,51 +1,20 @@
-"""
-Stresseurs — Événements programmés qui dégradent les conditions de mission.
-
-Chaque stresseur est un objet avec :
-    - un `trigger_step` (à partir de quand il s'active)
-    - une méthode `apply(step, ctx)` qui modifie l'état (LinkState, agents…)
-      au moment du déclenchement et déclenche le `ResilienceManager`.
-
-Stresseurs disponibles :
-    KillDroneStressor          — désactive un drone (land + retire du LiDAR)
-    CutCloudStressor           — coupe le lien cloud → fallback distribué
-    CutDroneLinkStressor       — coupe une paire ou tous les liens drone↔drone
-    DynamicObstacleStressor    — injecte un obstacle dans la scène (Isaac Sim)
-
-Le **StressorScheduler** lit les flags de SimConfig et instancie les stresseurs
-correspondants, puis les déclenche au bon step.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import List, Optional
 
 
-# ════════════════════════════════════════════════════════════════════
-# Contexte d'application (passé à apply())
-# ════════════════════════════════════════════════════════════════════
-
-
 @dataclass
 class StressContext:
-    """Tout ce qu'un stresseur peut avoir besoin de toucher."""
 
-    agents: list                       # List[DroneAgent]
-    link_state: object                 # LinkState
-    resilience: object                 # ResilienceManager
-    cfg: object                        # SimConfig
-    # callback optionnel : sera appelé pour injecter un obstacle USD dans Isaac Sim
+    agents: list
+    link_state: object
+    resilience: object
+    cfg: object
     inject_obstacle_fn: Optional[callable] = None
 
 
-# ════════════════════════════════════════════════════════════════════
-# Stresseur de base
-# ════════════════════════════════════════════════════════════════════
-
-
 class Stressor:
-    """Stresseur abstrait — sous-classer et implémenter `apply()`."""
 
     name: str = "generic"
 
@@ -54,7 +23,6 @@ class Stressor:
         self.fired: bool = False
 
     def ready(self, step: int) -> bool:
-        """True si on doit déclencher ce stresseur maintenant."""
         return (self.trigger_step >= 0
                 and step == self.trigger_step
                 and not self.fired)
@@ -68,16 +36,7 @@ class Stressor:
             self.fired = True
 
 
-# ════════════════════════════════════════════════════════════════════
-# Stresseurs concrets
-# ════════════════════════════════════════════════════════════════════
-
-
 class KillDroneStressor(Stressor):
-    """Désactive un drone (simule une panne).
-
-    Naturellement, sa belief n'est plus mise à jour → la fusion globale et
-    le `discovery_rate` chutent immédiatement (un LiDAR de moins)."""
 
     name = "kill_drone"
 
@@ -100,7 +59,6 @@ class KillDroneStressor(Stressor):
 
 
 class CutCloudStressor(Stressor):
-    """Coupe le lien drone↔cloud. En centralisé, déclenche le fallback distribué."""
 
     name = "cut_cloud"
 
@@ -115,7 +73,6 @@ class CutCloudStressor(Stressor):
 
 
 class CutDroneLinkStressor(Stressor):
-    """Coupe un lien drone↔drone (paire i-j) ou tous (spec = 'all')."""
 
     name = "cut_drone_link"
 
@@ -143,11 +100,6 @@ class CutDroneLinkStressor(Stressor):
 
 
 class DynamicObstacleStressor(Stressor):
-    """Injecte un obstacle dans la scène à une position donnée.
-
-    Nécessite un callback `inject_obstacle_fn(x, y)` qui crée le prim USD
-    avec collider dans Isaac Sim.  Si le callback est absent, le stresseur
-    ne fait que logger (utile pour test sans Isaac Sim)."""
 
     name = "dynamic_obstacle"
 
@@ -175,10 +127,7 @@ class DynamicObstacleStressor(Stressor):
         else:
             print(f"  [STRESS]   (pas de callback Isaac Sim → no-op)")
 
-        # Boost d'innovation visible : chaque drone actif "découvre" la
-        # perturbation au prochain perceive().  Le drone le plus proche a le
-        # boost le plus fort.  Garantit un pic franc dans le graphe innovation,
-        # indépendamment des aléas de détection LiDAR/PhysX.
+        # Boost d'innovation : le drone le plus proche a le boost le plus fort
         for a in ctx.agents:
             if not a.active:
                 continue
@@ -189,25 +138,11 @@ class DynamicObstacleStressor(Stressor):
                 print(f"  [STRESS]   D{a.id} (dist {d:.1f} m) → "
                       f"innovation boost = {boost:.2f}")
 
-        # Trigger explicite de resilience pour garantir le passage en phase
-        # recovery (le seuil EMA+2σ est trop dur à atteindre avec un seul
-        # cube détecté partiellement).
+        # Trigger explicite pour garantir le passage en phase recovery
         ctx.resilience.trigger(step, "dynamic_obstacle")
 
 
-# ════════════════════════════════════════════════════════════════════
-# Scheduler — Instancie les stressors depuis SimConfig et les déclenche
-# ════════════════════════════════════════════════════════════════════
-
-
 class StressorScheduler:
-    """Lit la config et déclenche les stresseurs au bon step.
-
-    Usage :
-        scheduler = StressorScheduler(cfg)
-        for step in range(...):
-            scheduler.tick(step, ctx)
-    """
 
     def __init__(self, cfg):
         self.cfg = cfg
@@ -236,7 +171,6 @@ class StressorScheduler:
             s.fire(step, ctx)
 
     def summary(self) -> List[str]:
-        """Retourne une liste lisible des stresseurs programmés (pour le log)."""
         out = []
         for s in self.stressors:
             tag = f"{s.name} @ step {s.trigger_step}"

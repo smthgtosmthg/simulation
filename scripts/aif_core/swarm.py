@@ -1,23 +1,3 @@
-"""
-SwarmCoordinator — Orchestrateur du pipeline complet à chaque step AIF.
-
-Pipeline `step()` :
-
-    1. Stresseurs       → modifie LinkState / désactive drones / déclenche resilience
-    2. Perception       → chaque drone met à jour sa belief + son innovation
-    3. Innovation EMA   → détection automatique de spike → trigger resilience
-    4. NS-3             → relit les latences inter-drone (si activé)
-    5. Fused global     → carte fusionnée omnisciente (pour cloud + métriques)
-    6. Phase resilience → recovery / durable / normal
-    7. Broadcast        → drone↔voisin (distribué) OU cleanup actions (centralisé)
-    8. Delivery         → vide la MessageQueue (beliefs → cache, actions → pending)
-    9. Planning         → l'ArchitecturePlanner décide + exécute (set waypoints)
-   10. Metrics & history
-
-Cette classe ne sait RIEN sur Isaac Sim — elle est testable indépendamment.
-Le couplage Isaac Sim se fait via les *backends* attachés à chaque DroneAgent.
-"""
-
 from __future__ import annotations
 
 import math
@@ -45,20 +25,17 @@ from .stressors import StressContext, StressorScheduler
 
 
 class SwarmCoordinator:
-    """Pipeline complet de la simulation."""
 
     def __init__(self, agents: List[DroneAgent], cfg, diag_logger=None):
         self.agents = agents
         self.cfg = cfg
         self.diag = diag_logger
 
-        # ── État partagé ────────────────────────────────────────────
         self.prior_lo = logit(cfg.prior_occupancy)
         self.fused_belief: BeliefGrid = agents[0].belief.copy()
         self.step_count: int = 0
         self.history: List[Dict] = []
 
-        # ── Composants modulaires ───────────────────────────────────
         self.msg_queue = MessageQueue()
         self.ns3 = NS3LatencyReader(cfg.ns3_mode)
         self.link_state = LinkState()
@@ -66,7 +43,6 @@ class SwarmCoordinator:
         self.stressors = StressorScheduler(cfg)
         self.dec_rate = DecisionRateTracker(cfg, window=10)
 
-        # ── Architecture (centralisé ou distribué) ──────────────────
         if cfg.arch == "centralized":
             self.planner = CloudPlanner(cfg, self.msg_queue, self.ns3, self.link_state)
         elif cfg.arch == "distributed":
@@ -74,13 +50,10 @@ class SwarmCoordinator:
         else:
             raise ValueError(f"Unknown arch: {cfg.arch!r}")
 
-        # ── Hooks externes (set par l'orchestrateur Isaac Sim) ──────
         self.inject_obstacle_fn: Optional[Any] = None
 
-        # ── Cache pour le calcul d'aire intérieure ──────────────────
         self.interior_area_cells: int = cfg.interior_area_cells()
 
-        # Logger d'info au démarrage
         sched_summary = self.stressors.summary()
         if sched_summary:
             print(f"[SWARM] Stresseurs programmés : {sched_summary}")
@@ -88,24 +61,19 @@ class SwarmCoordinator:
               f"(neighbor_radius_m={cfg.neighbor_radius_m}, "
               f"cloud_round_trip_ms={cfg.cloud_round_trip_ms})")
 
-    # ── Helpers ─────────────────────────────────────────────────────
-
     @property
     def active_agents(self) -> List[DroneAgent]:
         return [a for a in self.agents if a.active]
 
     def kill_drone(self, drone_id: int) -> None:
-        """API publique pour déclencher kill_drone hors scheduler (legacy)."""
         for a in self.agents:
             if a.id == drone_id and a.active:
                 a.land()
                 self.resilience.trigger(self.step_count, f"drone_{drone_id}_lost")
                 return
 
-    # ── Boucle principale ───────────────────────────────────────────
-
     def step(self) -> None:
-        # ── 1) Stresseurs : avant tout, on peut désactiver un drone ou couper un lien ──
+        # 1) stresseurs : peuvent désactiver un drone ou couper un lien
         ctx = StressContext(
             agents=self.agents,
             link_state=self.link_state,
@@ -115,63 +83,51 @@ class SwarmCoordinator:
         )
         self.stressors.tick(self.step_count, ctx)
 
-        # Snapshot entropy avant ce step (pour step_info_gain)
         h_before = self.fused_belief.mean_entropy()
 
         if self.diag:
             self.diag.log_step_header(self.step_count + 1)
 
-        # ── 2) Perception : chaque drone lit son LiDAR + met à jour sa belief ──
         for a in self.agents:
             a.perceive()
             if self.diag and a.active and a.lidar_diag is not None:
                 angles, ranges, hits = a.lidar_diag
                 self.diag.log_lidar(a.id, a.x, a.y, angles, ranges, hits)
 
-        # ── 3) Innovation EMA + détection automatique de spike ──
         active = self.active_agents
         innov_mean = (sum(a.last_innovation for a in active) / len(active)) if active else 0.0
         spike = self.resilience.update_innovation_stats(innov_mean)
         if spike and self.step_count > 5:
             self.resilience.trigger(self.step_count, "innovation_spike")
 
-        # ── 4) NS-3 : lecture des latences inter-drone si activé ──
         if self.ns3.active:
             self.ns3.read_latencies()
 
-        # ── 5) Fused belief global (omniscient — pour le cloud et les métriques) ──
         if active:
             self.fused_belief = fuse_beliefs_logodds(
                 [a.belief for a in active], self.prior_lo,
             )
         h_after = self.fused_belief.mean_entropy()
 
-        # ── 6) Update de la phase resilience ──
         self.resilience.update_phase(self.step_count, h_after, innov_mean)
         phase = self.resilience.current_phase(self.step_count)
 
-        # ── 7) Reset les drapeaux de fraîcheur (le planner va les setter) ──
         for a in active:
             a.last_action_fresh = False
             a.last_decision_source = "none"
 
-        # ── 8) Broadcasts via la MessageQueue (selon l'arch) ──
         self.planner.broadcast_beliefs(active, self.step_count)
 
-        # ── 9) Délivrer les messages prêts (beliefs → cache ; actions → pending) ──
         self._deliver_pending_messages()
 
-        # ── 10) L'ArchitecturePlanner décide et exécute ──
         self.planner.plan_step(active, self.fused_belief, phase, self.step_count)
 
-        # ── 11) Step count + métriques + history ──
         self.step_count += 1
         metrics_entry = self._compute_step_metrics(active, h_before, h_after, innov_mean, phase)
         self.history.append(metrics_entry)
-        # discovery_rate dépend de history → on le met à jour APRÈS append
+        # discovery_rate dépend de history → mis à jour après append
         metrics_entry["discovery_rate"] = round(compute_discovery_rate(self.history), 4)
 
-        # ── 12) Diagnostic logging ──
         if self.diag:
             self.diag.log_step_summary(self.step_count, self.agents, self.fused_belief)
             for a in active:
@@ -187,10 +143,7 @@ class SwarmCoordinator:
                              f"innov_mean={innov_mean:.4f} "
                              f"innov_ema={self.resilience.innov_ema:.4f}\n")
 
-    # ── Helpers internes ────────────────────────────────────────────
-
     def _deliver_pending_messages(self) -> None:
-        """Vide la MessageQueue et range les payloads dans le bon cache."""
         delivered = self.msg_queue.deliver(self.step_count)
         agents_by_id = {a.id: a for a in self.agents}
         for src, dst, typ, payload in delivered:
@@ -217,22 +170,18 @@ class SwarmCoordinator:
             self.cfg.occ_threshold, bounds_grid=bounds_grid,
         ) * 100.0) if drone_positions else 0.0
 
-        # Métriques nouvelles
         coverage_known = compute_coverage_known_to_planner(active, self.cfg)
         fresh_count = self.dec_rate.record(active)
         decisions_pm = self.dec_rate.rate_per_min()
 
-        # Compteurs message queue
         q = self.msg_queue.stats()
 
-        # Architecture effective : centralized seulement si le cloud est actif
         eff_arch = ("centralized"
                     if (self.cfg.arch == "centralized" and self.link_state.cloud_link_active)
                     else "distributed")
 
         return {
             "step": self.step_count,
-            # ── Métriques de base ──
             "mean_entropy": round(h_after, 4),
             "exploration_pct": round(coverage_pct, 2),
             "exploration_pct_interior": round(interior_pct, 2),
@@ -244,7 +193,6 @@ class SwarmCoordinator:
             "innovation_ema": round(self.resilience.innov_ema, 4),
             "resilience_phase": phase,
             "active_drones": len(active),
-            # ── Architecture / réseau ──
             "arch_effective": eff_arch,
             "arch_configured": self.cfg.arch,
             "cloud_link_active": self.link_state.cloud_link_active,
@@ -254,14 +202,10 @@ class SwarmCoordinator:
             "msg_dropped": q["dropped"],
             "msg_dropped_belief": q["dropped_by_type"].get("belief", 0),
             "msg_dropped_action": q["dropped_by_type"].get("action", 0),
-            # ── Nouvelles métriques pour le PFE ──
             "coverage_known_to_planner": round(coverage_known, 2),
             "decisions_per_min": round(decisions_pm, 2),
             "fresh_decisions_step": int(fresh_count),
-            # discovery_rate ajouté après l'append (cf. step())
         }
-
-    # ── Sérialisation pour le dashboard (/tmp/aif_state.json) ───────
 
     def get_full_state(self, obstacles: List[Dict]) -> Dict:
         eb = self.fused_belief.effective_bounds(self.cfg.occ_threshold)
