@@ -97,12 +97,6 @@ run_one aif_cent_obstacle_s20   --planner aif       --arch centralized --ns3 wif
 # ════════════════════════════════════════════════════════════════════
 #run_one aif_cent_ns3_5g         --planner aif       --arch centralized --ns3 5g
 
-# ════════════════════════════════════════════════════════════════════
-# Rapport comparatif
-# ════════════════════════════════════════════════════════════════════
 echo
-echo "  → Generating comparison report …"
-python3 "$SCRIPT_DIR/generate_comparison_report.py" --runs-dir "$RUNS_DIR"
-echo
-echo "  Comparison report → $RUNS_DIR/comparison_report.md"
+echo "  Runs terminés → $RUNS_DIR"
 echo "  Open the dashboard, tab 'Runs', to browse runs interactively."
