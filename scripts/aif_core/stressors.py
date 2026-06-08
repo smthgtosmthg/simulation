@@ -116,7 +116,6 @@ class DynamicObstacleStressor(Stressor):
                 print(f"  [WARN] Invalid drop_obstacle_xy spec: {self.xy!r}")
 
     def apply(self, step: int, ctx: StressContext) -> None:
-        import math as _math
         print(f"\n  [STRESS] 🧱 Dynamic obstacle DROPPED at step {step} "
               f"({self.x:.2f}, {self.y:.2f})")
         if ctx.inject_obstacle_fn is not None:
@@ -126,17 +125,6 @@ class DynamicObstacleStressor(Stressor):
                 print(f"  [WARN] obstacle injection failed: {e}")
         else:
             print(f"  [STRESS]   (pas de callback Isaac Sim → no-op)")
-
-        # Boost d'innovation : le drone le plus proche a le boost le plus fort
-        for a in ctx.agents:
-            if not a.active:
-                continue
-            d = _math.hypot(a.x - self.x, a.y - self.y)
-            if d < 20.0:
-                boost = max(0.95 - d * 0.02, 0.6)
-                a._innovation_boost = max(a._innovation_boost, boost)
-                print(f"  [STRESS]   D{a.id} (dist {d:.1f} m) → "
-                      f"innovation boost = {boost:.2f}")
 
         # Trigger explicite pour garantir le passage en phase recovery
         ctx.resilience.trigger(step, "dynamic_obstacle")

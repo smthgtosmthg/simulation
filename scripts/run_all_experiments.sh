@@ -83,7 +83,7 @@ run_one() {
 
 
 run_one aif_cent_obstacle_s20   --planner aif       --arch centralized --ns3 wifi \
-                                --drop-obstacle-at-step 20 --drop-obstacle-xy "0.0,2.0"
+                                --drop-obstacle-at-step 20 --drop-obstacle-xy "4.0,3.5"
 
 # ════════════════════════════════════════════════════════════════════
 # Multi-stress

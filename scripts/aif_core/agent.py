@@ -46,8 +46,6 @@ class DroneAgent:
 
         self.lidar_diag: Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]] = None
 
-        self._innovation_boost: float = 0.0
-
         self.last_received_belief: Dict[int, BeliefGrid] = {}
         self.local_fused: Optional[BeliefGrid] = None
 
@@ -105,11 +103,6 @@ class DroneAgent:
         else:
             self.lidar_diag = None
             self.last_innovation = 0.0
-
-        # boost one-shot appliqué même sans LiDAR (pic visible garanti)
-        if self._innovation_boost > 0.0:
-            self.last_innovation = max(self.last_innovation, self._innovation_boost)
-            self._innovation_boost = 0.0
 
     def fuse_with_neighbors(self, neighbors: List["DroneAgent"],
                             prior_lo: float) -> BeliefGrid:

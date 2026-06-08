@@ -59,6 +59,38 @@ def frontier_attraction(wx: float, wy: float, belief: BeliefGrid) -> float:
     return total / max(count, 1)
 
 
+def obstacle_clearance(wx: float, wy: float, belief: BeliefGrid, cfg) -> float:
+    """Pénalité de proximité aux cases occupées (répulsion d'obstacle).
+
+    Plus la case candidate est proche d'un obstacle (p >= occ_threshold) dans
+    un rayon de `clearance_cells`, plus la valeur est élevée. Sert à contourner
+    l'obstacle avec une marge, au lieu de le longer ou de l'éviter brutalement."""
+    gx, gy = belief.world_to_grid(wx, wy)
+    R = int(cfg.clearance_cells)
+    pen = 0.0
+    for dy in range(-R, R + 1):
+        for dx in range(-R, R + 1):
+            d = math.hypot(dx, dy)
+            if d < 1e-9 or d > R:
+                continue
+            nx, ny = gx + dx, gy + dy
+            if belief.in_bounds(nx, ny) and belief.probability[ny, nx] >= cfg.occ_threshold:
+                pen += 1.0 / (d + 0.1)
+    return pen
+
+
+def _planner_bounds(cfg) -> Tuple[float, float, float, float]:
+    """Bornes (x0, y0, x1, y1) navigables en repère local.
+
+    Restreint au volume intérieur de l'usine (inset compris) si connu, sinon
+    repli sur les bords de l'environnement. Empêche les drones de divaguer
+    dans la marge des murs ou entre les étagères."""
+    ib = cfg.interior_bounds_local()
+    if ib is not None:
+        return ib
+    return (0.5, 0.5, cfg.env_width - 0.5, cfg.env_height - 0.5)
+
+
 # Sélection d'action — AIF (Free Energy Minimization)
 def select_action(pos_x: float, pos_y: float,
                   others: List[Tuple[float, float]],
@@ -70,6 +102,7 @@ def select_action(pos_x: float, pos_y: float,
                   ) -> Tuple[Tuple[str, float, float], List[Dict], int]:
     plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
     H = plan_belief.mean_entropy()
+    bx0, by0, bx1, by1 = _planner_bounds(cfg)
     n = len(ACTIONS)
     G = np.full(n, 1e6)
     valid = np.zeros(n, dtype=bool)
@@ -83,9 +116,9 @@ def select_action(pos_x: float, pos_y: float,
             "nx": round(nx, 3), "ny": round(ny, 3),
             "valid": False, "reason": "",
             "ig": 0.0, "frontier": 0.0,
-            "move": 0.0, "coll": 0.0, "G": 1e6,
+            "move": 0.0, "coll": 0.0, "clearance": 0.0, "G": 1e6,
         }
-        if not (0.5 <= nx < cfg.env_width - 0.5 and 0.5 <= ny < cfg.env_height - 0.5):
+        if not (bx0 <= nx <= bx1 and by0 <= ny <= by1):
             entry["reason"] = "out-of-bounds"
             cand_diag.append(entry)
             continue
@@ -103,6 +136,7 @@ def select_action(pos_x: float, pos_y: float,
             1.0 / (math.hypot(nx - ox, ny - oy) + 0.1)
             for ox, oy in others if math.hypot(nx - ox, ny - oy) < 8.0
         )
+        clr = obstacle_clearance(nx, ny, plan_belief, cfg)
 
         if resilience_phase == "recovery":
             G[i] = (
@@ -110,6 +144,7 @@ def select_action(pos_x: float, pos_y: float,
                 - cfg.w_innov_recover * ig
                 + cfg.w_movement * move
                 + cfg.w_collision * coll
+                + cfg.w_clearance * clr
                 - cfg.w_epistemic * ig
                 - cfg.w_pragmatic * fr
             )
@@ -123,6 +158,7 @@ def select_action(pos_x: float, pos_y: float,
                 - cfg.w_pragmatic * fr
                 + cfg.w_movement * move
                 + cfg.w_collision * coll
+                + cfg.w_clearance * clr
                 + cfg.w_maintain * maintain_pen
             )
         else:
@@ -131,12 +167,14 @@ def select_action(pos_x: float, pos_y: float,
                 - cfg.w_pragmatic * fr
                 + cfg.w_movement * move
                 + cfg.w_collision * coll
+                + cfg.w_clearance * clr
             )
 
         entry.update({
             "valid": True, "reason": "ok",
             "ig": round(ig, 4), "frontier": round(fr, 4),
             "move": round(move, 2), "coll": round(coll, 4),
+            "clearance": round(clr, 4),
             "G": round(G[i], 4),
         })
         cand_diag.append(entry)
@@ -182,6 +220,7 @@ def select_action_heuristic(pos_x: float, pos_y: float,
                             ) -> Tuple[Tuple[str, float, float], List[Dict], int]:
     del resilience_phase
     plan_belief = mix_beliefs(belief, fused, cfg.fusion_mix) if fused else belief
+    bx0, by0, bx1, by1 = _planner_bounds(cfg)
 
     key = id(rng)
     state = _HEUR_STATE.get(key)
@@ -205,7 +244,7 @@ def select_action_heuristic(pos_x: float, pos_y: float,
         if name == "stay":
             cand_diag.append(entry)
             continue
-        if not (0.5 <= nx < cfg.env_width - 0.5 and 0.5 <= ny < cfg.env_height - 0.5):
+        if not (bx0 <= nx <= bx1 and by0 <= ny <= by1):
             entry["reason"] = "out-of-bounds"
             cand_diag.append(entry)
             continue

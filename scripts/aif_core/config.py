@@ -35,6 +35,8 @@ class SimConfig:
     w_pragmatic: float = 0.8
     w_movement: float = 0.1
     w_collision: float = 5.0
+    w_clearance: float = 25.0
+    clearance_cells: int = 6
     softmax_temp: float = 0.3
     fusion_mix: float = 0.3
 
@@ -125,6 +127,21 @@ class SimConfig:
         gy1 = min(self.grid_height,
                   int(math.ceil((fy1w - self.origin_y) / self.grid_resolution)))
         return gx0, gy0, gx1, gy1
+
+    def interior_bounds_local(self) -> Optional[Tuple[float, float, float, float]]:
+        """Bornes de l'intérieur usine (inset compris) en repère local drone.
+
+        Renvoie (x0, y0, x1, y1) en mètres locaux, ou None si l'environnement
+        usine n'est pas connu (ex. run headless sans Isaac Sim)."""
+        if self.factory_bounds_world is None:
+            return None
+        fx0w, fy0w, fx1w, fy1w = self.factory_bounds_world
+        inset = float(self.interior_inset_m)
+        x0 = (fx0w - self.origin_x) + inset
+        y0 = (fy0w - self.origin_y) + inset
+        x1 = (fx1w - self.origin_x) - inset
+        y1 = (fy1w - self.origin_y) - inset
+        return x0, y0, x1, y1
 
     def interior_area_cells(self) -> int:
         if self.factory_bounds_world is None:
