@@ -52,8 +52,8 @@ run_one() {
 # ════════════════════════════════════════════════════════════════════
 # Baselines (4 runs)
 # ════════════════════════════════════════════════════════════════════
-#run_one aif_cent_baseline       --planner aif       --arch centralized --ns3 wifi
-#run_one aif_dist_baseline       --planner aif       --arch distributed --ns3 wifi
+run_one aif_cent_baseline       --planner aif       --arch centralized --ns3 wifi
+run_one aif_dist_baseline       --planner aif       --arch distributed --ns3 wifi
 #run_one heur_cent_baseline      --planner heuristic --arch centralized --ns3 wifi
 #run_one heur_dist_baseline      --planner heuristic --arch distributed --ns3 wifi
 
@@ -67,19 +67,19 @@ run_one() {
 # Résilience — stresseurs isolés
 # ════════════════════════════════════════════════════════════════════
 # Kill drone
-#run_one aif_cent_kill_d0_s20    --planner aif       --arch centralized --ns3 wifi \
-#                                --kill-drone-at-step 20 --kill-drone-id 0
+run_one aif_cent_kill_d0_s20    --planner aif       --arch centralized --ns3 wifi \
+                                --kill-drone-at-step 20 --kill-drone-id 0
 #run_one heur_cent_kill_d0_s20   --planner heuristic --arch centralized --ns3 wifi \
 #                                --kill-drone-at-step 20 --kill-drone-id 0
 
 # Cut cloud (centralisé → fallback local)
-#run_one aif_cent_cut_cloud_s20  --planner aif       --arch centralized --ns3 wifi \
-#                                --cut-cloud-at-step 20
+run_one aif_cent_cut_cloud_s20  --planner aif       --arch centralized --ns3 wifi \
+                                --cut-cloud-at-step 20
 
 
-#run_one aif_dist_cut_links_s20  --planner aif       --arch distributed --ns3 wifi \
-#                                --neighbor-radius-m 12 \
-#                                --cut-drone-link all --cut-drone-link-at-step 20
+run_one aif_dist_cut_links_s20  --planner aif       --arch distributed --ns3 wifi \
+                                --neighbor-radius-m 12 \
+                                --cut-drone-link all --cut-drone-link-at-step 20
 
 
 run_one aif_cent_obstacle_s20   --planner aif       --arch centralized --ns3 wifi \
