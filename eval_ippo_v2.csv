@@ -1,0 +1,10 @@
+metric,value
+Couverture QR (%),0.0 ± 0.0
+Mission complète (%),0.0
+Taux de succès (%)  [tout lu + 0 collision],0.0
+Temps de mission,jamais atteinte (couverture incomplète)
+Taux de collision (%),0.0
+Distance mini inter-drones (m),0.53 ± 0.05
+% temps en zone sûre (risque<=0.4),100.0 ± 0.0
+Efficacité exploration (QR/m),0.000 ± 0.000
+Effort de contrôle moy (|action|),1.000 ± 0.000
