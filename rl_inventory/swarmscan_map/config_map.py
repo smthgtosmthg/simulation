@@ -34,7 +34,7 @@ class CurriculumConfig:
     """ADR bidirectionnel piloté par le taux de lecture, + spawns dirigés + panne de drone."""
 
     notches: int = 12                     # crans FINS entre borne tolérante et nominale (6 = falaises → yo-yo observé)
-    success_hi: float = 0.85              # BARRE DE MAÎTRISE, identique à tous les niveaux (décision utilisatrice : pas de promotion sans vrai bon pourcentage — 0.60 accepté avant = erreur)
+    success_hi: float = 0.85              # BARRE DE MAÎTRISE, identique à tous les niveaux (décision utilisatrice)
     hi_decay_per_notch: float = 0.0
     hi_min: float = 0.85
     lo_gap: float = 0.25                  # plancher de recul = 0.60
