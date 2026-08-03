@@ -34,14 +34,29 @@ class LidarConfig:
 class ActionConfig:
     """Commande de vitesse continue en repère drone (doc §3.2).
 
-    a = (vx, vy, vz, yaw_rate), bornée. Niveau vitesse : le sim suit la
-    consigne (write_root_velocity_to_sim). vz libre entre min/max altitude.
+    a = (vx, vy, vz, yaw_rate), bornée. L'action fixe la vitesse VISÉE ; la vitesse
+    réelle la rejoint via rl_inventory/actuator.py (retard + accélération bornée).
+    Sources : firmware Bitcraze (platform_defaults_cf2.h), Preiss et al. Crazyswarm
+    ICRA 2017, Eschmann et al. arXiv:2404.07837.
     """
 
-    max_lin_vel_mps: float = 1.5     # borne |vx|,|vy|,|vz|
-    max_yaw_rate_rps: float = 1.5    # borne yaw_rate
+    max_lin_vel_mps: float = 1.0     # PID_POS_VEL_X/Y_MAX du firmware (était 1.5, non tenable)
+    max_vz_up_mps: float = 1.0       # PID_POS_VEL_Z_MAX (valeur unique du firmware Bitcraze)
+    max_vz_down_mps: float = 1.0     # SYMÉTRIQUE. Une descente bridée à 0,5 rendait la commande
+                                     # verticale asymétrique : un bruit de moyenne nulle produisait
+                                     # +0,060 m/s, soit +9 m par épisode. Les drones montaient au
+                                     # plafond et y restaient, d'où 36 des 90 QR invisibles (mesuré)
+    max_yaw_rate_rps: float = 1.5    # 86 °/s ; entre MotionCommander (72) et cfclient (200)
     altitude_min_m: float = 0.3      # le drone monte/descend pour scanner les étagères
     altitude_max_m: float = 3.0
+
+    # modèle d'actionneur : sans lui, 0 → 1,5 m/s en un pas = 4,59 g (Crazyflie : 0,36 g)
+    accel_xy_mps2: float = 3.6       # g·tan(20°), PID_VEL_ROLL_MAX = 20.0f
+    accel_z_mps2: float = 3.0
+    yaw_accel_rps2: float = 10.0     # choix d'ingénierie : aucune source publiée
+    tau_xy_s: float = 0.30           # = v_max / a_max ; 1,0 → 0,6 m/s en ~5 pas de contrôle
+    tau_z_s: float = 0.30
+    tau_yaw_s: float = 0.15
 
     @property
     def dim(self) -> int:

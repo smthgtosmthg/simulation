@@ -22,6 +22,7 @@ from isaaclab.utils.math import euler_xyz_from_quat
 from isaaclab.utils.warp import raycast_mesh
 from isaaclab_assets import CRAZYFLIE_CFG
 
+from . import actuator
 from .config_rl import CFG
 from .qr_task import FACES, carton_qr_world_poses, find_cartons
 
@@ -278,6 +279,14 @@ class SwarmQREnvCfg(DirectMARLEnvCfg):
     alt_min: float = CFG.action.altitude_min_m
     alt_max: float = CFG.action.altitude_max_m
     start_altitude: float = 1.0
+    max_vz_up: float = CFG.action.max_vz_up_mps
+    max_vz_down: float = CFG.action.max_vz_down_mps
+    accel_xy: float = CFG.action.accel_xy_mps2
+    accel_z: float = CFG.action.accel_z_mps2
+    yaw_accel: float = CFG.action.yaw_accel_rps2
+    tau_xy: float = CFG.action.tau_xy_s
+    tau_z: float = CFG.action.tau_z_s
+    tau_yaw: float = CFG.action.tau_yaw_s
 
 
 class SwarmQREnv(DirectMARLEnv):
@@ -301,6 +310,10 @@ class SwarmQREnv(DirectMARLEnv):
         self._qr_ready = False
         self._refreshed = False
         self._stepping = False
+        # état d'actionneur, repère MONDE : (vx, vy, vz, taux de lacet) par drone.
+        # C'est LUI la vitesse du drone ; l'action n'est plus qu'une consigne.
+        self._vel_state = torch.zeros(NUM_DRONES, self.num_envs, 4, device=self.device)
+        self._vel_buf = torch.zeros(NUM_DRONES, self.num_envs, 6, device=self.device)
         # LiDAR statique maison : motif de rayons (généré 1 fois) + mesh entrepôt partagé (récupéré au 1er pas)
         pcfg = self.cfg.lidar.pattern_cfg
         _, self._ray_dirs = pcfg.func(pcfg, self.device)
@@ -454,26 +467,48 @@ class SwarmQREnv(DirectMARLEnv):
             self._actions[a] = act
 
     def _apply_action(self) -> None:
-        """Applique la commande de vitesse à chacun des 3 drones."""
+        """Un pas d'actionneur pour chacun des 3 drones (appelé à chaque sous-pas physique)."""
         for k in range(NUM_DRONES):
-            self._drive(self._drones[k], self._actions[f"drone_{k}"])
+            self._drive(k)
 
-    def _drive(self, robot, a):
-        """Vitesse autoritaire d'un drone (repère monde, altitude bornée)."""
-        vx_b = a[:, 0] * self.cfg.max_lin_vel
-        vy_b = a[:, 1] * self.cfg.max_lin_vel
-        vz = a[:, 2] * self.cfg.max_lin_vel
-        yaw_rate = a[:, 3] * self.cfg.max_yaw_rate
+    def _drive(self, k: int) -> None:
+        """L'action fixe la vitesse VISÉE ; la vitesse réelle la rejoint avec un retard du
+        premier ordre et une accélération bornée (rl_inventory/actuator.py).
+
+        Le filtre vit dans le repère MONDE : c'est là que vit la quantité de mouvement. Un
+        filtre en repère corps ferait tourner la vitesse avec le nez du drone (accélération
+        centripète gratuite, inversion de vitesse par simple pivot). La consigne, elle, est
+        tournée du corps vers le monde à chaque sous-pas.
+        """
+        robot, a, cfg = self._drones[k], self._actions[f"drone_{k}"], self.cfg
         _, _, yaw = euler_xyz_from_quat(robot.data.root_quat_w)
         cy, sy = torch.cos(yaw), torch.sin(yaw)
-        vx_w = vx_b * cy - vy_b * sy
-        vy_w = vx_b * sy + vy_b * cy
+        vz_cap = torch.where(a[:, 2] >= 0, cfg.max_vz_up, -cfg.max_vz_down)
+        cmd = torch.stack(
+            [
+                (a[:, 0] * cy - a[:, 1] * sy) * cfg.max_lin_vel,
+                (a[:, 0] * sy + a[:, 1] * cy) * cfg.max_lin_vel,
+                a[:, 2].abs() * vz_cap,
+                a[:, 3] * cfg.max_yaw_rate,
+            ],
+            dim=-1,
+        )
+        v = actuator.integrate(
+            self._vel_state[k], cmd, self.physics_dt,
+            accel_xy=cfg.accel_xy, accel_z=cfg.accel_z, yaw_accel=cfg.yaw_accel,
+            tau_xy=cfg.tau_xy, tau_z=cfg.tau_z, tau_yaw=cfg.tau_yaw,
+        )
+        # butée d'altitude appliquée à l'ÉTAT, après le filtre : couper la seule commande
+        # laisserait le retard du filtre dépasser la butée.
         z = robot.data.root_pos_w[:, 2] - self.scene.env_origins[:, 2]
-        vz = torch.where((z >= self.cfg.alt_max) & (vz > 0), torch.zeros_like(vz), vz)
-        vz = torch.where((z <= self.cfg.alt_min) & (vz < 0), torch.zeros_like(vz), vz)
-        vel = torch.zeros(self.num_envs, 6, device=self.device)
-        vel[:, 0], vel[:, 1], vel[:, 2] = vx_w, vy_w, vz
-        vel[:, 5] = yaw_rate
+        v[:, 2] = actuator.altitude_envelope(v[:, 2], z, cfg.alt_min, cfg.alt_max, cfg.accel_z,
+                                             max_delta=cfg.accel_z * self.physics_dt)
+        self._vel_state[k] = v
+
+        vel = self._vel_buf[k]
+        vel.zero_()
+        vel[:, :3] = v[:, :3]
+        vel[:, 5] = v[:, 3]
         robot.write_root_velocity_to_sim(vel)
 
     def _get_observations(self) -> dict:
@@ -532,6 +567,8 @@ class SwarmQREnv(DirectMARLEnv):
             rs[:, 2] = self.scene.env_origins[env_ids, 2] + self.cfg.start_altitude
             robot.write_root_pose_to_sim(rs[:, :7], env_ids)
             robot.write_root_velocity_to_sim(rs[:, 7:], env_ids)
+        if hasattr(self, "_vel_state"):
+            self._vel_state[:, env_ids] = 0.0     # sinon le drone repart avec l'élan de l'épisode précédent
         if getattr(self, "_qr_ready", False):
             self._read[env_ids] = False
             self._dwell[env_ids] = 0

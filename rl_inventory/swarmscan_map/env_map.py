@@ -27,7 +27,11 @@ from .layouts import LayoutGenerator
 from .mapping import SwarmMapper
 
 D = NUM_DRONES
-VEC_DIM = MAP_CFG.train.lidar_sectors + 3 + 1 + 2 + 1 + 1 + (D - 1) * 4 + 1 + 2 + 4
+# +D : identité du drone (one-hot). Les 3 drones partagent UN cerveau ; sans identifiant ils
+# reçoivent des observations semblables, prennent les mêmes décisions et se regroupent au même
+# endroit — mesuré : dans les bons épisodes la pénalité de proximité était 10× plus lourde que
+# dans les mauvais, et la couverture d'équipe devenait négative (travail en triple).
+VEC_DIM = MAP_CFG.train.lidar_sectors + 3 + 1 + 2 + 1 + 1 + (D - 1) * 4 + 1 + 2 + 4 + D
 PRIV_DIM = 7
 OBS_DIM = MAP_CFG.map.obs_dim + VEC_DIM + PRIV_DIM
 
@@ -70,10 +74,22 @@ class SwarmScanMapEnv(SwarmQREnv):
         self._new_reads_nom = torch.zeros(D, B, device=self.device)
         self._lin_k = torch.zeros(B, D, device=self.device)
         self._yawrate_k = torch.zeros(B, D, device=self.device)
+        self._alg_ref = None           # posé par train.py : bascule d'entropie en vol au niveau cible
+        self._switch_level = 10
+        self._switch_entropy = 0.001
+        self._switched = False
         self._scan_counts = {k: torch.zeros(B, D, device=self.device) for k in ("new", "facade", "marginal", "overlap")}
         self._pos_local = torch.zeros(B, D, 3, device=self.device)
         self._yaw = torch.zeros(B, D, device=self.device)
         self._raw_min = torch.full((B, D), MAX_DIST, device=self.device)
+        # diagnostic : chaque poste de récompense et chaque grandeur de comportement, cumulés
+        # par épisode. Sans ça, un épisode à 0,9 et un à 0,1 sont indiscernables dans les courbes.
+        self._rw_acc = {k: torch.zeros(B, device=self.device)
+                        for k in ("couverture", "lectures", "chocs", "potentiel", "commande", "separation")}
+        self._beh_acc = {k: torch.zeros(B, device=self.device)
+                         for k in ("altitude", "vitesse", "contacts", "distance", "pas")}
+        self._prev_xy = None
+        self._agent_id = torch.eye(D, device=self.device).unsqueeze(1)   # (D,1,D) one-hot par drone
         self.map_log: dict[str, float] = {}
 
     # ------------------------------------------------------------------ QR & layouts
@@ -124,11 +140,17 @@ class SwarmScanMapEnv(SwarmQREnv):
             vec = qr_pos - d.root_pos_w.unsqueeze(1)
             dist = torch.norm(vec, dim=-1).clamp_min(1e-6)
             direction = vec / dist.unsqueeze(-1)
-            fwd = torch.stack([torch.cos(self._yaw[:, k]), torch.sin(self._yaw[:, k]),
-                               torch.zeros_like(self._yaw[:, k])], dim=-1)
-            in_fov = (direction * fwd.unsqueeze(1)).sum(-1) >= cos_fov
+            # DEUX caméras LATÉRALES (±90° du cap) : la lecture se fait en LONGEANT les racks,
+            # sans visée fine du lacet — c'est la visée qui vivait dans le bruit d'exploration
+            # (mesuré : 0,91 bruité → 0,11 déterministe en frontal ; géométrie C=1,0 en latéral).
+            # Axe gauche = (−sin, cos, 0), axe droit = son opposé : un seul test en |valeur absolue|.
+            side = torch.stack([-torch.sin(self._yaw[:, k]), torch.cos(self._yaw[:, k]),
+                                torch.zeros_like(self._yaw[:, k])], dim=-1)
+            in_fov = (direction * side.unsqueeze(1)).sum(-1).abs() >= cos_fov
             face_cos = (-direction * self._qr_normal.unsqueeze(0)).sum(-1)
-            lin = torch.norm(d.root_lin_vel_w[:, :2], dim=-1)
+            lin = torch.norm(
+                d.root_lin_vel_w if g.speed_uses_vz else d.root_lin_vel_w[:, :2], dim=-1
+            )
             yr = torch.abs(d.root_ang_vel_w[:, 2])
             alive = ~self._dead[:, k]
             self._lin_k[:, k] = lin
@@ -147,11 +169,20 @@ class SwarmScanMapEnv(SwarmQREnv):
             vis_nom[k] = gate(g.read_distance_m, g.view_angle_deg, g.max_speed_mps, g.max_yawrate_rps)
             dist_tag[k] = dist.view(B, n, len(FACES)).min(-1).values
 
+        # au reset la vitesse est nulle : sans ce délai, les spawns dirigés offrent une
+        # lecture gratuite dès le premier pas (les 2 conditions géométriques y sont
+        # satisfaites avec probabilité 1, et la condition de vitesse aussi)
+        live = (self.episode_length_buf >= g.credit_blackout_steps).view(1, B, 1)
+        vis_cur &= live
+        vis_nom &= live
+
         self._dwell_k = torch.where(vis_cur, self._dwell_k + 1, torch.zeros_like(self._dwell_k))
         self._dwell_nom = torch.where(vis_nom, self._dwell_nom + 1, torch.zeros_like(self._dwell_nom))
 
-        ready = (self._dwell_k >= int(th["dwell_steps"])) & self._active.unsqueeze(0) & (~self._read).unsqueeze(0)
-        ready_nom = (self._dwell_nom >= g.dwell_steps) & self._active.unsqueeze(0) & (~self._read_nominal).unsqueeze(0)
+        # _readable et non _active : un tag au-dessus de max_tag_z_m payait 25 points sans
+        # jamais compter au dénominateur de la mission ni du curriculum
+        ready = (self._dwell_k >= int(th["dwell_steps"])) & self._readable.unsqueeze(0) & (~self._read).unsqueeze(0)
+        ready_nom = (self._dwell_nom >= g.dwell_steps) & self._readable.unsqueeze(0) & (~self._read_nominal).unsqueeze(0)
 
         self._new_reads = torch.zeros(D, B, device=self.device)
         self._new_reads_nom = torch.zeros(D, B, device=self.device)
@@ -190,7 +221,8 @@ class SwarmScanMapEnv(SwarmQREnv):
         # potentiel : se rapprocher PAYE, et être lent PRÈS d'un tag paye aussi (gradient dense
         # vers la posture nominale). Normalisé par le cap COURANT : normalisé par le nominal 0.6,
         # le gradient était NUL entre 0.6 et 1.5 m/s — exactement la transition à apprendre.
-        slowness = 1.0 - (self._lin_k / th["max_speed_mps"]).clamp(0.0, 1.0)
+        v_ref = CFG.action.max_lin_vel_mps
+        slowness = ((v_ref - self._lin_k) / max(v_ref - th["max_speed_mps"], 1e-3)).clamp(0.0, 1.0)
         proximity = torch.exp(-(self._nearest - g.read_distance_m).clamp(min=0.0) / 1.5)
         phi_val = -self._nearest / clip + MAP_CFG.reward.slow_potential * slowness * proximity
         phi = torch.where(has_unread.unsqueeze(1), phi_val, torch.zeros_like(phi_val))
@@ -286,6 +318,7 @@ class SwarmScanMapEnv(SwarmQREnv):
             norm_xy = act[:, :2].norm(dim=1, keepdim=True).clamp(min=1.0)
             act[:, :2] = act[:, :2] / norm_xy  # vitesse PLANAIRE ≤ 1.5 m/s (bornée par axe, la diagonale montait à 2.12)
             act[self._dead[:, i]] = 0.0
+            self._vel_state[i, self._dead[:, i]] = 0.0   # sinon le drone mort dérive ~1 s
             self._actions[a] = act
 
     def _get_observations(self) -> dict:
@@ -314,13 +347,14 @@ class SwarmScanMapEnv(SwarmQREnv):
                     d.root_lin_vel_b / CFG.action.max_lin_vel_mps,
                     (d.root_ang_vel_b[:, 2] / CFG.action.max_yaw_rate_rps).unsqueeze(-1),
                     torch.sin(self._yaw[:, k]).unsqueeze(-1), torch.cos(self._yaw[:, k]).unsqueeze(-1),
-                    (self._pos_local[:, k, 2] / CFG.action.altitude_max_m).unsqueeze(-1),
+                    (self._pos_local[:, k, 2] / self.cfg.alt_max).unsqueeze(-1),
                     t_frac,
                     *mates,
                     self._dead[:, k].float().unsqueeze(-1),
                     self._scan_ok[:, k].float().unsqueeze(-1),
                     self._yaw_ok[:, k].float().unsqueeze(-1),
                     th_vec,
+                    self._agent_id[k].expand(self.num_envs, D),
                 ],
                 dim=-1,
             )
@@ -364,25 +398,46 @@ class SwarmScanMapEnv(SwarmQREnv):
         out = {}
         for k, a in enumerate(AGENTS):
             alive = (~self._dead[:, k]).float()
-            r = cov_scale * rw.facade_gain * self._scan_counts["facade"][:, k] / norm
-            r += cov_scale * rw.area_gain * (self._scan_counts["new"][:, k] - self._scan_counts["facade"][:, k]) / norm
-            r += cov_scale * rw.marginal_gain * self._scan_counts["marginal"][:, k] / norm
-            r -= rw.overlap_penalty * self._scan_counts["overlap"][:, k] / norm * cov_low
-            r += read_scale * rw.new_qr * self._new_reads[k]
-            r += read_scale * rw.new_qr_nominal * self._new_reads_nom[k]
-            r += milestone_bonus
-            r += rw.shaping_scale * shaping[:, k]
+            couverture = (
+                cov_scale * rw.facade_gain * self._scan_counts["facade"][:, k] / norm
+                + cov_scale * rw.area_gain
+                * (self._scan_counts["new"][:, k] - self._scan_counts["facade"][:, k]) / norm
+                + cov_scale * rw.marginal_gain * self._scan_counts["marginal"][:, k] / norm
+                - rw.overlap_penalty * self._scan_counts["overlap"][:, k] / norm * cov_low
+            )
+            lectures = (read_scale * rw.new_qr * self._new_reads[k]
+                        + read_scale * rw.new_qr_nominal * self._new_reads_nom[k]
+                        + milestone_bonus / D)   # jalon d'ÉQUIPE : payé 1× au total, pas 1× par drone
             gap = ((rw.safe_distance_m - self._raw_min[:, k]) / rw.safe_distance_m).clamp(0.0, 1.0)
-            r -= rw.collision_scale * gap * gap
-            r -= rw.contact_penalty * (self._raw_min[:, k] < rw.collision_distance_m).float()
+            chocs = -(rw.collision_scale * gap * gap
+                      + rw.contact_penalty * (self._raw_min[:, k] < rw.collision_distance_m).float())
+            self._rw_acc["couverture"] += couverture * alive
+            self._rw_acc["lectures"] += lectures * alive
+            self._rw_acc["chocs"] += chocs * alive
+            self._rw_acc["potentiel"] += rw.shaping_scale * shaping[:, k] * alive
+            self._rw_acc["commande"] -= (rw.action_diff * self._jerk_pre[a]
+                                         + rw.bound_penalty * self._bound_pen[a]) * alive
+            r = couverture + lectures + chocs
+            r += rw.shaping_scale * shaping[:, k]
             r -= rw.action_diff * self._jerk_pre[a]
             r -= rw.bound_penalty * self._bound_pen[a]
             for j in range(D):
                 if j != k:
                     sep = torch.norm(pos_xy[:, k] - pos_xy[:, j], dim=-1)
-                    too_close = (sep < rw.separation_m) & ~self._dead[:, j] & ~self._dead[:, k]
-                    r -= rw.separation_penalty * too_close.float()
+                    prox = ((rw.separation_m - sep) / rw.separation_m).clamp(0.0, 1.0)
+                    prox = prox * (~self._dead[:, j] & ~self._dead[:, k]).float()
+                    pen = rw.separation_penalty * prox * prox
+                    r -= pen
+                    self._rw_acc["separation"] -= pen * alive
             out[a] = r * alive
+        # comportement : ce qui distingue un bon épisode d'un mauvais
+        self._beh_acc["altitude"] += self._pos_local[..., 2].mean(dim=1)
+        self._beh_acc["vitesse"] += self._lin_k.mean(dim=1)
+        self._beh_acc["contacts"] += (self._raw_min < rw.collision_distance_m).float().sum(dim=1)
+        if self._prev_xy is not None:
+            self._beh_acc["distance"] += (pos_xy - self._prev_xy).norm(dim=-1).sum(dim=1)
+        self._prev_xy = pos_xy.clone()
+        self._beh_acc["pas"] += 1.0
         return out
 
     def _get_dones(self) -> tuple[dict, dict]:
@@ -399,14 +454,27 @@ class SwarmScanMapEnv(SwarmQREnv):
         if self._qr_ready and len(env_ids) > 0:
             fracs = self._read_frac_readable[env_ids].tolist()
             self._curr.on_episodes_end(fracs)
+            if (self._alg_ref is not None and not self._switched
+                    and self._curr.level >= self._switch_level):
+                self._alg_ref.entropy_coef = self._switch_entropy
+                self._switched = True
+                print(f"\n>>> BASCULE CONVERGENCE : niveau {self._curr.level} atteint → "
+                      f"entropy_coef={self._switch_entropy} (le bruit se retire)\n")
             nom = self._read_nominal[env_ids] & self._readable[env_ids]
             denom = self._readable[env_ids].sum(dim=1).clamp_min(1).float()
+            pas = self._beh_acc["pas"][env_ids].clamp_min(1.0)
             self.map_log = {
                 "curriculum/level": float(self._curr.level),
                 "curriculum/ema": self._curr.ema,
                 "curriculum/dropout_p": self._curr.dropout_prob(),
                 "episode/read_frac_gate": sum(fracs) / max(1, len(fracs)),
                 "episode/read_frac_nominal": (nom.sum(dim=1).float() / denom).mean().item(),
+                "comportement/altitude_m": (self._beh_acc["altitude"][env_ids] / pas).mean().item(),
+                "comportement/vitesse_mps": (self._beh_acc["vitesse"][env_ids] / pas).mean().item(),
+                "comportement/distance_m": self._beh_acc["distance"][env_ids].mean().item(),
+                "comportement/contacts_pct": (self._beh_acc["contacts"][env_ids] / (pas * D)).mean().item() * 100,
+                "comportement/couverture_cellules": self._mapper.scan[env_ids].amax(dim=1).flatten(1).sum(-1).mean().item(),
+                **{f"recompense/{k}": v[env_ids].mean().item() for k, v in self._rw_acc.items()},
             }
         super()._reset_idx(env_ids)
         self._refreshed = False
@@ -421,6 +489,10 @@ class SwarmScanMapEnv(SwarmQREnv):
         self._phi[env_ids] = 0.0
         self._phi_fresh[env_ids] = True
         self._read_frac_readable[env_ids] = 0.0
+        for acc in (self._rw_acc, self._beh_acc):
+            for v in acc.values():
+                v[env_ids] = 0.0
+        self._prev_xy = None
         self._mapper.reset(env_ids)
 
         p_drop = self._curr.dropout_prob() if self._split == "train" else 0.0
@@ -477,7 +549,11 @@ class SwarmScanMapEnv(SwarmQREnv):
                 cand = tag_p + tag_n * dist.unsqueeze(-1)
                 cand[:, 2] = tag_p[:, 2].clamp(self.cfg.alt_min + 0.1, self.cfg.alt_max - 0.1)
                 pos[near] = cand
-                yaw[near] = torch.atan2(-tag_n[:, 1], -tag_n[:, 0]) + (torch.rand(len(envs), device=self.device) - 0.5) * 0.6
+                # spawn dirigé FLANC vers le tag (caméras latérales) : nez vers le tag, aucune
+                # caméra ne le voit et le curriculum s'assèche silencieusement
+                side_pick = torch.randint(0, 2, (len(envs),), device=self.device).float() * 2.0 - 1.0
+                yaw[near] = (torch.atan2(-tag_n[:, 1], -tag_n[:, 0]) + side_pick * (math.pi / 2)
+                             + (torch.rand(len(envs), device=self.device) - 0.5) * 0.6)
 
             free = self._clearance_ok(pos)
             if (~free).any():

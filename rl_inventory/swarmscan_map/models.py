@@ -73,3 +73,21 @@ class MapActorCritic(ActorCritic):
         self.std = nn.Parameter(init_noise_std * torch.ones(num_actions))
         self.distribution = None
         torch.distributions.Normal.set_default_validate_args(False)
+
+    def _bounded_mean(self, obs) -> torch.Tensor:
+        # moyenne bornée en douceur à ±3 : l'évasion hors de la zone de rappel (moyennes éjectées
+        # par un update violent puis coincées dans le plat, 3 runs tués) devient impossible par
+        # construction ; quasi-identité dans [−1,1] (écart max 3,5 %), gradient jamais nul
+        return 3.0 * torch.tanh(self.actor(obs) / 3.0)
+
+    def update_distribution(self, obs):
+        mean = self._bounded_mean(obs)
+        # σ PLAFONNÉ : sans borne, un accident d'update + bonus d'entropie → explosion (σ=9 vécu,
+        # = la pathologie n°3 de l'audit IPPO ; remède max_log_std enfin appliqué à notre pile)
+        std = self.std.clamp(0.05, 1.2).expand_as(mean)
+        self.distribution = torch.distributions.Normal(mean, std)
+
+    def act_inference(self, obs):
+        obs = self.get_actor_obs(obs)
+        obs = self.actor_obs_normalizer(obs)
+        return self._bounded_mean(obs)

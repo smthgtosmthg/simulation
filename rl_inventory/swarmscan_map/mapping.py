@@ -102,7 +102,9 @@ class SwarmMapper:
             dy = self.cell_y - pos[:, k, 1].view(B, 1, 1)
             dist = torch.sqrt(dx * dx + dy * dy).clamp_min(1e-6)
             c, s = torch.cos(yaw[:, k]).view(B, 1, 1), torch.sin(yaw[:, k]).view(B, 1, 1)
-            in_cone = (dx * c + dy * s) / dist >= cos_half
+            # empreinte BILATÉRALE (caméras latérales ±90°) : projection sur l'axe gauche (−sin, cos),
+            # les deux cônes dos à dos se testent en |valeur absolue|
+            in_cone = ((dx * (-s) + dy * c) / dist).abs() >= cos_half
             ok = (scan_ok[:, k] & alive[:, k]).view(B, 1, 1)
             stamp = (dist <= scan_range) & in_cone & ok
             prev = self.scan[bd[:, 0], band[:, k]]        # (B,H,W) bande courante du drone k
@@ -126,7 +128,17 @@ class SwarmMapper:
             counts["new"][:, k] = news[k].flatten(1).sum(-1).float()
             counts["facade"][:, k] = facades[k].flatten(1).sum(-1).float()
             counts["marginal"][:, k] = (news[k] & ~others).flatten(1).sum(-1).float()
-            counts["overlap"][:, k] = (stamps[k] & ~news[k]).flatten(1).sum(-1).float() * alive_f[:, k]
+            # recouvrement avec les AUTRES drones seulement : comparée à la grille, qui
+            # contient déjà l'empreinte du pas précédent DU MÊME drone, la taxe valait
+            # ~105 cellules à chaque pas (−225 par drone et par épisode) — une taxe
+            # constante d'être vivant, qui rendait mourir rentable
+            others_stamp = torch.zeros_like(union_new)
+            for j in range(D):
+                if j != k:
+                    others_stamp |= stamps[j]
+            counts["overlap"][:, k] = (
+                (stamps[k] & ~news[k] & others_stamp).flatten(1).sum(-1).float() * alive_f[:, k]
+            )
             union_new |= news[k]
 
         for k in range(D):

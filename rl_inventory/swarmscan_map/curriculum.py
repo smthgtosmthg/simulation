@@ -28,7 +28,12 @@ class GateCurriculum:
 
     @property
     def progress(self) -> float:
-        return self.level / self.cfg.notches
+        # ÉCRÊTÉ à 1.0 : _interp extrapole au-delà du gate nominal si level > notches.
+        # verify_env.py imposait --level 7 par défaut alors que notches est passé de 12 à 6 :
+        # progress = 1.167 donnait read_distance = 4.0 + (1.25−4.0)·1.167 = 0.79 m, soit un
+        # gate 37 % PLUS SERRÉ que le nominal. Toutes les validations d'environnement ont été
+        # faites à ce gate-là, et ses zéros ont été lus comme « l'environnement est sain ».
+        return min(self.level / self.cfg.notches, 1.0)
 
     @property
     def nominal(self) -> bool:

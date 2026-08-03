@@ -11,13 +11,21 @@ os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser(description="Entraînement SwarmScan-Map (rsl_rl PS-PPO).")
-parser.add_argument("--num_envs", type=int, default=32)
+parser.add_argument("--num_envs", type=int, default=64)
+# fenêtre GAE effective = 1/(1−γλ) ≈ 17 pas (0,57 s) pour un épisode de 4500 pas : très court.
+# Passer à 64 pas avec --mini_batches 4 est NEUTRE en mémoire (3072 par backward au lieu de
+# 6144) et double la fenêtre. À tester SÉPARÉMENT du correctif de curriculum.
+parser.add_argument("--num_steps", type=int, default=32, help="pas collectés par env et par itération")
+parser.add_argument("--mini_batches", type=int, default=1, help="mini-lots par époque (monter avec --num_steps)")
 parser.add_argument("--max_iterations", type=int, default=5000)
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--run_name", type=str, default="v2_map")
 parser.add_argument("--resume", type=str, default=None, help="checkpoint .pt à reprendre")
 parser.add_argument("--start_level", type=int, default=0, help="niveau de curriculum au démarrage (resume : remettre celui du run précédent)")
 parser.add_argument("--freeze_level", type=int, default=-1, help="fige le curriculum à ce niveau (fin de parcours : palier stable, sans promotions/reculs)")
+parser.add_argument("--entropy", type=float, default=None, help="override du coefficient d'entropie initial")
+parser.add_argument("--entropy_final", type=float, default=0.001, help="entropie de la phase convergence (bascule automatique)")
+parser.add_argument("--converge_level", type=int, default=9, help="niveau qui déclenche la bascule d'entropie (curriculum à 10 crans)")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 simulation_app = AppLauncher(args).app
@@ -43,7 +51,7 @@ N_SCALES = len(MAP_CFG.map.crop_spans_m)
 
 
 def train_cfg(num_envs: int) -> dict:
-    steps = 32
+    steps = args.num_steps
     return {
         "seed": args.seed,
         "num_steps_per_env": steps,
@@ -62,12 +70,12 @@ def train_cfg(num_envs: int) -> dict:
         "algorithm": {
             "class_name": "PPO",
             "num_learning_epochs": 5,
-            "num_mini_batches": 1,
+            "num_mini_batches": args.mini_batches,
             "clip_param": 0.2,
             "gamma": MAP_CFG.train.gamma,
             "lam": MAP_CFG.train.lam,
             "value_loss_coef": 1.0,
-            "entropy_coef": MAP_CFG.train.entropy_coef,
+            "entropy_coef": args.entropy if args.entropy is not None else MAP_CFG.train.entropy_coef,
             "learning_rate": 3.0e-4,
             "max_grad_norm": 1.0,
             "schedule": "fixed",
@@ -95,6 +103,12 @@ def main():
     runner = OnPolicyRunner(vec, train_cfg(args.num_envs), log_dir=os.path.abspath(log_dir), device=str(env.device))
     if args.resume:
         runner.load(args.resume)
+    # bascule d'entropie EN VOL, sans toucher la boucle d'entraînement (celle des 19 runs sains) :
+    # l'env écrit le nouveau coefficient directement dans l'algorithme quand le niveau cible est atteint
+    env._alg_ref = runner.alg
+    env._switch_level = args.converge_level
+    env._switch_entropy = args.entropy_final
+
     print(f"\n>>> SwarmScan-Map | envs={args.num_envs}×3 drones | iters={args.max_iterations} | log={log_dir}\n")
     runner.learn(num_learning_iterations=args.max_iterations, init_at_random_ep_len=True)
     vec.close()
