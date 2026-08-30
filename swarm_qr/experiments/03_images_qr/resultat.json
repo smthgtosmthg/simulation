@@ -1,0 +1,39 @@
+{
+  "tag": "BOX_000",
+  "tag_size_m": 0.4,
+  "distances": [
+    {
+      "distance": 0.5,
+      "decode": false,
+      "text": ""
+    },
+    {
+      "distance": 0.8,
+      "decode": true,
+      "text": "BOX_000"
+    },
+    {
+      "distance": 1.1,
+      "decode": true,
+      "text": "BOX_000"
+    },
+    {
+      "distance": 1.5,
+      "decode": true,
+      "text": "BOX_000"
+    },
+    {
+      "distance": 2.0,
+      "decode": true,
+      "text": "BOX_000"
+    },
+    {
+      "distance": 3.0,
+      "decode": true,
+      "text": "BOX_001"
+    }
+  ],
+  "portee_max_m": 3.0,
+  "qr_lus_en_vol": 6,
+  "images_video": 197
+}

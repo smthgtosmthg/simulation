@@ -1,0 +1,14 @@
+{
+  "paire_la_plus_proche": {
+    "graines": [
+      1,
+      6
+    ],
+    "deplacement_moyen_m": 1.8450666666666666
+  },
+  "std_x": 1.7316414697984632,
+  "std_y": 3.267229652257143,
+  "boxes_min": 62,
+  "boxes_max": 118,
+  "ok": true
+}
