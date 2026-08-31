@@ -73,45 +73,47 @@ def compare() -> int:
     return 0 if ok else 2
 
 
-args, _ = parser.parse_known_args()
-if args.compare:
+args_pre, _ = parser.parse_known_args()
+if args_pre.compare:
     raise SystemExit(compare())
 
-from isaaclab.app import AppLauncher  # noqa: E402
+args, _ = parser.parse_known_args()
 
-AppLauncher.add_app_launcher_args(parser)
-args = parser.parse_args()
-args.headless = True
-args.enable_cameras = True
-simulation_app = AppLauncher(args).app
+import sys as _sys  # noqa: E402
+
+_sys.stdout.reconfigure(line_buffering=True)
+
+from isaacsim import SimulationApp  # noqa: E402
+
+simulation_app = SimulationApp(
+    {"headless": True, "extra_args": ["--/rtx/verifyDriverVersion/enabled=false"]}
+)
 
 import traceback  # noqa: E402
 
-import isaaclab.sim as sim_utils  # noqa: E402
+import omni.timeline  # noqa: E402
 import omni.usd  # noqa: E402
 
 from swarm_qr.env import scene as scene_mod  # noqa: E402
-from swarm_qr.env.config import CAMERAS, SIM_DT, RenderClock  # noqa: E402
 from swarm_qr.env.layout import make_layout  # noqa: E402
 from swarm_qr.experiments import _viz  # noqa: E402
 
 
 def main() -> None:
     layout = make_layout(args.seed)
-    sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(dt=SIM_DT, device="cuda:0"))
-    scene = scene_mod.build(layout)
+    scene = scene_mod.build(layout, with_sitl=False)
     overview = _viz.overview_camera()
     _viz.hide_roof(omni.usd.get_context().get_stage())
-    clock = RenderClock(CAMERAS.update_hz)
-    sim.reset()
-    scene_mod.place_drones(scene)
 
-    for _ in range(25):
-        clock.step(sim)
-        overview.update(SIM_DT)
-        scene.update(SIM_DT)
+    scene.world.reset()
+    scene.finalize()
+    _viz.overview_init(overview)
+    omni.timeline.get_timeline_interface().play()
 
-    img = _viz.to_bgr(overview.data.output["rgb"])
+    for _ in range(40):
+        scene.world.step(render=True)
+
+    img = _viz.to_bgr(overview.get_rgb())
     _viz.save(img, HERE / f"vue_{args.run_pass}.jpg")
     (HERE / f"layout_{args.run_pass}.json").write_text(
         json.dumps(

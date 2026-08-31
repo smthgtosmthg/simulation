@@ -1,0 +1,32 @@
+{
+  "lien_commande": true,
+  "ekf": true,
+  "mode_guided": true,
+  "arme": true,
+  "takeoff_acks": [
+    0
+  ],
+  "decollage": {
+    "altitude_m": 2.99,
+    "ok": true
+  },
+  "stationnaire": {
+    "duree_s": 10.0,
+    "ecart_type_cm": [
+      10.79,
+      0.93,
+      1.23
+    ],
+    "rayon_max_cm": 20.87
+  },
+  "arret": {
+    "vitesse_initiale_ms": 1.01,
+    "temps_s": 6.8,
+    "distance_m": 1.06
+  },
+  "debit": {
+    "pas_par_s": 412.6,
+    "dt_physique": 0.00125,
+    "x_temps_reel": 0.52
+  }
+}

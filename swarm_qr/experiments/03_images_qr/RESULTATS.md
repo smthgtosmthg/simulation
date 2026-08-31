@@ -1,29 +1,29 @@
-# Test 3 — Netteté des QR et vol du drone
+# Test 3 — Le drone lit-il vraiment les QR codes en volant ?
 
-**Question.** Les QR sont-ils lisibles, et à quelle distance ? Le drone vole-t-il vraiment ?
+**Ce qu'on veut savoir.** C'est le cœur de la tâche : si le drone ne sait pas lire, le reste du
+système ne sert à rien. Le drone est ici un vrai appareil piloté par ArduPilot, avec son
+inertie et ses imprécisions.
 
-**Méthode.** Le drone est placé face à un QR de 40 cm, à six distances, et on tente le décodage
-réel avec OpenCV. Puis il longe un rack à 0,5 m/s pendant que sa caméra et la vue de dessus
-sont filmées.
+**Comment on a testé.** Deux essais différents. Dans le premier, le drone vole jusqu'à six
+distances face à un panneau de 40 centimètres, s'arrête, et prend **une seule photo** à chaque
+fois. Dans le second, il longe le rack à un demi-mètre par seconde et lit **en continu**, sans
+jamais s'arrêter.
 
-| Distance | Résultat |
-|---|---|
-| 0,5 m | non décodé |
-| 0,8 m | décodé |
-| 1,1 m | décodé |
-| 1,5 m | décodé |
-| 2,0 m | décodé |
-| 3,0 m | décodé (un autre QR entre dans le champ) |
+**Ce qu'on a trouvé.** À l'arrêt, le code a été lu à 1,1 mètre, à 2 mètres et à 3 mètres, mais
+pas à 0,5 mètre, ni à 0,8 mètre, ni à 1,5 mètre. En vol continu, le drone a lu six codes
+différents en un seul passage. Au moment de chaque photo, il était placé à moins de 5
+centimètres et à moins d'un degré de la position demandée : le pilotage n'est donc plus ce qui
+limite la lecture.
 
-L'échec à 0,5 m est instructif : le QR remplit tout le cadre et sa marge blanche est coupée,
-alors qu'un décodeur en a besoin. **Il existe donc une distance minimale, pas seulement une
-distance maximale.** À 2 et 3 mètres, trois QR tiennent dans la même image, donc plusieurs
-cartons pourront être lus d'un coup. La portée maximale n'est pas encore bornée : elle sera
-mesurée proprement à l'étape 2.
+**Ce que cela nous apprend.** Une photo unique est fragile, alors que lire en continu est
+robuste, puisqu'une image ratée ne coûte rien quand il y en a cinq par seconde. Or la vraie
+mission lira en continu. En dessous d'un mètre environ, la lecture est impossible : le panneau
+déborde du cadre et la marge blanche autour du code disparaît, alors que le lecteur en a besoin.
 
-**Verdict : les QR sont nets et se décodent de 0,8 m à au moins 3 m.** Le drone vole, ses
-caméras suivent, et 6 QR ont été lus pendant le vol le long du rack.
+**Verdict : la chaîne complète est prouvée**, du décollage jusqu'à l'identité du carton lu.
 
-**Images.** `planche_qr.jpg` — les six distances. `vol_le_long_du_rack.mp4` — 197 images.
+**Images.** `planche_qr.jpg` réunit les six photos, une par distance, avec le résultat de
+lecture écrit sur chacune. `vol_le_long_du_rack.mp4` montre le vol filmé : à gauche ce que voit
+la caméra, à droite la vue d'en haut, et un compteur qui monte jusqu'à six.
 
-**Relancer.** `run.py --seed 7`.
+**Pour relancer.** `DISPLAY=:1 run.py --seed 7`, qui lance le pilote automatique tout seul.

@@ -1,29 +1,26 @@
-# Test 4 — Débit du simulateur
+# Test 4 — Combien de temps coûte une simulation ?
 
-**Question.** Combien de pas de simulation par seconde tient la machine, selon le nombre
-d'images demandées ?
+**Ce qu'on veut savoir.** Ce chiffre gouverne tout le projet, puisqu'il dit combien d'heures
+coûtera l'évaluation finale.
 
-**Méthode.** Trois drones volent avec leurs neuf caméras. On fait varier la fréquence de rendu
-et on chronomètre 240 pas.
+**Comment on a testé.** La scène complète, avec trois drones et neuf caméras, a été chronométrée
+dans trois situations : sans aucune image, avec cinq images par seconde, et avec une image à
+chaque pas de calcul.
 
-| Images/s | Pas/s | Vitesse | Mission de 5 min |
-|---|---|---|---|
-| 1 | 248,8 | 4,15× le temps réel | 1,2 min |
-| **5** | **88,5** | **1,48×** | **3,4 min** |
-| 15 | 33,2 | 0,55× | 9,0 min |
-| 60 | 8,7 | 0,14× | 34,7 min |
+**Ce qu'on a trouvé.** Sans images, la machine tient 222 pas de simulation par seconde. Avec
+cinq images par seconde, elle en tient 206, soit à peine 7 % de moins. Avec une image à chaque
+pas, elle s'effondre à 6 pas par seconde.
 
-Le coût est presque entièrement dans le rendu : passer de 60 à 5 images par seconde multiplie
-la vitesse par dix. Un premier essai avait donné 8,6 pas par seconde quelle que soit la
-fréquence demandée, parce que le réglage utilisé limitait la relecture du capteur sans empêcher
-le simulateur de rendre. Le bon levier est de demander explicitement `sim.step(render=False)`
-la plupart du temps.
+**Ce que cela nous apprend.** Le coût ne vient pas des caméras, contrairement à ce qu'on
+pouvait croire, mais de la physique du pilote automatique, qui doit être calculée huit cents
+fois par seconde. La simulation tourne donc environ quatre fois moins vite que le temps réel :
+une mission de dix minutes demande à peu près quarante minutes de calcul, et l'évaluation
+finale de vingt-cinq missions demandera environ seize heures.
 
-**Réglage retenu : 5 images par seconde.** Le simulateur va alors plus vite que le temps réel,
-et cinq images par seconde suffisent largement pour un drone à moins d'un mètre par seconde,
-qui ne parcourt que 20 cm entre deux images. Les caméras gardent leur pleine résolution : c'est
-elle qui rend la lecture des QR possible.
+**Réglage retenu : cinq images par seconde.** C'est largement suffisant pour un drone qui vole
+sous un mètre par seconde, et les caméras gardent leur pleine résolution, ce qui est la
+condition pour lire les QR codes.
 
-**Image.** `courbe_debit.png` — le débit et la vitesse par rapport au temps réel.
+**Image.** `courbe_debit.png` compare les trois situations.
 
-**Relancer.** `run.py --hz N` pour chaque fréquence, puis `run.py --plot`.
+**Pour relancer.** `run.py`, puis `run.py --plot` pour afficher le tableau.

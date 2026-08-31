@@ -1,26 +1,23 @@
-# Test 2 — Variation entre entrepôts
+# Test 2 — Est-ce que les entrepôts sont vraiment différents entre eux ?
 
-**Question.** Des graines différentes donnent-elles des entrepôts vraiment différents ?
+**Ce qu'on veut savoir.** Si tous les entrepôts se ressemblent, dire que notre système
+généralise ne veut rien dire, puisqu'il aura toujours vu la même chose.
 
-**Méthode.** Six entrepôts construits avec les graines 1 à 6, photographiés de dessus et
-assemblés en une planche. On mesure, pour chaque paire de graines, le déplacement moyen des
-trois racks.
+**Comment on a testé.** Six entrepôts ont été construits avec six numéros différents, puis
+photographiés d'en haut. Pour chaque paire d'entrepôts, on a mesuré de combien les trois racks
+avaient bougé en moyenne.
 
-| Mesure | Valeur |
-|---|---|
-| Déplacement moyen de la paire la plus ressemblante | 1,85 m (graines 1 et 6) |
-| Écart-type des positions en X | 1,73 m |
-| Écart-type des positions en Y | 3,27 m |
-| Nombre de cartons | de 62 à 118 |
+**Ce qu'on a trouvé.** Le résultat qui compte est celui du pire cas : les deux entrepôts qui se
+ressemblent le plus ont quand même leurs racks déplacés de 1,85 mètre. Les positions varient
+de 1,73 mètre d'écart-type en largeur et de 3,27 mètres en profondeur. Le nombre de cartons
+change beaucoup lui aussi, entre 62 et 118 selon l'entrepôt.
 
-On juge la disposition dans son ensemble, pas rack par rack : avec six graines et trois racks
-cela fait quarante-cinq comparaisons, donc deux racks qui tombent au même endroit par hasard
-sont attendus et sans conséquence. Ce qui compte est que chaque paire d'entrepôts diffère
-nettement, et le pire cas reste à près de deux mètres.
+**Un point de méthode important.** On juge chaque entrepôt dans son ensemble, et non rack par
+rack. Avec six entrepôts et trois racks, cela fait quarante-cinq comparaisons : que deux racks
+tombent au même endroit par hasard est attendu et sans conséquence.
 
-**Verdict : variation suffisante.** Les drones exploreront de vraies formes nouvelles, et
-l'évaluation finale pourra dire quelque chose sur la généralisation.
+**Verdict : la variation est suffisante.** Les drones exploreront de vraies formes nouvelles.
 
-**Images.** `planche_variation.jpg` — les six entrepôts côte à côte.
+**Image.** `planche_variation.jpg` montre les six entrepôts côte à côte.
 
-**Relancer.** `run.py --seed N` pour chaque graine, puis `run.py --board`.
+**Pour relancer.** `run.py --seed N` pour chaque numéro de 1 à 6, puis `run.py --board`.

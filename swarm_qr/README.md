@@ -3,6 +3,9 @@
 Trois drones découvrent un entrepôt inconnu et lisent les QR codes collés sur les cartons.
 Système construit, sans apprentissage. Le plan complet est dans `docs/plan_systeme_swarm.md`.
 
+Socle : Isaac Sim 5.1 + Pegasus Simulator + ArduPilot SITL. Chaque drone est un vrai
+multirotor Iris piloté par MAVLink — inertie, estimateur, contrôleur de bord réels.
+
 ## Organisation
 
 ```
@@ -10,19 +13,17 @@ env/            le système
   config.py     les constantes, toutes mesurées dans l'entrepôt
   layout.py     une graine donne un entrepôt (Python pur, testable sans simulateur)
   qr_tags.py    génération des QR et collage sur les cartons
-  scene.py      assemblage : entrepôt, racks, cartons, drones, capteurs
+  scene.py      assemblage : entrepôt, racks, cartons, drones Iris, caméras
+  pilot.py      pilotage MAVLink : connexion, décollage, goto position + cap, calibration
 experiments/    un dossier par test, avec ses images et sa fiche de résultats
 assets/qr/      les images de QR générées
 ```
 
 ## Lancer les tests de l'étape 1
 
-```bash
-bash swarm_qr/experiments/run_all.sh
-```
-
-Compter environ 17 minutes par lancement du simulateur, soit près de 4 heures pour la campagne
-complète. Chaque test peut aussi se lancer seul — voir l'en-tête de son `run.py`.
+Chaque test se lance seul — la commande exacte est dans l'en-tête de son `run.py`. Compter 4 à
+10 minutes par lancement du simulateur ; les tests en vol lancent le SITL automatiquement et
+demandent `DISPLAY=:1`.
 
 ## Les quatre tests
 
@@ -44,19 +45,21 @@ suivent bien le drone, donc l'erreur se voit très tard.
 Isaac ignore le signal d'arrêt normal : toujours lancer avec `timeout -s KILL`, et vérifier
 `nvidia-smi` avant de relancer, un processus mort peut garder plusieurs gigaoctets.
 
-## Étape 1 — résultats
+## Étape 1 — résultats (socle Pegasus + SITL)
 
 | Test | Verdict | Chiffre clé |
 |---|---|---|
 | 1 Reproductibilité | validé | disposition identique octet par octet, 0 % de géométrie déplacée |
 | 2 Variation | validé | paire de graines la plus proche : 1,85 m d'écart ; 62 à 118 cartons |
-| 3 Images et vidéo | validé | décodage réel de 0,8 m à au moins 3 m ; 6 QR lus en vol |
-| 4 Débit | validé | 88,5 pas/s à 5 images/s, soit 1,48× le temps réel |
+| 3 Lecture en vol | validé | décodage de 1,1 à 3 m en vol réel, pose ≤ 5 cm et ≤ 1° ; 6 QR lus en un passage |
+| 4 Débit | validé | 206 pas/s en régime de mission (rendu 5 images/s), 0,26× le temps réel |
 
-Cinq défauts trouvés et corrigés par ces tests : cartons comptés deux fois, caméra de survol
-mal orientée, plafond masquant la vue, caméras placées au centre du drone, et rendu jamais
-ralenti. Les deux derniers auraient coûté des semaines s'ils étaient passés inaperçus.
+Huit défauts trouvés et corrigés par ces tests : cartons comptés deux fois, caméra de survol
+mal orientée, plafond masquant la vue, rendu jamais ralenti, caméras au centre du drone puis
+coque et hélices dans le champ, arrivée validée sans le cap (caméra de travers), et calibration
+du repère NED fausse de 10 degrés (l'impulsion de vitesse est polluée par le contrôleur — on
+compare maintenant le cap rapporté par ArduPilot au cap vrai du simulateur).
 
-Deux constantes mesurées à retenir pour l'étape 2 : le QR fait 40 cm de côté, et il existe une
-**distance minimale** de lecture — trop près, la marge blanche sort du cadre et le décodage
-échoue.
+Deux constantes mesurées à retenir pour l'étape 2 : le QR fait 40 cm de côté, et la lecture a
+une **distance minimale** d'environ 1 m — trop près, le panneau déborde du cadre et la marge
+blanche disparaît.

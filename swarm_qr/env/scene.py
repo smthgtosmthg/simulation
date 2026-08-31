@@ -1,6 +1,10 @@
-"""Construction de la scène : entrepôt, racks déplacés, cartons, QR, drones et capteurs.
+"""Assemblage de la scène sur la base Pegasus + ArduPilot SITL.
 
-Ce module s'importe uniquement après le démarrage du simulateur.
+Entrepôt chargé par URL directe (cache local), racks déplacés selon la graine, cartons
+filtrés, QR collés, drones Iris de Pegasus, caméras natives d'Isaac Sim.
+
+S'importe uniquement après le démarrage de SimulationApp. Aucune dépendance à Isaac Lab :
+la World de Pegasus et le SimulationContext d'Isaac Lab sont incompatibles.
 """
 
 from __future__ import annotations
@@ -8,85 +12,67 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-import torch
-
-import isaaclab.sim as sim_utils
-from isaaclab.assets import RigidObject, RigidObjectCfg
-from isaaclab.sensors import TiledCamera, TiledCameraCfg
-from isaaclab.sensors.ray_caster import MultiMeshRayCaster, MultiMeshRayCasterCfg
-from isaaclab.sensors.ray_caster.patterns import LidarPatternCfg
+import numpy as np
+from isaacsim.core.api.world import World
 from isaacsim.core.utils.stage import add_reference_to_stage
-import isaacsim.core.utils.prims as prim_utils
+from isaacsim.sensors.camera import Camera
+from scipy.spatial.transform import Rotation
+
 import omni.usd
 
-from . import qr_tags
-from .config import (
-    CAMERAS,
-    DRONES,
-    LIDAR,
-    QR_CFG,
-    RACKS,
-    SIM_DT,
-    WAREHOUSE_PRIM,
-    WAREHOUSE_USD,
+from pegasus.simulator.logic.backends.ardupilot_mavlink_backend import (
+    ArduPilotMavlinkBackend,
+    ArduPilotMavlinkBackendConfig,
 )
+from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
+from pegasus.simulator.logic.vehicles.multirotor import Multirotor, MultirotorConfig
+from pegasus.simulator.params import ROBOTS, WORLD_SETTINGS
+
+from . import qr_tags
+from .config import CAMERAS, DRONES, QR_CFG, RACKS, WAREHOUSE_PRIM, WAREHOUSE_USD
 from .layout import Layout, select_boxes
 
-DRONE_ROOT = "/World/Drone"
-BODY = "Body"
+DRONE_PRIM = "/World/Drone_{:02d}"
+GROUND_Z = 0.07
 
-
-def _yaw_quat(deg: float) -> tuple[float, float, float, float]:
-    h = math.radians(deg) / 2.0
-    return (math.cos(h), 0.0, 0.0, math.sin(h))
+def _cam_orientation(yaw_deg: float) -> np.ndarray:
+    """Orientation locale d'une caméra visant à `yaw_deg` du cap du drone. La classe Camera
+    interprète l'orientation en convention monde (avant = +X, haut = +Z) et fait elle-même la
+    conversion vers le repère USD : un simple lacet suffit."""
+    h = math.radians(yaw_deg) / 2.0
+    return np.array([math.cos(h), 0.0, 0.0, math.sin(h)])
 
 
 @dataclass
 class Scene:
+    world: World
     layout: Layout
-    drones: RigidObject
-    cam_left: TiledCamera
-    cam_right: TiledCamera
-    cam_front: TiledCamera
-    lidar: MultiMeshRayCaster
+    drones: list[Multirotor]
+    cameras: list[dict[str, Camera]]
     tags: list = field(default_factory=list)
     kept_boxes: list = field(default_factory=list)
 
-    @property
-    def cameras(self) -> dict[str, TiledCamera]:
-        return {"left": self.cam_left, "right": self.cam_right, "front": self.cam_front}
+    def finalize(self) -> None:
+        """À appeler une fois, après world.reset() : branche les caméras au rendu."""
+        for per_drone in self.cameras:
+            for cam in per_drone.values():
+                cam.initialize()
+                cam.set_focal_length(CAMERAS.focal_length)
+                cam.set_horizontal_aperture(CAMERAS.horizontal_aperture)
+                cam.set_clipping_range(CAMERAS.near, CAMERAS.far)
 
-    def update(self, dt: float = SIM_DT) -> None:
-        self.drones.update(dt)
-        for cam in self.cameras.values():
-            cam.update(dt)
-        self.lidar.update(dt)
+    def positions(self) -> np.ndarray:
+        return np.array([d.state.position for d in self.drones])
 
-    def positions(self) -> torch.Tensor:
-        return self.drones.data.root_pos_w
-
-    def orientations(self) -> torch.Tensor:
-        return self.drones.data.root_quat_w
-
-    def command_velocity(self, vel: torch.Tensor) -> None:
-        """vel : (n_drones, 6) — trois vitesses de déplacement puis trois de rotation, en monde."""
-        self.drones.write_root_velocity_to_sim(vel)
-
-    def rgb(self, name: str) -> torch.Tensor:
-        return self.cameras[name].data.output["rgb"]
-
-    def ranges(self) -> torch.Tensor:
-        hits = self.lidar.data.ray_hits_w
-        d = torch.norm(hits - self.lidar.data.pos_w.unsqueeze(1), dim=-1)
-        return torch.nan_to_num(d, nan=LIDAR.max_range, posinf=LIDAR.max_range)
+    def rgb(self, name: str, drone: int = 0) -> np.ndarray:
+        return self.cameras[drone][name].get_rgb()
 
 
-def _spawn_warehouse() -> None:
-    add_reference_to_stage(WAREHOUSE_USD, WAREHOUSE_PRIM)
-    sim_utils.GroundPlaneCfg().func("/World/Ground", sim_utils.GroundPlaneCfg())
-    sim_utils.DomeLightCfg(intensity=2500.0, color=(0.95, 0.95, 0.95)).func(
-        "/World/Light", sim_utils.DomeLightCfg(intensity=2500.0, color=(0.95, 0.95, 0.95))
-    )
+def _add_light(stage) -> None:
+    from pxr import UsdLux
+
+    light = UsdLux.DomeLight.Define(stage, "/World/Light")
+    light.CreateIntensityAttr(2500.0)
 
 
 def _place_racks(stage, layout: Layout) -> None:
@@ -108,8 +94,8 @@ def _place_racks(stage, layout: Layout) -> None:
 
 
 def _find_boxes(stage) -> list[str]:
-    """Un carton est le prim le plus HAUT dont le nom correspond. Ses enfants portent souvent le
-    même nom : les compter aussi doublerait les cartons et les QR."""
+    """Le prim le plus haut dont le nom correspond : ses enfants portent souvent le même nom,
+    les compter aussi doublerait cartons et QR."""
     from pxr import UsdGeom
 
     needle = QR_CFG.box_name_filter.lower()
@@ -135,31 +121,71 @@ def _hide(stage, paths) -> None:
             UsdGeom.Imageable(prim).MakeInvisible()
 
 
-def _camera_cfg(name: str, width: int, height: int, yaw_deg: float) -> TiledCameraCfg:
-    """La caméra est posée sur la coque, pas au centre : au centre elle filmerait l'intérieur
-    du corps du drone."""
-    out = DRONES.body_size / 2.0 + 0.03
-    a = math.radians(yaw_deg)
-    pos = (out * math.cos(a), out * math.sin(a), 0.0)
-    return TiledCameraCfg(
-        prim_path=f"{DRONE_ROOT}_.*/{BODY}/{name}",
-        offset=TiledCameraCfg.OffsetCfg(pos=pos, rot=_yaw_quat(yaw_deg), convention="world"),
-        data_types=["rgb"],
-        spawn=sim_utils.PinholeCameraCfg(
-            focal_length=CAMERAS.focal_length,
-            horizontal_aperture=CAMERAS.horizontal_aperture,
-            clipping_range=(CAMERAS.near, CAMERAS.far),
-        ),
-        width=width,
-        height=height,
-        update_period=1.0 / CAMERAS.update_hz,
-        update_latest_camera_pose=True,
+def _drone_cameras(drone_prim: str) -> dict[str, Camera]:
+    """Deux latérales haute résolution pour lire, une frontale basse résolution pour voir.
+    Montées sous le ventre (z -0,11) : au-dessus de ce plan, la coque de l'Iris (z -0,067 à
+    +0,047) et les disques d'hélices (z +0,02, rayon 0,13 aux quatre coins) restent à plus de
+    25 degrés au-dessus de l'axe optique, hors du champ vertical de ±23,6 degrés."""
+    out_dist = 0.10
+    specs = {
+        "left": (90.0, CAMERAS.side_width, CAMERAS.side_height),
+        "right": (-90.0, CAMERAS.side_width, CAMERAS.side_height),
+        "front": (0.0, CAMERAS.front_width, CAMERAS.front_height),
+    }
+    cams = {}
+    for name, (yaw, w, h) in specs.items():
+        a = math.radians(yaw)
+        cams[name] = Camera(
+            prim_path=f"{drone_prim}/body/Cam_{name}",
+            translation=np.array([out_dist * math.cos(a), out_dist * math.sin(a), -0.11]),
+            orientation=_cam_orientation(yaw),
+            resolution=(w, h),
+        )
+    return cams
+
+
+def _make_drone(index: int, spawn_xy: tuple, with_sitl: bool, pg: PegasusInterface) -> Multirotor:
+    config = MultirotorConfig()
+    if with_sitl:
+        config.backends = [
+            ArduPilotMavlinkBackend(
+                config=ArduPilotMavlinkBackendConfig(
+                    {
+                        "vehicle_id": index,
+                        "ardupilot_autolaunch": True,
+                        "ardupilot_dir": pg.ardupilot_path,
+                        "ardupilot_vehicle_model": "gazebo-iris",
+                    }
+                )
+            )
+        ]
+    else:
+        config.backends = []
+
+    return Multirotor(
+        DRONE_PRIM.format(index),
+        ROBOTS["Iris"],
+        index,
+        [spawn_xy[0], spawn_xy[1], GROUND_Z],
+        Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
+        config=config,
     )
 
 
-def build(layout: Layout, device: str = "cuda:0") -> Scene:
-    _spawn_warehouse()
+def build(layout: Layout, with_sitl: bool = False, n_drones: int | None = None) -> Scene:
+    """Construit la scène complète. `with_sitl=False` : drones posés, inertes — suffisant pour
+    les tests qui ne volent pas, et aucun terminal ne s'ouvre."""
+    n = DRONES.count if n_drones is None else n_drones
+
+    pg = PegasusInterface()
+    pg._world = World(**WORLD_SETTINGS["ardupilot"])
+    world = pg.world
+
+    add_reference_to_stage(usd_path=WAREHOUSE_USD, prim_path=WAREHOUSE_PRIM)
+    world.scene.add_default_ground_plane()
+
     stage = omni.usd.get_context().get_stage()
+    _add_light(stage)
     _place_racks(stage, layout)
 
     all_boxes = _find_boxes(stage)
@@ -169,67 +195,17 @@ def build(layout: Layout, device: str = "cuda:0") -> Scene:
     images = qr_tags.generate_images(len(kept))
     tags = qr_tags.attach(stage, kept, images)
 
-    for k in range(DRONES.count):
-        prim_utils.create_prim(f"{DRONE_ROOT}_{k}", "Xform")
-
-    drones = RigidObject(
-        RigidObjectCfg(
-            prim_path=f"{DRONE_ROOT}_.*/{BODY}",
-            spawn=sim_utils.CuboidCfg(
-                size=(DRONES.body_size,) * 3,
-                rigid_props=sim_utils.RigidBodyPropertiesCfg(disable_gravity=True, kinematic_enabled=False),
-                mass_props=sim_utils.MassPropertiesCfg(mass=0.5),
-                collision_props=sim_utils.CollisionPropertiesCfg(),
-                visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.1, 0.35, 0.9)),
-            ),
-            init_state=RigidObjectCfg.InitialStateCfg(pos=layout.spawns[0]),
-        )
-    )
-
-    cam_left = TiledCamera(_camera_cfg("CamL", CAMERAS.side_width, CAMERAS.side_height, 90.0))
-    cam_right = TiledCamera(_camera_cfg("CamR", CAMERAS.side_width, CAMERAS.side_height, -90.0))
-    cam_front = TiledCamera(_camera_cfg("CamF", CAMERAS.front_width, CAMERAS.front_height, 0.0))
-
-    lidar = MultiMeshRayCaster(
-        MultiMeshRayCasterCfg(
-            prim_path=f"{DRONE_ROOT}_.*/{BODY}",
-            mesh_prim_paths=[
-                MultiMeshRayCasterCfg.RaycastTargetCfg(
-                    prim_expr=WAREHOUSE_PRIM, merge_prim_meshes=True, track_mesh_transforms=False
-                )
-            ],
-            pattern_cfg=LidarPatternCfg(
-                channels=LIDAR.channels,
-                vertical_fov_range=(0.0, 0.0),
-                horizontal_fov_range=(-180.0, 180.0),
-                horizontal_res=LIDAR.horizontal_res_deg,
-            ),
-            ray_alignment="base",
-            max_distance=LIDAR.max_range,
-            update_period=1.0 / LIDAR.update_hz,
-            attach_yaw_only=False,
-            debug_vis=False,
-        )
-    )
+    drones, cameras = [], []
+    for i in range(n):
+        x, y, _ = layout.spawns[i]
+        drones.append(_make_drone(i, (x, y), with_sitl, pg))
+        cameras.append(_drone_cameras(DRONE_PRIM.format(i)))
 
     return Scene(
+        world=world,
         layout=layout,
         drones=drones,
-        cam_left=cam_left,
-        cam_right=cam_right,
-        cam_front=cam_front,
-        lidar=lidar,
+        cameras=cameras,
         tags=tags,
         kept_boxes=kept,
     )
-
-
-def place_drones(scene: Scene, device: str = "cuda:0") -> None:
-    """À appeler après sim.reset() : positionne chaque drone à son point de départ."""
-    n = DRONES.count
-    state = scene.drones.data.default_root_state.clone()
-    for k, (x, y, z) in enumerate(scene.layout.spawns[:n]):
-        state[k, 0:3] = torch.tensor([x, y, z], device=state.device)
-        state[k, 3:7] = torch.tensor([1.0, 0.0, 0.0, 0.0], device=state.device)
-        state[k, 7:13] = 0.0
-    scene.drones.write_root_state_to_sim(state)
