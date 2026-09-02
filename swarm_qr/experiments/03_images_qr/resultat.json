@@ -6,50 +6,51 @@
     {
       "distance": 0.5,
       "atteint": true,
-      "decode": false,
-      "text": "",
-      "err_pos_m": 0.169,
-      "err_cap_deg": -0.0
+      "cible_lue": true,
+      "voisins_lus": [],
+      "err_pos_m": 0.106
     },
     {
       "distance": 0.8,
       "atteint": true,
-      "decode": false,
-      "text": "",
-      "err_pos_m": 0.043,
-      "err_cap_deg": -0.1
+      "cible_lue": true,
+      "voisins_lus": [],
+      "err_pos_m": 0.037
     },
     {
       "distance": 1.1,
       "atteint": true,
-      "decode": true,
-      "text": "BOX_000",
-      "err_pos_m": 0.043,
-      "err_cap_deg": 0.3
+      "cible_lue": true,
+      "voisins_lus": [],
+      "err_pos_m": 0.081
     },
     {
       "distance": 1.5,
       "atteint": true,
-      "decode": false,
-      "text": "",
-      "err_pos_m": 0.05,
-      "err_cap_deg": 0.7
+      "cible_lue": true,
+      "voisins_lus": [
+        "BOX_001"
+      ],
+      "err_pos_m": 0.042
     },
     {
       "distance": 2.0,
       "atteint": true,
-      "decode": true,
-      "text": "BOX_001",
-      "err_pos_m": 0.014,
-      "err_cap_deg": 0.9
+      "cible_lue": true,
+      "voisins_lus": [
+        "BOX_001"
+      ],
+      "err_pos_m": 0.044
     },
     {
       "distance": 3.0,
       "atteint": true,
-      "decode": true,
-      "text": "BOX_001",
-      "err_pos_m": 0.03,
-      "err_cap_deg": 1.1
+      "cible_lue": true,
+      "voisins_lus": [
+        "BOX_002",
+        "BOX_001"
+      ],
+      "err_pos_m": 0.039
     }
   ],
   "portee_max_m": 3.0,
@@ -61,5 +62,5 @@
     "BOX_004",
     "BOX_018"
   ],
-  "images_video": 99
+  "images_video": 52
 }

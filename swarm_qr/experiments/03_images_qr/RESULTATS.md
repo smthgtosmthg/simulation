@@ -1,29 +1,46 @@
 # Test 3 — Le drone lit-il vraiment les QR codes en volant ?
 
-**Ce qu'on veut savoir.** C'est le cœur de la tâche : si le drone ne sait pas lire, le reste du
-système ne sert à rien. Le drone est ici un vrai appareil piloté par ArduPilot, avec son
-inertie et ses imprécisions.
+## Ce qu'on veut savoir
 
-**Comment on a testé.** Deux essais différents. Dans le premier, le drone vole jusqu'à six
-distances face à un panneau de 40 centimètres, s'arrête, et prend **une seule photo** à chaque
-fois. Dans le second, il longe le rack à un demi-mètre par seconde et lit **en continu**, sans
-jamais s'arrêter.
+C'est le cœur de la tâche : si le drone ne sait pas lire, le reste du système ne sert à rien.
+Le drone est ici un vrai appareil piloté par ArduPilot, avec son inertie et ses imprécisions.
 
-**Ce qu'on a trouvé.** À l'arrêt, le code a été lu à 1,1 mètre, à 2 mètres et à 3 mètres, mais
-pas à 0,5 mètre, ni à 0,8 mètre, ni à 1,5 mètre. En vol continu, le drone a lu six codes
-différents en un seul passage. Au moment de chaque photo, il était placé à moins de 5
-centimètres et à moins d'un degré de la position demandée : le pilotage n'est donc plus ce qui
-limite la lecture.
+## Comment on a testé
 
-**Ce que cela nous apprend.** Une photo unique est fragile, alors que lire en continu est
-robuste, puisqu'une image ratée ne coûte rien quand il y en a cinq par seconde. Or la vraie
-mission lira en continu. En dessous d'un mètre environ, la lecture est impossible : le panneau
-déborde du cadre et la marge blanche autour du code disparaît, alors que le lecteur en a besoin.
+Deux essais dans un même vol. D'abord la planche : le drone rejoint six distances face à un
+panneau de 40 centimètres, s'arrête, prend une photo, et on vérifie que **le code visé** est lu
+— pas celui d'un carton voisin. Ensuite la vidéo : il longe le rack à un demi-mètre par seconde
+en lisant en continu.
 
-**Verdict : la chaîne complète est prouvée**, du décollage jusqu'à l'identité du carton lu.
+Le trajet vers le rack passe par le couloir ouvert au bout des racks : la ligne droite les
+traverserait, et l'évitement d'obstacles n'existe pas encore à ce stade du projet.
 
-**Images.** `planche_qr.jpg` réunit les six photos, une par distance, avec le résultat de
-lecture écrit sur chacune. `vol_le_long_du_rack.mp4` montre le vol filmé : à gauche ce que voit
-la caméra, à droite la vue d'en haut, et un compteur qui monte jusqu'à six.
+## Ce qu'on a trouvé
 
-**Pour relancer.** `DISPLAY=:1 run.py --seed 7`, qui lance le pilote automatique tout seul.
+**Les six distances sont lues, de 0,5 à 3 mètres**, avec une arrivée entre 4 et 11 centimètres
+du point demandé. À partir de 1,5 mètre, les cartons voisins se lisent en même temps que la
+cible — trois codes dans une seule image à 3 mètres.
+
+En vol continu le long du rack, le drone a lu **six codes différents en un seul passage**.
+
+## Ce que cela corrige
+
+Les versions précédentes de ce test concluaient qu'il existait une distance minimale de lecture
+autour d'un mètre. C'était faux : la caméra est montée 10 centimètres sur le côté du drone et
+11 centimètres plus bas, et l'ancienne visée ne compensait que la hauteur. Le drone se plaçait
+donc toujours 10 centimètres trop près, et à courte distance ce décalage suffisait à couper la
+marge blanche du code. Avec la visée complète, le panneau tient dans le cadre dès 0,5 mètre et
+se lit.
+
+**Verdict : la chaîne complète est prouvée** — décollage, trajet sans collision, visée, capture,
+lecture, identité du carton — sur toute la plage de 0,5 à 3 mètres.
+
+## Images
+
+`planche_qr.jpg` réunit les six photos, une par distance, avec le résultat écrit sur chacune.
+`vol_le_long_du_rack.mp4` montre le vol : à gauche la caméra du drone avec le compteur de codes
+lus, à droite la vue de dessus avec sa position.
+
+## Pour relancer
+
+`DISPLAY=:1 run.py --seed 7` — le pilote automatique se lance tout seul.

@@ -10,3 +10,8 @@ __pycache__/
 *.pyc
 rl_inventory/assets
 swarmscan_runs
+swarm_qr/experiments/07_enveloppe/images_9019
+swarm_qr/experiments/07_enveloppe/images_optique
+swarm_qr/experiments/07_enveloppe/images_sans_qr
+swarm_qr/experiments/07_enveloppe/images_traversee
+swarm_qr/experiments/07_enveloppe/images_vol

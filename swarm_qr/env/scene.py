@@ -35,6 +35,12 @@ from .layout import Layout, select_boxes
 DRONE_PRIM = "/World/Drone_{:02d}"
 GROUND_Z = 0.07
 
+# Le rendu a jusqu'à 4 images de retard sur la position réelle : 10 rendus garantissent une
+# image à jour. Chaque rendu est précédé d'un peu de physique, sans quoi le pilote ArduPilot,
+# qui tourne dans un processus séparé, cesse d'être alimenté et perd le contrôle du drone.
+RENDER_LAG = 10
+PHYSICS_BETWEEN_RENDERS = 40
+
 def _cam_orientation(yaw_deg: float) -> np.ndarray:
     """Orientation locale d'une caméra visant à `yaw_deg` du cap du drone. La classe Camera
     interprète l'orientation en convention monde (avant = +X, haut = +Z) et fait elle-même la
@@ -66,6 +72,26 @@ class Scene:
 
     def rgb(self, name: str, drone: int = 0) -> np.ndarray:
         return self.cameras[drone][name].get_rgb()
+
+    def capture(self, name: str, drone: int = 0, settle: int = RENDER_LAG) -> np.ndarray:
+        """Image à jour d'une caméra du drone. Voir `capture_camera` pour les pièges traités."""
+        return capture_camera(self.world, self.cameras[drone][name], settle)
+
+
+def capture_camera(world: World, cam: Camera, settle: int = RENDER_LAG,
+                   physique_entre_rendus: int = PHYSICS_BETWEEN_RENDERS) -> np.ndarray:
+    """Image à jour d'une caméra. `physique_entre_rendus=0` est réservé aux scènes sans drone
+    SITL : il n'y a alors personne à alimenter et la capture est quatre fois plus rapide."""
+    for _ in range(settle):
+        for _ in range(physique_entre_rendus):
+            world.step(render=False)
+        world.step(render=True)
+    for _ in range(120):
+        img = cam.get_rgb()
+        if img is not None and getattr(img, "ndim", 0) == 3 and img.size:
+            return img
+        world.step(render=True)
+    raise RuntimeError("camera vide apres 120 rendus")
 
 
 def _add_light(stage) -> None:

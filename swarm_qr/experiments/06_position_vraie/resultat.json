@@ -1,0 +1,59 @@
+{
+  "tag": "BOX_000",
+  "panneau_m": 0.4,
+  "code_m": 0.336,
+  "fx": 886.8,
+  "points": [
+    {
+      "vise_m": 1.0,
+      "pilote_m": 0.926,
+      "camera_m": 0.826,
+      "optique_m": 0.828,
+      "cote_px": 360.0,
+      "pos_pilote": [
+        -6.366,
+        1.482,
+        1.666
+      ],
+      "pos_camera": [
+        -6.466,
+        1.478,
+        1.556
+      ]
+    },
+    {
+      "vise_m": 2.0,
+      "pilote_m": 1.92,
+      "camera_m": 1.821,
+      "optique_m": 1.778,
+      "cote_px": 167.6,
+      "pos_pilote": [
+        -5.38,
+        1.285,
+        1.668
+      ],
+      "pos_camera": [
+        -5.481,
+        1.28,
+        1.558
+      ]
+    },
+    {
+      "vise_m": 3.0,
+      "pilote_m": 2.956,
+      "camera_m": 2.856,
+      "optique_m": 2.844,
+      "cote_px": 104.8,
+      "pos_pilote": [
+        -4.339,
+        1.341,
+        1.674
+      ],
+      "pos_camera": [
+        -4.439,
+        1.336,
+        1.565
+      ]
+    }
+  ]
+}

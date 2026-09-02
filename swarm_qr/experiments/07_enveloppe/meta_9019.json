@@ -1,0 +1,25 @@
+{
+  "mode": "optique",
+  "seed_entrepot": 9019,
+  "graine_tirage": 20260901,
+  "K": [
+    [
+      886.8099,
+      0.0,
+      512.0
+    ],
+    [
+      0.0,
+      886.8099,
+      384.0
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "images": 400,
+  "retard_mesure": 5,
+  "sans_qr": false
+}

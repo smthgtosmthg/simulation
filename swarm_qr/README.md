@@ -51,7 +51,7 @@ Isaac ignore le signal d'arrêt normal : toujours lancer avec `timeout -s KILL`,
 |---|---|---|
 | 1 Reproductibilité | validé | disposition identique octet par octet, 0 % de géométrie déplacée |
 | 2 Variation | validé | paire de graines la plus proche : 1,85 m d'écart ; 62 à 118 cartons |
-| 3 Lecture en vol | validé | décodage de 1,1 à 3 m en vol réel, pose ≤ 5 cm et ≤ 1° ; 6 QR lus en un passage |
+| 3 Lecture en vol | validé | les six distances lues, de 0,5 à 3 m, arrivées à 4-11 cm ; 6 QR lus en un passage |
 | 4 Débit | validé | 206 pas/s en régime de mission (rendu 5 images/s), 0,26× le temps réel |
 
 Huit défauts trouvés et corrigés par ces tests : cartons comptés deux fois, caméra de survol
@@ -60,6 +60,29 @@ coque et hélices dans le champ, arrivée validée sans le cap (caméra de trave
 du repère NED fausse de 10 degrés (l'impulsion de vitesse est polluée par le contrôleur — on
 compare maintenant le cap rapporté par ArduPilot au cap vrai du simulateur).
 
-Deux constantes mesurées à retenir pour l'étape 2 : le QR fait 40 cm de côté, et la lecture a
-une **distance minimale** d'environ 1 m — trop près, le panneau déborde du cadre et la marge
-blanche disparaît.
+Une constante à retenir : le QR fait 40 cm de côté. La « distance minimale d'un mètre »
+annoncée par les premières versions était fausse — elle venait d'une visée décalée de 10 cm ;
+bien visé, le code se lit dès 0,5 m.
+
+## Étape 2 — Jusqu'où le drone peut-il lire un QR code ?
+
+3 481 images, chacune avec la position exacte de la caméra, analysées par six lecteurs.
+La campagne a été refaite entièrement une seconde fois, code réécrit, pour vérification :
+les chiffres se confirment. Détail dans
+[`07_enveloppe/RESULTATS.md`](experiments/07_enveloppe/RESULTATS.md).
+
+| Question posée | Réponse mesurée |
+|---|---|
+| Jusqu'où le drone lit-il ? | zone fiable de **1,5 à 4 m** de distance apparente (≥ 90 %) |
+| Faut-il choisir entre distance et angle ? | non : distance apparente = distance ÷ cos(angle) |
+| La vitesse gêne-t-elle ? | **non** : 100 % de lecture jusqu'à 1 m/s, panneau dans le cadre |
+| Sait-il dire où est le code lu ? | oui, à 0,8 cm près en médiane |
+| Invente-t-il des codes ? | jamais, sur 300 images sans le moindre QR |
+| Repère-t-il des motifs à tort ? | oui, 27 % — un détecteur appris sera nécessaire (étape 7) |
+| Quel lecteur ? | **zxing** retenu, zbar en alternative ; l'ancien perdait onze points |
+| Le vol dégrade-t-il la lecture ? | non : le vrai drone lit à 100 % de 1 à 4 m |
+
+La distance apparente augmente avec l'angle : un code vu de biais paraît plus loin. Avec une
+visée bien centrée, la lecture marche dès 0,5 m (test 3) ; la borne de 1,5 m couvre une visée
+réaliste. Et l'allée entre deux racks limite le recul à 3,6 m : c'est l'angle, presque gratuit,
+qui permet de couvrir plusieurs cartons depuis une même position.

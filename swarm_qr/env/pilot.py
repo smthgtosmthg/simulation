@@ -25,12 +25,15 @@ class Pilot:
         self.world = world
         self.port = f"tcp:127.0.0.1:{5762 + vehicle_id * 10}"
         self.mav = None
+        self.sim_clock = 0.0
 
     # --- boucle ---
 
     def pump(self, sim_seconds: float) -> None:
-        for _ in range(int(sim_seconds / PHYS_DT)):
+        n = int(sim_seconds / PHYS_DT)
+        for _ in range(n):
             self.world.step(render=False)
+        self.sim_clock += n * PHYS_DT
 
     def _beat(self) -> None:
         self.mav.mav.heartbeat_send(
@@ -59,15 +62,18 @@ class Pilot:
                 return True
         return False
 
-    def wait_ekf(self, timeout_s: float = 150.0) -> bool:
+    def wait_ekf(self, timeout_sim_s: float = 60.0, timeout_wall_s: float = 900.0) -> bool:
         """L'estimateur a besoin de son origine GPS avant tout décollage — un ordre envoyé
-        avant est refusé en silence."""
-        t0 = time.monotonic()
+        avant est refusé en silence. L'attente se compte en temps simulé, parce que c'est ce
+        temps-là que voit l'autopilote : en temps réel, la même attente durerait deux fois
+        plus longtemps sur une machine chargée."""
+        t0 = self.sim_clock
+        mur0 = time.monotonic()
         fix_since = None
         last_beat = 0.0
-        while time.monotonic() - t0 < timeout_s:
+        while self.sim_clock - t0 < timeout_sim_s and time.monotonic() - mur0 < timeout_wall_s:
             self.pump(0.25)
-            now = time.monotonic()
+            now = self.sim_clock
             if now - last_beat > 1.0:
                 self._beat()
                 last_beat = now
@@ -80,12 +86,12 @@ class Pilot:
                     text = msg.text if isinstance(msg.text, str) else msg.text.decode()
                     if "is using GPS" in text:
                         self.pump(3.0)
-                        print(f"[PILOT {self.port}] EKF pret ({now - t0:.0f} s)")
+                        print(f"[PILOT {self.port}] EKF pret ({now - t0:.0f} s simulees)")
                         return True
                 elif kind == "GPS_RAW_INT" and msg.fix_type >= 3 and fix_since is None:
                     fix_since = now
-            if fix_since is not None and now - fix_since > 20.0:
-                print(f"[PILOT {self.port}] EKF pret via GPS ({now - t0:.0f} s)")
+            if fix_since is not None and now - fix_since > 8.0:
+                print(f"[PILOT {self.port}] EKF pret via GPS ({now - t0:.0f} s simulees)")
                 return True
         return False
 
@@ -119,20 +125,20 @@ class Pilot:
                 return True
         return False
 
-    def ack(self, command: int, timeout_s: float = 3.0):
-        t0 = time.monotonic()
-        while time.monotonic() - t0 < timeout_s:
+    def ack(self, command: int, timeout_sim_s: float = 1.5):
+        t0 = self.sim_clock
+        while self.sim_clock - t0 < timeout_sim_s:
             self.pump(0.1)
             msg = self.mav.recv_match(type="COMMAND_ACK", blocking=False)
             if msg and msg.command == command:
                 return msg.result
         return None
 
-    def takeoff(self, alt: float, get_z, timeout_s: float = 90.0) -> bool:
+    def takeoff(self, alt: float, get_z, timeout_sim_s: float = 40.0) -> bool:
         """`get_z` : fonction qui renvoie l'altitude vraie du drone (lue dans la simulation)."""
         z0 = get_z()
-        t0 = time.monotonic()
-        while time.monotonic() - t0 < timeout_s:
+        t0 = self.sim_clock
+        while self.sim_clock - t0 < timeout_sim_s:
             if get_z() - z0 < 0.3:
                 self.mav.mav.command_long_send(
                     self.mav.target_system, self.mav.target_component,
@@ -170,9 +176,9 @@ class Pilot:
 
         if get_yaw is not None:
             self._drain()
-            t0 = time.monotonic()
+            t0 = self.sim_clock
             msg = None
-            while msg is None and time.monotonic() - t0 < 30.0:
+            while msg is None and self.sim_clock - t0 < 10.0:
                 self.pump(0.1)
                 msg = self.mav.recv_match(type="ATTITUDE", blocking=False)
             if msg is None:
@@ -197,12 +203,16 @@ class Pilot:
         print(f"[PILOT {self.port}] nord NED mesure en monde : {np.round(x_w, 2)}")
 
     def goto(self, target_world, yaw_world_rad: float, get_pos,
-             speed: float = 0.8, tol: float = 0.15, timeout_s: float = 120.0,
+             speed: float = 0.8, tol: float = 0.15, timeout_sim_s: float = 45.0,
              get_yaw=None, yaw_tol_rad: float = 0.09) -> bool:
         """Rejoint un point du monde par asservissement proportionnel en vitesse NED.
+
         Si `get_yaw` est fourni (cap réel du drone, en monde), l'arrivée exige aussi le cap :
         le drone tourne bien plus lentement qu'il ne se déplace, valider la seule position
-        laisse la caméra de travers."""
+        laisse la caméra de travers.
+
+        Le délai se compte en temps simulé. Mesuré en temps réel, il dépendrait de la charge
+        de la machine : le même vol réussirait à vide et échouerait pendant un calcul lourd."""
         import math
 
         import numpy as np
@@ -213,8 +223,8 @@ class Pilot:
         # le cap NED se deduit du meme reperage : angle du cap monde dans la base NED
         cw = np.array([np.cos(yaw_world_rad), np.sin(yaw_world_rad), 0.0])
         yaw_ned = float(np.arctan2(np.dot(cw, R[:, 1]), np.dot(cw, R[:, 0])))
-        t0 = time.monotonic()
-        while time.monotonic() - t0 < timeout_s:
+        t0 = self.sim_clock
+        while self.sim_clock - t0 < timeout_sim_s:
             err_w = np.array(target_world) - np.array(get_pos())
             yaw_ok = True
             if get_yaw is not None:
