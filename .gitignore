@@ -1,1 +1,12 @@
-scripts/installation/venv
+docs/doc.md
+
+# Sorties d'entraînement RL (checkpoints + logs TensorBoard)
+qr_inventory_swarm/
+runs/
+outputs/
+
+# Python
+__pycache__/
+*.pyc
+rl_inventory/assets
+swarmscan_runs

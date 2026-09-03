@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Inference — Drone Exploration Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="topbar">
+    <div class="topbar-left">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        <span class="logo-text">Active Inference Explorer</span>
+    </div>
+    <div class="topbar-center">
+        <span class="badge" id="badgeStep">Step 0</span>
+        <span class="badge badge-green" id="badgeCoverage">0 %</span>
+        <span class="badge badge-blue" id="badgeEntropy">H = 0.693</span>
+        <span class="badge badge-phase" id="badgePhase">NORMAL</span>
+        <span class="badge" id="badgePlanner">planner: aif</span>
+        <span class="badge" id="badgeArch">arch: centralized</span>
+    </div>
+    <div class="topbar-right">
+        <div class="status-pill" id="statusPill">
+            <span class="pulse"></span>
+            <span id="statusText">Connecting…</span>
+        </div>
+        <button class="btn-pause" id="btnPause" title="Pause/Resume">⏸</button>
+    </div>
+</header>
+
+<!-- ── TABS NAV ── -->
+<nav class="tabs-nav" id="tabsNav">
+    <button class="tab-btn active" data-tab="live">● Live</button>
+    <button class="tab-btn" data-tab="resilience">Resilience</button>
+    <button class="tab-btn" data-tab="ns3">NS-3</button>
+    <button class="tab-btn" data-tab="runs">Runs</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : LIVE  (contenu existant)
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel active" id="tab-live">
+
+    <!-- ── BIG MAP ── -->
+    <section class="map-section">
+        <div class="card card-map">
+            <div class="card-header">
+                <h2>Belief Map — Fused Occupancy Grid</h2>
+                <div class="map-legend">
+                    <span class="leg"><span class="leg-swatch" style="background:#0f172a"></span>Unknown</span>
+                    <span class="leg"><span class="leg-swatch" style="background:#10b981"></span>Free</span>
+                    <span class="leg"><span class="leg-swatch" style="background:#ef4444"></span>Occupied</span>
+                    <span class="leg"><span class="leg-swatch dot" style="background:#22d3ee"></span>Drone</span>
+                    <span class="leg"><span class="leg-swatch" style="background:rgba(255,255,255,.25);border:1px dashed #94a3b8"></span>Obstacle</span>
+                </div>
+            </div>
+            <div class="canvas-wrap" id="mapWrap">
+                <canvas id="canvasMap"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── KPI ROW ── -->
+    <section class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiStep">0</div>
+            <div class="kpi-label">Step</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiCoverage">0%</div>
+            <div class="kpi-label">Coverage</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiEntropy">0.693</div>
+            <div class="kpi-label">Mean Entropy</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiDrones">0</div>
+            <div class="kpi-label">Drones</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiInfoGain">0</div>
+            <div class="kpi-label">Step IG</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiActiveDrones">0/0</div>
+            <div class="kpi-label">Active Drones</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="kpiInnovation">0.000</div>
+            <div class="kpi-label">Innovation EMA</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value phase-value" id="kpiPhase">NORMAL</div>
+            <div class="kpi-label">Resilience Phase</div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         CAMERA FEEDS + QR DETECTION
+         ══════════════════════════════════════════════════════════ -->
+    <section class="camera-section">
+        <div class="card">
+            <div class="card-header">
+                <h2>📷 Drone Camera Feeds — QR Code Detection</h2>
+                <div class="qr-global-stats" id="qrGlobalStats">
+                    <span class="badge badge-qr-success" id="badgeQrDecoded">✓ 0</span>
+                    <span class="badge badge-qr-fail" id="badgeQrFailed">✗ 0</span>
+                    <span class="badge badge-qr-rate" id="badgeQrRate">0%</span>
+                </div>
+            </div>
+            <div class="camera-feeds" id="cameraFeeds">
+                <div class="camera-empty">Waiting for camera frames…</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── QR KPI ROW ── -->
+    <section class="kpi-row kpi-row-qr">
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" id="kpiQrTotal">0</div>
+            <div class="kpi-label">Frames Processed</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--green)" id="kpiQrDecoded">0</div>
+            <div class="kpi-label">QR Decoded</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--red)" id="kpiQrFailed">0</div>
+            <div class="kpi-label">QR Failed</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--yellow)" id="kpiQrCacheHits">0</div>
+            <div class="kpi-label">Cache Hits</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" id="kpiQrRate">0%</div>
+            <div class="kpi-label">Success Rate</div>
+        </div>
+        <div class="kpi-card kpi-qr">
+            <div class="kpi-value kpi-qr-val" style="color:var(--purple)" id="kpiQrData">—</div>
+            <div class="kpi-label">Last QR Data</div>
+        </div>
+    </section>
+
+    <!-- ── CHARTS 2×3 ── -->
+    <section class="charts-grid">
+        <div class="card card-chart">
+            <div class="card-header"><h3>Entropy Over Time</h3></div>
+            <div class="chart-wrap"><canvas id="chartEntropy"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Exploration Coverage (%)</h3></div>
+            <div class="chart-wrap"><canvas id="chartCoverage"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Expected Free Energy (per drone)</h3></div>
+            <div class="chart-wrap"><canvas id="chartFE"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Information Gain (per step)</h3></div>
+            <div class="chart-wrap"><canvas id="chartIG"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Innovation (mean vs EMA)</h3></div>
+            <div class="chart-wrap"><canvas id="chartInnovation"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>QR Detection Success Rate (%)</h3></div>
+            <div class="chart-wrap"><canvas id="chartQrRate"></canvas></div>
+        </div>
+    </section>
+
+    <!-- ── DRONE INFO TABLE ── -->
+    <section class="drone-table-section">
+        <div class="card">
+            <div class="card-header"><h3>Drone Status</h3></div>
+            <div class="table-wrap">
+                <table id="droneTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Status</th><th>Position</th><th>Action</th>
+                            <th>Free Energy</th><th>Info Gain</th><th>Innovation</th>
+                            <th>Distance</th><th>Local H</th>
+                            <th>QR Status</th><th>QR Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="droneTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── RESILIENCE EVENTS LOG ── -->
+    <section class="resilience-section">
+        <div class="card">
+            <div class="card-header"><h3>Resilience Events</h3></div>
+            <div class="events-wrap" id="eventsWrap">
+                <div class="events-empty" id="eventsEmpty">No resilience events yet</div>
+                <div id="eventsList"></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : RESILIENCE
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel" id="tab-resilience">
+    <section class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value phase-value" id="resPhaseValue">NORMAL</div>
+            <div class="kpi-label">Current phase</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="resStressT0">—</div>
+            <div class="kpi-label">stress_t0 step</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="resDurable">0</div>
+            <div class="kpi-label">durable streak</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="resCause">—</div>
+            <div class="kpi-label">cause</div>
+        </div>
+    </section>
+    <section class="charts-grid charts-grid-2">
+        <div class="card card-chart"><div class="card-header"><h3>Entropy + phase bands</h3></div>
+            <div class="chart-wrap"><canvas id="chartResEntropy"></canvas></div>
+        </div>
+        <div class="card card-chart"><div class="card-header"><h3>Coverage + phase bands</h3></div>
+            <div class="chart-wrap"><canvas id="chartResCoverage"></canvas></div>
+        </div>
+        <div class="card card-chart"><div class="card-header"><h3>Innovation (mean + EMA + spike)</h3></div>
+            <div class="chart-wrap"><canvas id="chartResInnovation"></canvas></div>
+        </div>
+        <div class="card card-chart"><div class="card-header"><h3>Active drones</h3></div>
+            <div class="chart-wrap"><canvas id="chartResActive"></canvas></div>
+        </div>
+    </section>
+    <section class="resilience-section">
+        <div class="card">
+            <div class="card-header"><h3>Resilience events (timeline)</h3></div>
+            <div class="events-wrap" id="resEventsWrap"><div id="resEventsList"></div></div>
+        </div>
+    </section>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : NS-3 NETWORK
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel" id="tab-ns3">
+    <section class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Mode">none</div>
+            <div class="kpi-label">NS-3 mode</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Cloud">UP</div>
+            <div class="kpi-label">Cloud link</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3QueueSize">0</div>
+            <div class="kpi-label">Queue size</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Dropped">0</div>
+            <div class="kpi-label">Msgs dropped</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Sent">0</div>
+            <div class="kpi-label">Msgs sent</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="ns3Delivered">0</div>
+            <div class="kpi-label">Msgs delivered</div>
+        </div>
+    </section>
+    <section class="charts-grid charts-grid-2">
+        <div class="card">
+            <div class="card-header"><h3>Latency matrix (ms)</h3></div>
+            <div class="ns3-heatmap-wrap"><canvas id="ns3Heatmap"></canvas></div>
+        </div>
+        <div class="card card-chart">
+            <div class="card-header"><h3>Latency time-series (per pair)</h3></div>
+            <div class="chart-wrap"><canvas id="ns3TimeSeries"></canvas></div>
+        </div>
+    </section>
+    <section class="drone-table-section">
+        <div class="card">
+            <div class="card-header"><h3>Pairs detail</h3></div>
+            <div class="table-wrap">
+                <table id="ns3Table">
+                    <thead><tr><th>Pair</th><th>Latency (ms)</th><th>Jitter (ms)</th><th>RX packets</th><th>Link</th></tr></thead>
+                    <tbody id="ns3TableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB : RUNS
+     ══════════════════════════════════════════════════════════════ -->
+<main class="dashboard tab-panel" id="tab-runs">
+    <section class="runs-layout">
+        <aside class="runs-list-card card">
+            <div class="card-header">
+                <h3>Recorded runs</h3>
+                <button class="btn-refresh" id="btnRefreshRuns" title="Refresh">⟳</button>
+            </div>
+            <div class="runs-list" id="runsList"><div class="runs-empty">Loading…</div></div>
+        </aside>
+        <section class="runs-detail card">
+            <div class="card-header">
+                <h3 id="runDetailTitle">Select a run</h3>
+                <span id="runDetailMeta" class="badge">—</span>
+            </div>
+            <div class="runs-gallery" id="runsGallery">
+                <div class="runs-empty">Click a run on the left to view its artifacts.</div>
+            </div>
+        </section>
+    </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

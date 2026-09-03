@@ -21,6 +21,7 @@ import math
 import os
 import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 # ─── CSV paths (same as in the bridge scripts) ───
@@ -35,6 +36,7 @@ FIVEG_METRICS    = "/tmp/drone_5g_metrics.csv"
 
 POS_CSV          = "/tmp/drone_positions.csv"
 EXPLORE_JSON     = "/tmp/exploration_state.json"
+AIF_STATE_JSON   = "/tmp/aif_state.json"
 
 GNB_POSITION = (0.0, 0.0, 6.0)
 
@@ -213,12 +215,147 @@ def read_ns3_wifi_output(path=NS3_OUTPUT_CSV):
 
 
 def read_exploration_state(path=EXPLORE_JSON):
-    """Read the exploration state JSON produced by 10_exploration_active_inference."""
+    """Read exploration data.
+
+    Priority:
+      1) New AIF format from /tmp/aif_state.json (script 12)
+      2) Legacy exploration format from /tmp/exploration_state.json
+    """
+    aif_state = _read_json_file(AIF_STATE_JSON)
+    if aif_state:
+        converted = _convert_aif_state_to_exploration(aif_state)
+        if converted:
+            return converted
+
+    legacy = _read_json_file(path)
+    if legacy:
+        return legacy
+    return None
+
+
+def _read_json_file(path: str) -> Optional[Dict[str, Any]]:
     try:
         with open(path) as f:
-            return json.load(f)
+            data = json.load(f)
+        return data if isinstance(data, dict) else None
     except (FileNotFoundError, json.JSONDecodeError):
         return None
+
+
+def _convert_aif_state_to_exploration(state: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Convert /tmp/aif_state.json payload into dashboard exploration format."""
+    env = state.get("environment") or {}
+    fused = state.get("fused_belief") or []
+    drones = state.get("drones") or []
+    metrics = state.get("metrics") or {}
+
+    if not isinstance(fused, list) or not fused:
+        return None
+
+    height = len(fused)
+    width = len(fused[0]) if isinstance(fused[0], list) else 0
+    if width <= 0:
+        return None
+
+    flat_probs: List[float] = []
+    visited: List[int] = []
+    for row in fused:
+        if not isinstance(row, list):
+            return None
+        for p in row:
+            try:
+                pv = float(p)
+            except (TypeError, ValueError):
+                pv = 0.5
+            pv = max(0.0, min(1.0, pv))
+            flat_probs.append(pv)
+            visited.append(1 if abs(pv - 0.5) > 0.02 else 0)
+
+    if len(flat_probs) != width * height:
+        return None
+
+    resolution = float(env.get("grid_resolution", 0.5))
+    origin_x = float(env.get("origin_x", 0.0))
+    origin_y = float(env.get("origin_y", 0.0))
+
+    expl_drones: List[Dict[str, Any]] = []
+    trajectories: Dict[str, List[List[float]]] = {}
+
+    for d in drones:
+        if not isinstance(d, dict):
+            continue
+        did = int(d.get("id", len(expl_drones)))
+        trail = d.get("trail") if isinstance(d.get("trail"), list) else []
+
+        sx = 0.0
+        if len(trail) >= 2:
+            try:
+                x0, y0 = float(trail[-2][0]), float(trail[-2][1])
+                x1, y1 = float(trail[-1][0]), float(trail[-1][1])
+                sx = math.hypot(x1 - x0, y1 - y0)
+            except (TypeError, ValueError, IndexError):
+                sx = 0.0
+
+        x = float(d.get("x", 0.0))
+        y = float(d.get("y", 0.0))
+
+        expl_drones.append({
+            "id": did,
+            "x": x,
+            "y": y,
+            "z": float(d.get("z", 2.0)),
+            "speed": sx,
+            "yaw": float(d.get("heading", 0.0)),
+            "status": "flying",
+            "target_x": None,
+            "target_y": None,
+            "cells_discovered": 0,
+            "distance_traveled": float(d.get("total_distance", 0.0)),
+        })
+
+        if trail:
+            clean_trail: List[List[float]] = []
+            for pt in trail:
+                try:
+                    clean_trail.append([float(pt[0]), float(pt[1])])
+                except (TypeError, ValueError, IndexError):
+                    continue
+            trajectories[str(did)] = clean_trail
+
+    explored_cells = int(sum(visited))
+    total_cells = int(len(visited))
+
+    # Use metric when provided; fallback to visited ratio.
+    if "exploration_pct" in metrics:
+        explored_pct = float(metrics.get("exploration_pct", 0.0))
+    else:
+        explored_pct = (100.0 * explored_cells / total_cells) if total_cells else 0.0
+
+    return {
+        "step": int(state.get("step", 0)),
+        "explored_pct": explored_pct,
+        "explored_cells": explored_cells,
+        "total_cells": total_cells,
+        "grid": {
+            "width": width,
+            "height": height,
+            "resolution": resolution,
+            "origin_x": origin_x,
+            "origin_y": origin_y,
+            "data": flat_probs,
+            "visited": visited,
+        },
+        "frontiers": [],
+        "drones": expl_drones,
+        "trajectories": trajectories,
+        "events": [],
+        "environment": {
+            "width": float(env.get("width", width * resolution)),
+            "height": float(env.get("height", height * resolution)),
+            "obstacles": env.get("obstacles", []),
+            "lidar_max_range": float(env.get("lidar_max_range", 8.0)),
+        },
+    }
 
 
 # ─── Build API response ───
@@ -391,6 +528,7 @@ def main():
     print(f"  ║   WiFi  : {WIFI_RSSI_CSV:<38} ║")
     print(f"  ║   5G    : {FIVEG_RSSI_CSV:<38} ║")
     print(f"  ║   Pos   : {POS_CSV:<38} ║")
+    print(f"  ║   AIF   : {AIF_STATE_JSON:<38} ║")
     print("  ║                                                  ║")
     print("  ║   Lancez les bridges (08/09) dans un autre       ║")
     print("  ║   terminal pour voir les données en temps réel.  ║")

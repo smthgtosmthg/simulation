@@ -1,0 +1,17 @@
+[
+  {
+    "regime": "sans rendu",
+    "steps_per_s": 222.4,
+    "phys_dt": 0.00125
+  },
+  {
+    "regime": "rendu 5 images/s",
+    "steps_per_s": 205.7,
+    "phys_dt": 0.00125
+  },
+  {
+    "regime": "rendu chaque pas",
+    "steps_per_s": 6.2,
+    "phys_dt": 0.00125
+  }
+]

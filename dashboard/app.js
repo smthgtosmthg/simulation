@@ -723,17 +723,45 @@ function drawHeroMap(expl) {
 
     const { toX, toY } = makeCoord(g, W, H);
 
-    // Warehouse outline
+    // Dynamic scene bounds from current exploration grid
+    const minX = g.origin_x;
+    const maxX = g.origin_x + g.width * g.resolution;
+    const minY = g.origin_y;
+    const maxY = g.origin_y + g.height * g.resolution;
     heroCtx.strokeStyle = 'rgba(255,255,255,0.12)';
     heroCtx.lineWidth = 1.5;
-    heroCtx.strokeRect(toX(-15), toY(10), toX(15) - toX(-15), toY(-10) - toY(10));
+    heroCtx.strokeRect(toX(minX), toY(maxY), toX(maxX) - toX(minX), toY(minY) - toY(maxY));
 
-    // Shelves
-    const shelves = [[-7, 5, 6, 1.2], [7, 5, 6, 1.2], [-7, -5, 6, 1.2], [7, -5, 6, 1.2]];
-    heroCtx.fillStyle = 'rgba(139,92,46,0.3)';
-    shelves.forEach(([sx, sy, sw, sh]) => {
-        heroCtx.fillRect(toX(sx - sw / 2), toY(sy + sh / 2), (sw / (g.width * g.resolution)) * W, (sh / (g.height * g.resolution)) * H);
-    });
+    // Optional obstacle overlay from backend (if available)
+    const envObs = (expl.environment && Array.isArray(expl.environment.obstacles))
+        ? expl.environment.obstacles
+        : [];
+    if (envObs.length) {
+        const sx = W / (g.width * g.resolution);
+        const sy = H / (g.height * g.resolution);
+        heroCtx.fillStyle = 'rgba(148,163,184,0.16)';
+        heroCtx.strokeStyle = 'rgba(148,163,184,0.45)';
+        heroCtx.lineWidth = 1;
+
+        envObs.forEach((obs) => {
+            if (obs.type === 'box' && Number.isFinite(obs.x) && Number.isFinite(obs.y) && Number.isFinite(obs.w) && Number.isFinite(obs.h)) {
+                const rx = toX(obs.x);
+                const ry = toY(obs.y + obs.h);
+                const rw = obs.w * sx;
+                const rh = obs.h * sy;
+                heroCtx.fillRect(rx, ry, rw, rh);
+                heroCtx.strokeRect(rx, ry, rw, rh);
+            } else if (obs.type === 'cylinder' && Number.isFinite(obs.x) && Number.isFinite(obs.y) && Number.isFinite(obs.radius)) {
+                const px = toX(obs.x);
+                const py = toY(obs.y);
+                const rr = obs.radius * Math.min(sx, sy);
+                heroCtx.beginPath();
+                heroCtx.arc(px, py, rr, 0, Math.PI * 2);
+                heroCtx.fill();
+                heroCtx.stroke();
+            }
+        });
+    }
 
     // Trajectories (fading lines)
     if (expl.trajectories) {
@@ -759,7 +787,11 @@ function drawHeroMap(expl) {
             const col = DRONE_COLS[idx % 3];
 
             // LiDAR range
-            const lidarR = (10.0 / (g.width * g.resolution)) * W;
+            const lidarRange = (expl.environment && Number(expl.environment.lidar_max_range)) || 8.0;
+            const lidarR = lidarRange * Math.min(
+                W / (g.width * g.resolution),
+                H / (g.height * g.resolution)
+            );
             heroCtx.strokeStyle = col + '25';
             heroCtx.lineWidth = 1;
             heroCtx.setLineDash([3, 3]);
@@ -859,7 +891,11 @@ function drawDroneBelief(ctx, canvas, expl, droneIdx) {
     // Dim overlay outside LiDAR range
     const { toX, toY } = makeCoord(g, W, H);
     const px = toX(d.x), py = toY(d.y);
-    const lidarR = (10.0 / (g.width * g.resolution)) * W;
+    const lidarRange = (expl.environment && Number(expl.environment.lidar_max_range)) || 8.0;
+    const lidarR = lidarRange * Math.min(
+        W / (g.width * g.resolution),
+        H / (g.height * g.resolution)
+    );
 
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
