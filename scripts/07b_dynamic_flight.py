@@ -2,14 +2,44 @@
 
 import argparse
 import math
+import os
 import signal
 import sys
 import time
 
+
+def _bootstrap_python_with_pymavlink():
+    """Re-exec the script with a known project Python if available."""
+    if os.environ.get("SIM_MC02_PYMAVLINK_BOOTSTRAPPED") == "1":
+        return
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.join(script_dir, "installation", "venv", "bin", "python3"),
+        os.path.expanduser(
+            "~/ns-allinone-3.40/ns-3.40/contrib/sionna/model/ns3sionna/"
+            "sionna-venv/bin/python3"
+        ),
+    ]
+
+    current_python = os.path.abspath(sys.executable) if sys.executable else ""
+    for candidate in candidates:
+        candidate = os.path.abspath(candidate)
+        if not os.path.isfile(candidate) or not os.access(candidate, os.X_OK):
+            continue
+        if candidate == current_python:
+            continue
+
+        env = os.environ.copy()
+        env["SIM_MC02_PYMAVLINK_BOOTSTRAPPED"] = "1"
+        os.execve(candidate, [candidate, os.path.abspath(__file__), *sys.argv[1:]], env)
+
 try:
     from pymavlink import mavutil
 except ImportError:
+    _bootstrap_python_with_pymavlink()
     print("ERREUR: pymavlink non installé.")
+    print("Active le venv du projet ou lance scripts/installation/01_install_dependencies.sh.")
     sys.exit(1)
 
 MODE_GUIDED = 4

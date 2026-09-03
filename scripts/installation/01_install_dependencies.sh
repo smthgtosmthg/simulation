@@ -27,6 +27,7 @@ sudo apt-get install -y \
 sudo apt-get install -y \
     python3-pip \
     python3-dev \
+    python3-venv \
     python3-jinja2 \
     python3-jsonschema \
     python3-numpy \
@@ -52,8 +53,21 @@ sudo apt-get install -y \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly
 
-# Outils Python supplémentaires via pip
-pip3 install --user "numpy<2" pymavlink MAVProxy pexpect dronekit dronekit-sitl
+# Outils Python supplémentaires via pip (installed in a virtualenv to avoid
+# modifying the system-managed Python environment which may be protected
+# by the OS / PEP 668).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Creating virtualenv at $VENV_DIR"
+    sudo apt-get install -y python3-venv || true
+    python3 -m venv "$VENV_DIR"
+fi
+# shellcheck source=/dev/null
+source "$VENV_DIR/bin/activate"
+pip install --upgrade pip
+pip install "numpy<2" pymavlink MAVProxy pexpect dronekit dronekit-sitl
+deactivate
 
 echo ""
 echo "==> Dépendances système installées avec succès !"

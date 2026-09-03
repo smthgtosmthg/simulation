@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, csv, itertools, math, os, signal, subprocess, sys, time
+import argparse, csv, itertools, math, os, shutil, signal, subprocess, sys, time
 from datetime import datetime
 import numpy as np
 
@@ -19,7 +19,11 @@ RENDER_PNG = os.path.join(RENDER_DIR, "latest.png")
 NS3_DIR      = os.path.expanduser("~/ns-allinone-3.40/ns-3.40")
 NS3_BIN      = os.path.join(NS3_DIR, "ns3")
 NS3_OUT_CSV  = "/tmp/ns3_output.csv"
-NS3_SCENARIO = "drone-wifi-scenario"
+NS3_SCENARIO_NAME = "drone-wifi-scenario"
+NS3_SCENARIO = f"scratch/{NS3_SCENARIO_NAME}"
+WORKSPACE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOCAL_SCENARIO_CC = os.path.join(WORKSPACE_DIR, "scenarios", f"{NS3_SCENARIO_NAME}.cc")
+NS3_SCENARIO_CC = os.path.join(NS3_DIR, "scratch", f"{NS3_SCENARIO_NAME}.cc")
 
 #  WiFi 802.11ax parameters 
 TX_POWER_DBM  = 20.0
@@ -76,6 +80,25 @@ def fake_positions(tick):
 _ns3_process = None
 
 
+def ensure_ns3_scenario():
+    """Ensure NS-3 scenario source exists in ns-3/scratch."""
+    if os.path.isfile(NS3_SCENARIO_CC):
+        return True
+
+    if not os.path.isfile(LOCAL_SCENARIO_CC):
+        print(f"  ⚠ Scénario introuvable : {LOCAL_SCENARIO_CC}")
+        return False
+
+    try:
+        os.makedirs(os.path.dirname(NS3_SCENARIO_CC), exist_ok=True)
+        shutil.copy2(LOCAL_SCENARIO_CC, NS3_SCENARIO_CC)
+        print(f"  ✓ Scénario copié vers NS-3 : {NS3_SCENARIO_CC}")
+        return True
+    except Exception as e:
+        print(f"  ⚠ Impossible de copier le scénario NS-3 : {e}")
+        return False
+
+
 def launch_ns3(n_drones=3, sim_time=300):
     """Lance NS-3 WiFi ad-hoc en arrière-plan (mode temps réel).
     NS-3 lit les positions depuis le même CSV que script 08 écrit,
@@ -84,6 +107,10 @@ def launch_ns3(n_drones=3, sim_time=300):
 
     if not os.path.isfile(NS3_BIN):
         print(f"  ⚠ NS-3 non trouvé : {NS3_BIN}")
+        print(f"    → Latence sera estimée (propagation uniquement)")
+        return False
+
+    if not ensure_ns3_scenario():
         print(f"    → Latence sera estimée (propagation uniquement)")
         return False
 
@@ -98,7 +125,6 @@ def launch_ns3(n_drones=3, sim_time=300):
         f"--outFile={NS3_OUT_CSV} "
         f"--simTime={sim_time} "
         f"--channelModel=log-distance",
-        "--no-build",
     ]
     print(f"  ⏳ Lancement NS-3 WiFi ({NS3_SCENARIO})...")
     try:

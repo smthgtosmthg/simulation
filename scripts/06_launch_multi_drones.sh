@@ -6,6 +6,8 @@ DRONE_SPACING=3
 
 WORKSPACE="$HOME/simulation_mc02"
 ARDUPILOT_DIR="$HOME/ardupilot"
+SIM_VEHICLE_SCRIPT="$ARDUPILOT_DIR/Tools/autotest/sim_vehicle.py"
+SIM_VEHICLE_PYTHON="${SIM_VEHICLE_PYTHON:-/usr/bin/python3}"
 PLUGIN_DIR="$HOME/ardupilot_gazebo"
 IRIS_MODEL_SRC="$PLUGIN_DIR/models/iris_with_ardupilot"
 MODELS_DIR="$WORKSPACE/models"
@@ -20,6 +22,18 @@ if [ ! -d "$ARDUPILOT_DIR" ]; then
     echo "ERREUR : ArudPilot non trouvé dans $ARDUPILOT_DIR"
     echo "Lance d'abord le script 03_install_px4_sitl.sh"
     exit 1
+fi
+
+if [ ! -f "$SIM_VEHICLE_SCRIPT" ]; then
+  echo "ERREUR : sim_vehicle.py non trouvé dans $SIM_VEHICLE_SCRIPT"
+  echo "Vérifie l'installation ArduPilot SITL (script 03_install_ardupilot_sitl.sh)."
+  exit 1
+fi
+
+if ! command -v "$SIM_VEHICLE_PYTHON" >/dev/null 2>&1; then
+  echo "ERREUR : interpréteur Python introuvable : $SIM_VEHICLE_PYTHON"
+  echo "Définis SIM_VEHICLE_PYTHON ou vérifie ton installation système."
+  exit 1
 fi
 
 if [ ! -d "$IRIS_MODEL_SRC" ]; then
@@ -433,22 +447,35 @@ cd "$ARDUPILOT_DIR"
 
 # Charger le profil ArduPilot
 . ~/.profile 2>/dev/null || true
+. ~/.bashrc 2>/dev/null || true
 
 for i in $(seq 0 $((N_DRONES - 1))); do
     MAVLINK_PORT=$((5760 + i * 10))
-    echo "  Drone $i : sim_vehicle.py -I $i → MAVLink tcp:127.0.0.1:$MAVLINK_PORT"
+  LOG_FILE="/tmp/arducopter_${i}.log"
+  echo "  Drone $i : $SIM_VEHICLE_PYTHON $SIM_VEHICLE_SCRIPT -I $i → MAVLink tcp:127.0.0.1:$MAVLINK_PORT"
 
-    sim_vehicle.py \
+  "$SIM_VEHICLE_PYTHON" "$SIM_VEHICLE_SCRIPT" \
         -v ArduCopter \
         -f gazebo-iris \
         --model JSON \
         -I $i \
         --no-mavproxy \
         --no-rebuild \
-        > /dev/null 2>&1 &
-    PIDS+=($!)
+    > "$LOG_FILE" 2>&1 &
+  SITL_PID=$!
+  PIDS+=($SITL_PID)
 
-    sleep 8
+  sleep 5
+
+  if ! kill -0 "$SITL_PID" 2>/dev/null; then
+    echo ""
+    echo "ERREUR : l'instance SITL du drone $i a quitté immédiatement."
+    echo "Log : $LOG_FILE"
+    tail -n 40 "$LOG_FILE" 2>/dev/null || true
+    exit 1
+  fi
+
+  sleep 3
 done
 
 echo ""
