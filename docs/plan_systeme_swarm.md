@@ -220,11 +220,30 @@ cause. On n'a jamais deux inconnues superposées.
 
 # PARTIE 2 — La construction
 
+## L'ordre d'exécution
+
+Les étapes gardent leur numéro, mais elles se font dans cet ordre-là. Le but est d'obtenir un
+**système complet qui vole le plus tôt possible**, puis de le mesurer.
+
+| Rang | Étape | Pourquoi ici |
+|---|---|---|
+| 1 | **3 — le contrôleur** | Rien ne vole sans lui, et il porte le risque non testé : trois drones en même temps |
+| 2 | **4 — la carte partagée** | Tout s'y branche, et elle produit la vue de dessus dont le guide a besoin |
+| 3 | **7 — l'œil appris** | Les données d'entraînement existent déjà, et aucun vol nouveau n'est nécessaire |
+| 4 | **5 + 8 ensemble** | La décision et le guide sont construits d'un seul tenant |
+| | | → **première mission complète à trois drones** |
+| 5 | 6 — les deux références | Sert à comparer, pas à faire fonctionner |
+| 6 | 9 — l'évaluation complète | Les chiffres du mémoire |
+| 7 | 10 — la décision apprise | Optionnelle |
+| 8 | 11 — la consolidation | À la fin |
+
+**Les étapes 5 et 8 se construisent ensemble**, et non l'une après l'autre. Le paramètre λ reste
+un interrupteur pour isoler une panne pendant la mise au point, pas un protocole d'expérience.
+
 **L'ordre est choisi pour deux raisons.** D'abord le risque : le contrôleur, qui est la partie
-physiquement difficile, arrive tôt. Ensuite la construction : on monte d'abord une base qui
-tourne, puis on ajoute l'œil et le guide **un par un**, en vérifiant à chaque fois que le
-nouveau composant fonctionne et ne dégrade rien. La mesure de performance vient à la fin, sur
-le système complet.
+physiquement difficile, arrive en premier. Ensuite l'utilité : les quatre premières étapes
+suffisent à faire tourner une mission complète ; tout ce qui suit sert à la mesurer ou à
+l'améliorer.
 
 ---
 
@@ -588,10 +607,14 @@ sémantique de la carte.
 alternatives à taille comparable), leurs tailles, leurs vitesses, leurs licences. Et les outils
 d'annotation automatique.
 
-**Le point crucial : les données d'entraînement sont gratuites.** En simulation, on connaît la
-position exacte de chaque carton et de chaque QR. On peut donc voler au hasard, enregistrer des
-images, et **générer les annotations automatiquement** en projetant les positions connues dans
-l'image. Aucune annotation manuelle.
+**Le point crucial : les données d'entraînement sont gratuites, et une partie existe déjà.** En
+simulation, on connaît la position exacte de chaque carton et de chaque QR. On projette ces
+positions dans l'image et **les annotations se génèrent toutes seules**, sans un seul clic.
+
+Les images de l'étape 2 conviennent directement : chacune est enregistrée avec la pose exacte de
+la caméra, et la fonction de projection utilisée pour l'analyse est vérifiée à quelques pixels
+près. Cette étape démarre donc sur un jeu d'images déjà constitué, et n'a besoin de vols
+supplémentaires que pour élargir la variété des points de vue.
 
 **Les options et ce qu'on compare.**
 
@@ -644,8 +667,21 @@ c'est la contribution de recherche du projet.
 **Ce qu'on cherche.** Les petits modèles vision-langage utilisables localement, et pour chacun :
 la mémoire demandée, la vitesse, la licence, la facilité d'installation.
 
-**Le choix retenu : un modèle génératif.** Il reçoit l'image de la caméra **et** la vue de
-dessus de la carte, et il répond par un numéro de zone suivi d'une phrase. Deux raisons :
+**Sa mission.** Le modèle regarde **l'entrepôt** — l'image de la caméra du drone — **et la
+carte** vue de dessus, et il répond à deux questions :
+
+1. **Où aller ?** Il désigne la zone à explorer parmi celles qui lui sont proposées, numérotées
+   sur la carte.
+2. **Comment l'aborder ?** Par quel côté attaquer le rack, et quel carton repéré viser en
+   premier parmi ceux qui attendent d'être lus.
+
+Il répond par ces deux choix et une phrase qui les explique.
+
+**Ce qu'il ne décide pas.** La pose exacte du drone — distance, hauteur, orientation — reste
+calculée par la géométrie, à partir des constantes mesurées à l'étape 2. Un modèle de langage
+ne juge pas une distance au centimètre ; il juge une situation.
+
+**Le choix retenu : un modèle génératif.** Deux raisons :
 
 - **Il explique son choix.** Il ne dit pas seulement « zone 3 », il dit pourquoi. Un système qui
   justifie ses décisions se montre en démonstration et se défend en soutenance. C'est rare dans
@@ -662,8 +698,9 @@ a sauvegardé des vues de dessus à intervalles réguliers. On en garde une cent
 on connaît **après coup** la bonne réponse : la zone qui contenait le plus de QR restants.
 
 On fait passer chaque candidat sur les cent mêmes cartes et on mesure :
-1. **Le taux d'accord avec la bonne réponse**, comparé à un choix au hasard. **C'est la mesure
-   qui décide si on branche ce composant.**
+1. **Le taux d'accord avec la bonne réponse**, comparé à un choix au hasard, sur les deux
+   questions : la zone choisie, et le côté d'abordage. **C'est la mesure qui décide si on
+   branche ce composant.**
 2. **La latence** par requête.
 3. **La mémoire** occupée.
 4. **La qualité des explications**, lues à l'œil sur un échantillon.
@@ -828,17 +865,18 @@ dossier `swarm_qr/experiments/`, en une commande.
 
 # Récapitulatif : où en suis-je ?
 
-| Étape | Ce qu'on construit | Ce qui doit être validé pour continuer |
-|---|---|---|
-| 0 | Le cadre | Vous avez validé la page |
-| 1 | L'environnement | Reproductible, physique honnête, images nettes |
-| 2 | Le décodeur | **L'enveloppe de lecture est mesurée** (les 3 constantes) |
-| 3 | Le contrôleur | **Le drone tient la pose**, temps de cycle compatible |
-| 4 | La carte | Carte exacte, réservations qui expirent, vue lisible |
-| 5 | Cibles + décision | **Première mission à 3 drones**, sans blocage ni doublon |
-| 6 | Les références | Le tableau balayage / système / oracle |
-| 7 | L'œil appris | Portée gagnée, peu de fausses détections, missions normales |
-| 8 | Le guide | Bat le hasard hors ligne, λ choisi, aucune dégradation |
-| 9 | L'évaluation | Le tableau complet des scénarios |
-| 10 | La décision apprise (option) | Bat la géométrie, sinon on l'écrit |
-| 11 | La consolidation | Chaque chiffre reproductible |
+Les étapes sont listées dans **l'ordre où elles se font**.
+
+| Rang | Étape | Ce qu'on construit | Ce qui doit être validé pour continuer |
+|---|---|---|---|
+| — | 0 | Le cadre | Vous avez validé la page |
+| — | 1 | L'environnement | Reproductible, physique honnête, images nettes |
+| — | 2 | Le décodeur | **L'enveloppe de lecture est mesurée** |
+| 1 | 3 | Le contrôleur | **Le drone tient la pose**, et trois drones volent ensemble |
+| 2 | 4 | La carte | Carte exacte, réservations qui expirent, vue lisible |
+| 3 | 7 | L'œil appris | Portée gagnée, peu de fausses détections |
+| 4 | 5 + 8 | Cibles, décision et guide | **Première mission complète à 3 drones** |
+| 5 | 6 | Les références | Le tableau balayage / système / oracle |
+| 6 | 9 | L'évaluation | Le tableau complet des scénarios |
+| 7 | 10 | La décision apprise (option) | Bat la géométrie, sinon on l'écrit |
+| 8 | 11 | La consolidation | Chaque chiffre reproductible |
