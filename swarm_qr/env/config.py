@@ -80,6 +80,8 @@ class Cameras:
     near: float = 0.05
     far: float = 40.0
     update_hz: float = 5.0
+    side_offset: float = 0.10      # les latérales sont à 10 cm du centre du corps...
+    below: float = 0.11            # ...et 11 cm plus bas ; vérifié en vol (06_position_vraie)
 
     @property
     def focal_length(self) -> float:

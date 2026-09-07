@@ -42,7 +42,8 @@ import omni.timeline  # noqa: E402
 import omni.usd  # noqa: E402
 from scipy.spatial.transform import Rotation  # noqa: E402
 
-from swarm_qr import perception as P  # noqa: E402
+from swarm_qr import perception as P
+from swarm_qr.env.config import CAMERAS  # noqa: E402
 from swarm_qr.env import scene as scene_mod  # noqa: E402
 from swarm_qr.env.layout import make_layout  # noqa: E402
 from swarm_qr.env.pilot import Pilot  # noqa: E402
@@ -51,8 +52,8 @@ from swarm_qr.experiments._vol import transit  # noqa: E402
 
 DISTANCES = (0.5, 0.8, 1.1, 1.5, 2.0, 3.0)
 FLY_ALT = 1.6
-CAM_LATERAL = 0.10   # la caméra gauche est à 10 cm du centre du corps...
-CAM_BAS = 0.11       # ...et 11 cm plus bas : on vise avec elle, pas avec le corps
+CAM_LATERAL = CAMERAS.side_offset
+CAM_BAS = CAMERAS.below
 
 
 def codes_lus(bgr) -> list[str]:

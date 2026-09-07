@@ -9,12 +9,15 @@ multirotor Iris piloté par MAVLink — inertie, estimateur, contrôleur de bord
 ## Organisation
 
 ```
-env/            le système
+env/            le socle
   config.py     les constantes, toutes mesurées dans l'entrepôt
   layout.py     une graine donne un entrepôt (Python pur, testable sans simulateur)
   qr_tags.py    génération des QR et collage sur les cartons
   scene.py      assemblage : entrepôt, racks, cartons, drones Iris, caméras
-  pilot.py      pilotage MAVLink : connexion, décollage, goto position + cap, calibration
+  pilot.py      la parole au pilote automatique : lien MAVLink, décollage, repères, horloge
+perception.py   lire un QR dans une image : lecteurs, coins, position 3D
+control.py      le contrôleur : amener un drone à une pose, l'y tenir, dire s'il a réussi
+tests/          les tests sans simulateur (contrôleur sur un faux pilote)
 experiments/    un dossier par test, avec ses images et sa fiche de résultats
 assets/qr/      les images de QR générées
 ```
@@ -86,3 +89,23 @@ La distance apparente augmente avec l'angle : un code vu de biais paraît plus l
 visée bien centrée, la lecture marche dès 0,5 m (test 3) ; la borne de 1,5 m couvre une visée
 réaliste. Et l'allée entre deux racks limite le recul à 3,6 m : c'est l'angle, presque gratuit,
 qui permet de couvrir plusieurs cartons depuis une même position.
+
+## Étape 3 — Le drone sait-il aller quelque part et s'y tenir ?
+
+Un contrôleur qui ne bloque jamais (`control.py`), trois vols de mesure, treize tests sans
+simulateur. Détail dans [`08_controle/RESULTATS.md`](experiments/08_controle/RESULTATS.md).
+
+| Question posée | Réponse mesurée |
+|---|---|
+| Faut-il un contrôleur ? | oui : couper la vitesse fait glisser le drone de 0,79 m |
+| Quelle loi ? | vitesse proportionnelle à la distance restante, sur la position vraie : 1 cm en tenue |
+| Cent poses au hasard ? | **100 sur 100 atteintes**, aucun abandon, 9 cm à l'arrivée, cap exact |
+| Combien de temps par cible ? | **14,6 s** en médiane ; environ 2 s + 0,85 s par mètre de trajet |
+| Le QR se lit-il une fois arrivé ? | 93 sur 100, conforme au taux par image de l'étape 2 |
+| Trois drones en même temps ? | **oui** : 6 cibles sur 6, 6 lectures sur 6, 0,23 fois le temps réel |
+
+Deux pièges mesurés : une consigne de vitesse nulle laisse dériver le drone (1 à 3 cm/s), et le
+pilote automatique tient le cap qu'il *croit* avoir, jusqu'à 8,7 degrés de la vérité — d'où
+une tenue active et une boucle de cap sur le cap vrai. Le contrôleur ne calcule pas son chemin
+et n'évite pas les autres drones : deux drones se sont croisés à 0,96 m dans le même couloir,
+protégés par leurs altitudes différentes. C'est à l'étape 5 de l'interdire.

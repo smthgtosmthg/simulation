@@ -1,0 +1,311 @@
+{
+ "freinage": {
+  "tol": 0.15,
+  "v_approche": 1.0,
+  "gain": 0.9,
+  "recul_m": 4.0,
+  "par_loi": {
+   "proportionnel": {
+    "essais": 3,
+    "passages_dans_tolerance": 3,
+    "tenues": 3,
+    "t_arrivee": 4.65,
+    "t_stabilisation": 5.4,
+    "stabilises": 3,
+    "depassement_m": 0.139,
+    "err_finale_m": 0.011,
+    "derive_tenue_m": -0.112,
+    "err_tenue_max_m": 0.139,
+    "sorties_de_tolerance": 0.0
+   },
+   "coupe": {
+    "essais": 3,
+    "passages_dans_tolerance": 3,
+    "tenues": 0,
+    "t_arrivee": 4.65,
+    "t_stabilisation": 7.2,
+    "stabilises": 3,
+    "depassement_m": 0.791,
+    "err_finale_m": 0.719,
+    "derive_tenue_m": -0.008,
+    "err_tenue_max_m": 0.748,
+    "sorties_de_tolerance": 1.0
+   },
+   "autopilote": {
+    "essais": 3,
+    "passages_dans_tolerance": 0,
+    "tenues": 0,
+    "t_arrivee": null,
+    "t_stabilisation": 6.6,
+    "stabilises": 3,
+    "depassement_m": 0.203,
+    "err_finale_m": 0.253,
+    "derive_tenue_m": null,
+    "err_tenue_max_m": null,
+    "sorties_de_tolerance": 0.0
+   }
+  },
+  "essais": [
+   {
+    "loi": "proportionnel",
+    "rep": 0,
+    "t_arrivee": 4.5,
+    "t_stabilisation": 5.25,
+    "depassement_m": 0.164,
+    "derive_tenue_m": -0.146,
+    "err_tenue_m": 0.167,
+    "err_min_m": 0.007,
+    "err_finale_m": 0.007,
+    "sorties_de_tolerance": 1,
+    "phase_finale": "atteint"
+   },
+   {
+    "loi": "proportionnel",
+    "rep": 1,
+    "t_arrivee": 4.65,
+    "t_stabilisation": 5.4,
+    "depassement_m": 0.139,
+    "derive_tenue_m": -0.112,
+    "err_tenue_m": 0.139,
+    "err_min_m": 0.003,
+    "err_finale_m": 0.011,
+    "sorties_de_tolerance": 0,
+    "phase_finale": "atteint"
+   },
+   {
+    "loi": "proportionnel",
+    "rep": 2,
+    "t_arrivee": 4.65,
+    "t_stabilisation": 5.4,
+    "depassement_m": 0.13,
+    "derive_tenue_m": -0.099,
+    "err_tenue_m": 0.131,
+    "err_min_m": 0.006,
+    "err_finale_m": 0.014,
+    "sorties_de_tolerance": 0,
+    "phase_finale": "atteint"
+   },
+   {
+    "loi": "coupe",
+    "rep": 0,
+    "t_arrivee": 4.65,
+    "t_stabilisation": 7.2,
+    "depassement_m": 0.842,
+    "derive_tenue_m": -0.01,
+    "err_tenue_m": 0.77,
+    "err_min_m": 0.022,
+    "err_finale_m": 0.746,
+    "sorties_de_tolerance": 1,
+    "phase_finale": "abandon"
+   },
+   {
+    "loi": "coupe",
+    "rep": 1,
+    "t_arrivee": 4.65,
+    "t_stabilisation": 7.05,
+    "depassement_m": 0.785,
+    "derive_tenue_m": 0.03,
+    "err_tenue_m": 0.719,
+    "err_min_m": 0.051,
+    "err_finale_m": 0.718,
+    "sorties_de_tolerance": 1,
+    "phase_finale": "abandon"
+   },
+   {
+    "loi": "coupe",
+    "rep": 2,
+    "t_arrivee": 4.65,
+    "t_stabilisation": 7.2,
+    "depassement_m": 0.791,
+    "derive_tenue_m": -0.008,
+    "err_tenue_m": 0.748,
+    "err_min_m": 0.048,
+    "err_finale_m": 0.719,
+    "sorties_de_tolerance": 1,
+    "phase_finale": "abandon"
+   },
+   {
+    "loi": "autopilote",
+    "rep": 0,
+    "t_arrivee": null,
+    "t_stabilisation": 6.45,
+    "depassement_m": 0.186,
+    "derive_tenue_m": null,
+    "err_tenue_m": null,
+    "err_min_m": 0.222,
+    "err_finale_m": 0.225,
+    "sorties_de_tolerance": 0,
+    "phase_finale": "approche"
+   },
+   {
+    "loi": "autopilote",
+    "rep": 1,
+    "t_arrivee": null,
+    "t_stabilisation": 6.6,
+    "depassement_m": 0.206,
+    "derive_tenue_m": null,
+    "err_tenue_m": null,
+    "err_min_m": 0.207,
+    "err_finale_m": 0.253,
+    "sorties_de_tolerance": 0,
+    "phase_finale": "approche"
+   },
+   {
+    "loi": "autopilote",
+    "rep": 2,
+    "t_arrivee": null,
+    "t_stabilisation": 6.6,
+    "depassement_m": 0.203,
+    "derive_tenue_m": null,
+    "err_tenue_m": null,
+    "err_min_m": 0.2,
+    "err_finale_m": 0.254,
+    "sorties_de_tolerance": 0,
+    "phase_finale": "approche"
+   }
+  ]
+ },
+ "poses": {
+  "n": 100,
+  "atteintes": 100,
+  "taux_arrivee": 1.0,
+  "abandons": {},
+  "err_finale_cm": 8.9,
+  "err_finale_cm_p90": 10.5,
+  "cap_err_deg": 0.0,
+  "v_finale": 0.097,
+  "cycle": {
+   "n": 100,
+   "t_total": 14.55,
+   "t_total_p90": 25.25,
+   "t_transit": 8.18,
+   "t_approche": 7.05,
+   "t_tenue": 0.6,
+   "longueur_m": 15.67,
+   "vitesse_moyenne": 1.03
+  },
+  "cycle_direct": {
+   "n": 46,
+   "t_total": 6.67,
+   "t_total_p90": 10.2,
+   "t_transit": 0.0,
+   "t_approche": 6.08,
+   "t_tenue": 0.6,
+   "longueur_m": 5.25,
+   "vitesse_moyenne": 0.8
+  },
+  "cycle_couloir": {
+   "n": 54,
+   "t_total": 21.38,
+   "t_total_p90": 27.25,
+   "t_transit": 11.1,
+   "t_approche": 8.7,
+   "t_tenue": 0.6,
+   "longueur_m": 23.95,
+   "vitesse_moyenne": 1.1
+  },
+  "lectures": 93,
+  "taux_lecture": 0.93,
+  "err_distance_vue_cm": 1.2,
+  "debit_sim_sur_reel": 0.504,
+  "parametres": {
+   "seed": 9033,
+   "poses": 100,
+   "v_transit": 1.5,
+   "v_approche": 1.0,
+   "gain": 0.9,
+   "tol": 0.15,
+   "tol_cap": 0.09,
+   "tenue_s": 0.5,
+   "patience_s": 8.0,
+   "K": [
+    [
+     886.8099365234375,
+     0.0,
+     512.0
+    ],
+    [
+     0.0,
+     886.8099365234375,
+     384.0
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  }
+ },
+ "essaim": {
+  "drones": 3,
+  "manches": [
+   {
+    "nom": "vers trois allees",
+    "t_sim": 28.8,
+    "t_mur": 126.2,
+    "vitesse_sim": 0.228,
+    "distance_min_entre_drones_m": 0.96,
+    "drones": [
+     {
+      "drone": 0,
+      "phase": "atteint",
+      "raison": "",
+      "t_total": 14.8,
+      "ecart_final_m": 0.019,
+      "lu": true
+     },
+     {
+      "drone": 1,
+      "phase": "atteint",
+      "raison": "",
+      "t_total": 29.05,
+      "ecart_final_m": 0.1,
+      "lu": true
+     },
+     {
+      "drone": 2,
+      "phase": "atteint",
+      "raison": "",
+      "t_total": 24.9,
+      "ecart_final_m": 0.058,
+      "lu": true
+     }
+    ]
+   },
+   {
+    "nom": "seconde pose dans la meme allee",
+    "t_sim": 8.0,
+    "t_mur": 34.7,
+    "vitesse_sim": 0.231,
+    "distance_min_entre_drones_m": 4.31,
+    "drones": [
+     {
+      "drone": 0,
+      "phase": "atteint",
+      "raison": "",
+      "t_total": 5.55,
+      "ecart_final_m": 0.035,
+      "lu": true
+     },
+     {
+      "drone": 1,
+      "phase": "atteint",
+      "raison": "",
+      "t_total": 7.8,
+      "ecart_final_m": 0.113,
+      "lu": true
+     },
+     {
+      "drone": 2,
+      "phase": "atteint",
+      "raison": "",
+      "t_total": 3.0,
+      "ecart_final_m": 0.012,
+      "lu": true
+     }
+    ]
+   }
+  ]
+ }
+}

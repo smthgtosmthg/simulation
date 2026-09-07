@@ -73,8 +73,8 @@ MARGE_MUR = 0.60
 
 # --- vol ---
 FLY_ALT = 1.6
-CAM_LATERAL = 0.10        # la camera gauche est a 10 cm du centre du corps...
-CAM_BAS = 0.11            # ...et 11 cm plus bas ; verifie en vol (06_position_vraie)
+CAM_LATERAL = CAMERAS.side_offset
+CAM_BAS = CAMERAS.below
 DEGAGEMENT_MIN = 0.50     # helices 0,26 m + oscillation mesuree 0,21 m + marge
 POSES_VOL = ([(0.0, d) for d in (0.90, 1.20, 1.60, 2.10, 2.70, 3.50)]
              + [(30.0, 1.20), (30.0, 2.10), (30.0, 3.50),

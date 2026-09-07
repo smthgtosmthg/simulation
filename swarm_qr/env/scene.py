@@ -70,6 +70,15 @@ class Scene:
     def positions(self) -> np.ndarray:
         return np.array([d.state.position for d in self.drones])
 
+    def position(self, drone: int = 0) -> np.ndarray:
+        return np.array(self.drones[drone].state.position, float)
+
+    def yaw(self, drone: int = 0) -> float:
+        return float(Rotation.from_quat(self.drones[drone].state.attitude).as_euler("ZYX")[0])
+
+    def velocity(self, drone: int = 0) -> np.ndarray:
+        return np.array(self.drones[drone].state.linear_velocity, float)
+
     def rgb(self, name: str, drone: int = 0) -> np.ndarray:
         return self.cameras[drone][name].get_rgb()
 
@@ -152,7 +161,7 @@ def _drone_cameras(drone_prim: str) -> dict[str, Camera]:
     Montées sous le ventre (z -0,11) : au-dessus de ce plan, la coque de l'Iris (z -0,067 à
     +0,047) et les disques d'hélices (z +0,02, rayon 0,13 aux quatre coins) restent à plus de
     25 degrés au-dessus de l'axe optique, hors du champ vertical de ±23,6 degrés."""
-    out_dist = 0.10
+    out_dist = CAMERAS.side_offset
     specs = {
         "left": (90.0, CAMERAS.side_width, CAMERAS.side_height),
         "right": (-90.0, CAMERAS.side_width, CAMERAS.side_height),
@@ -163,7 +172,7 @@ def _drone_cameras(drone_prim: str) -> dict[str, Camera]:
         a = math.radians(yaw)
         cams[name] = Camera(
             prim_path=f"{drone_prim}/body/Cam_{name}",
-            translation=np.array([out_dist * math.cos(a), out_dist * math.sin(a), -0.11]),
+            translation=np.array([out_dist * math.cos(a), out_dist * math.sin(a), -CAMERAS.below]),
             orientation=_cam_orientation(yaw),
             resolution=(w, h),
         )
