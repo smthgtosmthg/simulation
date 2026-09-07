@@ -29,7 +29,7 @@ from pegasus.simulator.logic.vehicles.multirotor import Multirotor, MultirotorCo
 from pegasus.simulator.params import ROBOTS, WORLD_SETTINGS
 
 from . import qr_tags
-from .config import CAMERAS, DRONES, QR_CFG, RACKS, WAREHOUSE_PRIM, WAREHOUSE_USD
+from .config import CAMERAS, DRONES, LIDAR, QR_CFG, RACKS, WAREHOUSE_PRIM, WAREHOUSE_USD
 from .layout import Layout, select_boxes
 
 DRONE_PRIM = "/World/Drone_{:02d}"
@@ -55,8 +55,10 @@ class Scene:
     layout: Layout
     drones: list[Multirotor]
     cameras: list[dict[str, Camera]]
+    lidars: list[str] = field(default_factory=list)
     tags: list = field(default_factory=list)
     kept_boxes: list = field(default_factory=list)
+    _lidar_api: object = None
 
     def finalize(self) -> None:
         """À appeler une fois, après world.reset() : branche les caméras au rendu."""
@@ -81,6 +83,38 @@ class Scene:
 
     def rgb(self, name: str, drone: int = 0) -> np.ndarray:
         return self.cameras[drone][name].get_rgb()
+
+    def lidar(self, drone: int = 0):
+        """Un tour de lidar en repère monde : directions unitaires et distance par rayon, la
+        distance valant l'infini quand rien n'a été touché.
+
+        Deux pièges du capteur, tous deux silencieux :
+        - il ne se met à jour qu'au **rendu** : lire après des pas de physique seuls renvoie un
+          tour entier de zéros — on lève une erreur plutôt que de remplir la carte de vide ;
+        - son angle vertical se compte **vers le bas** : un « zénith » de −15 degrés pointe
+          15 degrés vers le haut. Sans le signe, la carte se remplit tête-bêche.
+        Les angles sont donnés dans le repère du capteur ; on les tourne avec l'attitude du
+        drone, sans quoi la carte se remplirait de travers dès qu'il tourne.
+        """
+        from omni.isaac.range_sensor import _range_sensor
+
+        if self._lidar_api is None:
+            self._lidar_api = _range_sensor.acquire_lidar_sensor_interface()
+        chemin = self.lidars[drone]
+        d = self._lidar_api.get_linear_depth_data(chemin)
+        if d is None:
+            raise RuntimeError("lidar sans donnees : le capteur n'est pas initialise")
+        portees = np.asarray(d, dtype=float).reshape(-1)
+        if not np.count_nonzero(portees > LIDAR.min_range):
+            raise RuntimeError("lidar muet : aucun rendu depuis le dernier deplacement")
+        az = np.asarray(self._lidar_api.get_azimuth_data(chemin), dtype=float)
+        zen = np.asarray(self._lidar_api.get_zenith_data(chemin), dtype=float)
+        A, Z = np.meshgrid(az, zen, indexing="ij")
+        local = np.stack([np.cos(Z) * np.cos(A), np.cos(Z) * np.sin(A), -np.sin(Z)], axis=-1)
+        R = Rotation.from_quat(self.drones[drone].state.attitude).as_matrix()
+        dirs = local.reshape(-1, 3) @ R.T
+        portees[portees >= LIDAR.max_range - 1e-3] = np.inf
+        return dirs, portees
 
     def capture(self, name: str, drone: int = 0, settle: int = RENDER_LAG) -> np.ndarray:
         """Image à jour d'une caméra du drone. Voir `capture_camera` pour les pièges traités."""
@@ -179,6 +213,31 @@ def _drone_cameras(drone_prim: str) -> dict[str, Camera]:
     return cams
 
 
+def _add_lidar(drone_prim: str) -> str:
+    """Lidar au centre du corps. Sa portée minimale passe au-delà des hélices, sinon le drone
+    se mesurerait lui-même à chaque rayon."""
+    import omni.kit.commands
+
+    omni.kit.commands.execute(
+        "RangeSensorCreateLidar",
+        path="/body/Lidar",
+        parent=drone_prim,
+        min_range=LIDAR.min_range,
+        max_range=LIDAR.max_range,
+        draw_points=False,
+        draw_lines=False,
+        horizontal_fov=LIDAR.horizontal_fov_deg,
+        vertical_fov=LIDAR.vertical_fov_deg,
+        horizontal_resolution=LIDAR.horizontal_res_deg,
+        vertical_resolution=LIDAR.vertical_res_deg,
+        rotation_rate=0.0,
+        high_lod=True,
+        yaw_offset=0.0,
+        enable_semantics=False,
+    )
+    return f"{drone_prim}/body/Lidar"
+
+
 def _make_drone(index: int, spawn_xy: tuple, with_sitl: bool, pg: PegasusInterface) -> Multirotor:
     config = MultirotorConfig()
     if with_sitl:
@@ -230,17 +289,19 @@ def build(layout: Layout, with_sitl: bool = False, n_drones: int | None = None) 
     images = qr_tags.generate_images(len(kept))
     tags = qr_tags.attach(stage, kept, images)
 
-    drones, cameras = [], []
+    drones, cameras, lidars = [], [], []
     for i in range(n):
         x, y, _ = layout.spawns[i]
         drones.append(_make_drone(i, (x, y), with_sitl, pg))
         cameras.append(_drone_cameras(DRONE_PRIM.format(i)))
+        lidars.append(_add_lidar(DRONE_PRIM.format(i)))
 
     return Scene(
         world=world,
         layout=layout,
         drones=drones,
         cameras=cameras,
+        lidars=lidars,
         tags=tags,
         kept_boxes=kept,
     )

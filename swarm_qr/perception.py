@@ -83,10 +83,12 @@ def _dec_opencv(gray, aruco: bool):
 
 
 def _dec_zxing(gray):
+    """QR seulement : l'entrepôt porte des codes-barres imprimés sur son décor, qu'un lecteur
+    tous formats ferait entrer dans l'inventaire comme s'ils venaient d'un carton."""
     import zxingcpp
 
     out = []
-    for r in zxingcpp.read_barcodes(gray):
+    for r in zxingcpp.read_barcodes(gray, formats=zxingcpp.BarcodeFormat.QRCode):
         p = r.position
         out.append((r.text, np.array([
             [p.top_left.x, p.top_left.y], [p.top_right.x, p.top_right.y],

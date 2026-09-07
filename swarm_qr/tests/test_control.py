@@ -213,6 +213,15 @@ def test_sans_cap_vrai_le_cap_absolu_est_envoye():
     assert pil.rate_cmd is None and pil.cap_cmd == 0.7
 
 
+def test_un_tick_avant_toute_consigne_ne_fait_rien():
+    """Une boucle de mission peut observer avant de donner un ordre : le contrôleur au repos
+    doit laisser le drone en vol stationnaire, pas planter."""
+    pil = FauxPilote()
+    c = _ctrl(pil)
+    assert c.tick() is Phase.REPOS
+    assert np.allclose(pil.v_cmd, 0.0)
+
+
 def test_budget_par_defaut_couvre_le_trajet():
     pil = FauxPilote()
     c = _ctrl(pil)

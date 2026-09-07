@@ -1,0 +1,46 @@
+{
+ "seed": 9033,
+ "point": [
+  -4.957187762499403,
+  4.565308092212353,
+  1.6
+ ],
+ "rayons_par_tour": 1800,
+ "physique": [
+  {
+   "cap_deg": 0,
+   "rayons": 358,
+   "ecart_median_cm": 0.0,
+   "part_faux": 0.0
+  },
+  {
+   "cap_deg": 90,
+   "rayons": 357,
+   "ecart_median_cm": 0.0,
+   "part_faux": 0.0112
+  },
+  {
+   "cap_deg": 180,
+   "rayons": 356,
+   "ecart_median_cm": 0.0,
+   "part_faux": 0.0281
+  }
+ ],
+ "rotation_cm": 0.0,
+ "part_sur_matiere": 1.0,
+ "ms_lidar": 18.01,
+ "ms_couverture": 1.52,
+ "resume": {
+  "cases": 258048,
+  "occupees": 762,
+  "libres": 16717,
+  "inconnues": 240569,
+  "couvertes": 897,
+  "part_connue": 0.0677,
+  "codes_lus": 0,
+  "faces_lues": 0,
+  "pistes": 0,
+  "reservations": 0,
+  "octets": 1290240
+ }
+}

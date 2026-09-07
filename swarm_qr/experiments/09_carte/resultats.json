@@ -1,0 +1,172 @@
+{
+ "vol": {
+  "seed": 9033,
+  "etages": [
+   0,
+   1,
+   2
+  ],
+  "t_sim_s": 596.6,
+  "compte": {
+   "images": 5472,
+   "lectures": 5745,
+   "reperages": 78313,
+   "lectures_placees": 5097,
+   "replanifications": 3
+  },
+  "ms": {
+   "lidar": 22.3,
+   "couverture": 1.5,
+   "decodage": 19.3
+  }
+ },
+ "verification": {
+  "seed": 9033,
+  "point": [
+   -4.957187762499403,
+   4.565308092212353,
+   1.6
+  ],
+  "rayons_par_tour": 1800,
+  "physique": [
+   {
+    "cap_deg": 0,
+    "rayons": 358,
+    "ecart_median_cm": 0.0,
+    "part_faux": 0.0
+   },
+   {
+    "cap_deg": 90,
+    "rayons": 357,
+    "ecart_median_cm": 0.0,
+    "part_faux": 0.0112
+   },
+   {
+    "cap_deg": 180,
+    "rayons": 356,
+    "ecart_median_cm": 0.0,
+    "part_faux": 0.0281
+   }
+  ],
+  "rotation_cm": 0.0,
+  "part_sur_matiere": 1.0,
+  "ms_lidar": 18.01,
+  "ms_couverture": 1.52,
+  "resume": {
+   "cases": 258048,
+   "occupees": 762,
+   "libres": 16717,
+   "inconnues": 240569,
+   "couvertes": 897,
+   "part_connue": 0.0677,
+   "codes_lus": 0,
+   "faces_lues": 0,
+   "pistes": 0,
+   "reservations": 0,
+   "octets": 1290240
+  }
+ },
+ "carte": {
+  "cases": 258048,
+  "occupees": 13496,
+  "libres": 217548,
+  "inconnues": 27004,
+  "couvertes": 132007,
+  "part_connue": 0.8954,
+  "codes_lus": 110,
+  "faces_lues": 171,
+  "pistes": 182,
+  "reservations": 0,
+  "octets": 1548288
+ },
+ "faux_obstacles": {
+  "cases": 10898,
+  "part": 0.0039
+ },
+ "par_etagere": {
+  "etagere_0": {
+   "panneaux": 70,
+   "obstacle": 63,
+   "couvert": 47,
+   "lu": 49,
+   "part_obstacle": 0.9,
+   "part_couvert": 0.6714,
+   "part_lu": 0.7
+  },
+  "etagere_1": {
+   "panneaux": 62,
+   "obstacle": 51,
+   "couvert": 41,
+   "lu": 47,
+   "part_obstacle": 0.8226,
+   "part_couvert": 0.6613,
+   "part_lu": 0.7581
+  },
+  "etagere_2": {
+   "panneaux": 96,
+   "obstacle": 80,
+   "couvert": 64,
+   "lu": 76,
+   "part_obstacle": 0.8333,
+   "part_couvert": 0.6667,
+   "part_lu": 0.7917
+  }
+ },
+ "panneaux": {
+  "codes_vrais": 114,
+  "panneaux_vrais": 228,
+  "tailles_d_etiquette_m": [
+   0.12,
+   0.13,
+   0.21,
+   0.4
+  ],
+  "codes_lus": 110,
+  "faces_lues": 171,
+  "codes_inventes": [],
+  "part_codes_lus": 0.9649,
+  "err_cm": 0.9,
+  "err_p90_cm": 1.2,
+  "err_max_cm": 8.3,
+  "err_cm_par_taille": {
+   "0.21": 2.7,
+   "0.4": 0.9
+  },
+  "faces_confirmees": 171,
+  "err_max_cm_confirmees": 8.3
+ },
+ "lisibilite": {
+  "panneaux_couverts": 152,
+  "lus_parmi_couverts": 144,
+  "part_lus_si_couvert": 0.9474,
+  "panneaux_non_couverts": 76,
+  "lus_parmi_non_couverts": 28,
+  "part_lus_si_non_couvert": 0.3684
+ },
+ "pistes": {
+  "total": 182,
+  "sur_un_vrai_panneau": 12,
+  "part_fausses": 0.9341
+ },
+ "securite": {
+  "points_de_trajectoire": 2738,
+  "points_dans_un_rack": 0,
+  "distance_min_a_un_rack_m": 0.05,
+  "allers": 15,
+  "debuts_inaccessibles": 0,
+  "transits_atteints": 15,
+  "traversees_atteintes": 15,
+  "abandons": [],
+  "replanifications": 3,
+  "points_de_passage_median": 0.0,
+  "t_transit_median_s": 4.0,
+  "t_traversee_median_s": 28.2
+ },
+ "chemins": {
+  "essais": 12,
+  "trouves": 12,
+  "hors_de_toute_emprise": 8,
+  "coupent_une_emprise_par_l_inconnu_ou_le_libre": 4,
+  "passent_sur_un_obstacle_connu": 0
+ }
+}

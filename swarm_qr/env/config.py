@@ -90,10 +90,17 @@ class Cameras:
 
 @dataclass(frozen=True)
 class Lidar:
-    channels: int = 1
+    """Un tour complet à chaque rendu, sans rotation mécanique : le lidar sert à
+    cartographier, pas à imiter un capteur tournant. Dix anneaux sur 36 degrés couvrent, à
+    2 mètres, une bande verticale de 1,3 m : trois passages à hauteur des trois étagères
+    se recouvrent."""
+
+    horizontal_fov_deg: float = 360.0
+    vertical_fov_deg: float = 36.0
     horizontal_res_deg: float = 2.0
+    vertical_res_deg: float = 4.0
+    min_range: float = 0.4          # au-delà des hélices : sinon le drone se mesure lui-même
     max_range: float = 25.0
-    update_hz: float = 10.0
 
 
 @dataclass(frozen=True)

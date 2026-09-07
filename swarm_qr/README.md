@@ -17,6 +17,8 @@ env/            le socle
   pilot.py      la parole au pilote automatique : lien MAVLink, décollage, repères, horloge
 perception.py   lire un QR dans une image : lecteurs, coins, position 3D
 control.py      le contrôleur : amener un drone à une pose, l'y tenir, dire s'il a réussi
+mapping.py      la carte partagée : occupation et couverture orientée, panneaux, réservations,
+                frontières, itinéraires, vue de dessus
 tests/          les tests sans simulateur (contrôleur sur un faux pilote)
 experiments/    un dossier par test, avec ses images et sa fiche de résultats
 assets/qr/      les images de QR générées
@@ -109,3 +111,28 @@ pilote automatique tient le cap qu'il *croit* avoir, jusqu'à 8,7 degrés de la 
 une tenue active et une boucle de cap sur le cap vrai. Le contrôleur ne calcule pas son chemin
 et n'évite pas les autres drones : deux drones se sont croisés à 0,96 m dans le même couloir,
 protégés par leurs altitudes différentes. C'est à l'étape 5 de l'interdire.
+
+## Étape 4 — La carte partagée
+
+Une grille pour l'espace, une table pour les panneaux, un lidar sur le drone, des chemins
+calculés sur ce que le drone a découvert, et 28 tests sans simulateur. Détail dans
+[`09_carte/RESULTATS.md`](experiments/09_carte/RESULTATS.md) ; la carte en trois dimensions
+dans `09_carte/carte_3d.html`.
+
+| Question posée | Réponse mesurée |
+|---|---|
+| Le lidar dit-il la vérité ? | oui : **0,0 cm** d'écart contre le moteur physique, rayon par rayon, à trois caps |
+| La carte invente-t-elle des obstacles ? | 0,39 % des cases occupées, en pleine allée |
+| Où sont les codes lus ? | à **0,9 cm** près en médiane, 8,3 cm au pire, aucun code inventé |
+| Combien de codes en une patrouille ? | **110 sur 114**, les quatre autres portent des étiquettes de 12 cm, trop petites pour la distance de patrouille |
+| « Lisible ici » est-il vrai ? | 95 % des panneaux annoncés lisibles ont été lus, contre 37 % des autres |
+| Le drone vole-t-il sur sa seule carte ? | oui : 15 transits sur 15, aucun point de trajectoire dans un rack, chemin recalculé en vol quand un obstacle apparaît |
+| Un chemin peut-il traverser un obstacle connu ? | jamais, sur 12 trajets d'un coin à l'autre |
+| Ce que ça coûte | 1,5 Mo, 24 ms par observation pour la carte |
+| La panne d'un drone ? | ses réservations expirent seules, sans code qui la surveille |
+
+Cinq faits découverts en comparant à la vérité : le lidar compte ses angles verticaux **vers le
+bas** et ne se rafraîchit qu'au **rendu** ; **les étiquettes n'ont pas toutes la même
+taille**, donc la distance d'un code vient du lidar et non de sa taille dans l'image ; chaque
+carton porte le même code sur ses deux faces ; une case vue à travers un rack ne rend pas
+lisible la face opposée ; et le décodeur lisait les codes-barres imprimés sur le décor.

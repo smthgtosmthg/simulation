@@ -477,31 +477,61 @@ de partager ce qu'elle voit.
 | Structure | grille pleine / structure creuse | On **calcule la mémoire avant de coder** : si la grille pleine tient confortablement, elle gagne par simplicité |
 | Taille de cube | petit (précis, lourd) / grand (léger, grossier) | Le cube doit être nettement plus petit qu'un carton, pour distinguer deux cartons voisins |
 
+**Deux choses que cette étape doit fournir, parce qu'aucune autre ne le fait.**
+
+- **Le capteur de distance.** L'architecture le prévoit, mais il n'est pas encore sur le drone.
+  C'est ici qu'on l'installe, parce que la carte est son premier client : sans lui, la case
+  « occupé » reste vide et rien ne peut être évité. Comme les caméras à l'étape 2, il est
+  **mesuré avant d'être cru** : chaque rayon est refait par le moteur physique, et le banc
+  s'arrête si les deux distances ne coïncident pas. Une carte remplie de travers a l'air normale.
+- **Le calcul d'itinéraire.** Le contrôleur contourne les obstacles connus, mais il ne les
+  connaît que par la carte : c'est donc la carte qui calcule le chemin — des points de passage
+  qui évitent les cases occupées, élargies du rayon du drone — et le contrôleur qui le suit.
+  Jusqu'ici, le chemin venait du plan connu de l'entrepôt ; il n'existera pas en mission.
+
 **Ce qu'on mesure.**
 1. **La mémoire réellement occupée** par la carte à la taille choisie.
 2. **Le temps de mise à jour** : combien de millisecondes pour intégrer une observation. Ce
    temps doit rester très petit devant le pas de décision (1 seconde).
-3. **L'exactitude** : on rejoue une trajectoire connue avec des détections connues, et on
-   compare la carte reconstruite à la vérité — bonnes cases occupées, tags au bon endroit.
+3. **Le capteur contre le moteur physique**, rayon par rayon, à plusieurs caps : l'écart doit
+   rester de l'ordre du centimètre, et le monde ne doit pas bouger quand le drone tourne.
+4. **L'exactitude** : on rejoue une trajectoire connue avec des détections connues, et on
+   compare la carte reconstruite à la vérité — bonnes cases occupées, aucun obstacle inventé
+   dans les allées, tags au bon endroit.
+5. **Les itinéraires** : calculés sur la carte découverte, ils ne traversent jamais une case
+   connue comme occupée.
 
 **Ce qu'on implémente.** `swarm_qr/mapping.py` : la grille et ses canaux (occupation,
-couverture, tags vus-non-lus avec leur orientation, tags lus, coéquipiers, **et le canal
-sémantique — qui restera vide jusqu'à l'étape 7**), les réservations avec expiration, la liste
-noire des cibles abandonnées, et le rendu **vue de dessus** en couleurs.
+couverture, coéquipiers, **et le canal sémantique — qui restera vide jusqu'à l'étape 7**),
+les tags vus-non-lus et lus **avec leur position exacte** — un cube de 25 cm jetterait la
+précision au centimètre mesurée à l'étape 2 —, les réservations avec expiration, la liste noire
+des cibles abandonnées, le calcul d'itinéraire, et le rendu **vue de dessus** en couleurs.
+
+Deux faits de l'environnement à respecter. **Chaque carton porte le même code sur ses deux
+faces** : deux lectures du même code à deux endroits distants de l'épaisseur d'un carton sont
+deux panneaux, pas un seul ; les fusionner placerait le code au milieu du carton. Et **les
+étiquettes n'ont pas toutes la même taille**, parce qu'elles suivent la taille des cartons :
+la distance déduite de la taille supposée d'un code est fausse du même rapport. La position
+d'un code vient donc du capteur de distance, le long de la direction que l'image donne ; la
+taille ne sert qu'en repli. C'est aussi ce qu'un vrai système ferait.
 
 **Tests, et ce qu'ils prouvent.** Le test d'exactitude prouve que la mémoire du système est
 juste. Un second test simule la mort d'un drone et vérifie que ses réservations expirent et que
 ses cibles redeviennent libres : cela prouve que **le mécanisme central de coordination
-fonctionne**, avant même qu'on s'en serve.
+fonctionne**, avant même qu'on s'en serve. Un troisième vérifie qu'un itinéraire contourne un
+mur connu et qu'il traverse l'inconnu — sans quoi un drone ne sortirait jamais de sa zone
+explorée ; c'est l'étape 5 qui, par ses frontières, l'y fera entrer par petits pas.
 
 **L'intégration.** Perception + carte sur une mission à un seul drone : la vue de dessus se
-remplit correctement pendant le vol.
+remplit correctement pendant le vol, et le drone rejoint ses cibles par des itinéraires calculés
+sur ce qu'il a découvert, sans le plan de l'entrepôt.
 
-**Porte de validation.** Les trois mesures passent, et **la vue de dessus est lisible par un
+**Porte de validation.** Les cinq mesures passent, et **la vue de dessus est lisible par un
 humain** : vous devez pouvoir suivre la mission à l'œil, sans explication.
 
-**Si ça échoue.** Tags mal placés : le problème est presque toujours la précision 3D de
-l'étape 2. Trous dans la couverture : vérifier le calcul du champ de vue des caméras.
+**Si ça échoue.** Capteur en désaccord avec la physique : convention de repère ou d'angle du
+capteur, à corriger avant tout. Tags mal placés : la précision 3D de l'étape 2, ou les deux
+faces confondues. Trous dans la couverture : vérifier le calcul du champ de vue des caméras.
 
 ---
 
@@ -873,7 +903,7 @@ Les étapes sont listées dans **l'ordre où elles se font**.
 | — | 1 | L'environnement | Reproductible, physique honnête, images nettes |
 | — | 2 | Le décodeur | **L'enveloppe de lecture est mesurée** |
 | 1 | 3 | Le contrôleur | **Le drone tient la pose**, et trois drones volent ensemble |
-| 2 | 4 | La carte | Carte exacte, réservations qui expirent, vue lisible |
+| 2 | 4 | La carte | Capteur vérifié contre la physique, carte exacte, itinéraires sûrs, réservations qui expirent, vue lisible |
 | 3 | 7 | L'œil appris | Portée gagnée, peu de fausses détections |
 | 4 | 5 + 8 | Cibles, décision et guide | **Première mission complète à 3 drones** |
 | 5 | 6 | Les références | Le tableau balayage / système / oracle |

@@ -108,6 +108,7 @@ class Controleur:
         self.phase = Phase.REPOS
         self.consigne: Consigne | None = None
         self.bilan: Bilan | None = None
+        self._tenue: Consigne | None = None          # au repos, aucune pose à tenir
 
     # --- affectation ---
 
