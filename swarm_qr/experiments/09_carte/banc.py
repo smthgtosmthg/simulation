@@ -33,6 +33,8 @@ parser.add_argument("--mode", choices=("verifie", "vol"), default="verifie")
 parser.add_argument("--seed", type=int, default=9033)
 parser.add_argument("--etages", default="0,1,2", help="étagères patrouillées, ex. 0 ou 0,1,2")
 parser.add_argument("--allees", type=int, default=0, help="nombre d'allées, 0 = toutes")
+parser.add_argument("--detecteur", default="", help="'auto' = poids retenus à l'étape 7, ou un .pt ; vide = repérage classique")
+parser.add_argument("--sortie", default="", help="dossier des sorties (défaut : ce dossier)")
 args, _ = parser.parse_known_args()
 
 from isaacsim import SimulationApp  # noqa: E402
@@ -276,6 +278,23 @@ def distance_par_le_lidar(origine, direction, nuage):
     return float(t[k])
 
 
+def point_vise(pixel, K, cam_pos, cam_R, nuage, carte, portee: float = mapping.PORTEE_CARTE):
+    """Point du monde visé par un pixel. C'est tout ce qu'un cadre de l'œil appris donne : une
+    direction, sans les quatre coins d'un code. De près, la distance vient du rayon lidar qui
+    passe au plus près de la direction ; de loin, les rayons sont trop espacés (28 cm à 8 m) et
+    c'est la carte, qui accumule les tours, qui donne le premier obstacle sur la direction."""
+    rayon_cam = np.array([(pixel[0] - K[0, 2]) / K[0, 0], (pixel[1] - K[1, 2]) / K[1, 1], 1.0])
+    rayon = cam_R @ _isaac(rayon_cam / np.linalg.norm(rayon_cam))
+    d = distance_par_le_lidar(cam_pos, rayon, nuage)
+    if d is not None and d <= mapping.LIRE_MAX:
+        pass
+    else:
+        d = carte.premier_obstacle(cam_pos, rayon, portee)
+    if d is None or not (0.3 < d <= portee):
+        return None
+    return cam_pos + rayon * d
+
+
 def position_monde(coins, K, cam_pos, cam_R, nuage):
     """Position et normale en monde d'un motif vu dans l'image, ou None hors de l'enveloppe.
 
@@ -317,14 +336,15 @@ def poses_cameras(scene, origine, dirs, portees):
 
 
 class Patrouille:
-    def __init__(self, scene, layout, K):
+    def __init__(self, scene, layout, K, detecteur=None):
         self.scene, self.layout, self.K = scene, layout, K
+        self.detecteur = detecteur
         self.carte = mapping.Carte()
         self.poses = deque(maxlen=2)
         self.trajectoire = []
         self.compte = {"images": 0, "lectures": 0, "reperages": 0, "lectures_placees": 0,
-                       "replanifications": 0}
-        self.couts = {"lidar": [], "couverture": [], "decodage": []}
+                       "cartons_reperes": 0, "replanifications": 0}
+        self.couts = {"lidar": [], "couverture": [], "decodage": [], "detecteur": []}
 
     def observe(self, t: float) -> None:
         """Une observation complète depuis la pose courante : lidar, lectures, couverture."""
@@ -356,19 +376,39 @@ class Patrouille:
                 if pn is not None:
                     carte.integre_lecture(code, pn[0], pn[1], t=t)
                     self.compte["lectures_placees"] += 1
-            for quad in P.repere_motifs(bgr):
-                self.compte["reperages"] += 1
-                pn = position_monde(quad, self.K, cam_pos, cam_R, nuage)
-                if pn is not None:
-                    carte.integre_reperage(pn[0], pn[1], t=t)
+            if self.detecteur is None:
+                for quad in P.repere_motifs(bgr):
+                    self.compte["reperages"] += 1
+                    pn = position_monde(quad, self.K, cam_pos, cam_R, nuage)
+                    if pn is not None:
+                        carte.integre_reperage(pn[0], pn[1], t=t)
             self.couts["decodage"].append((time.perf_counter() - t0) * 1000)
+            if self.detecteur is not None:
+                # l'œil appris remplace le repérage classique : un QR repéré devient une
+                # piste, un carton repéré marque le canal sémantique, tous deux placés par
+                # le lidar le long de la direction du cadre
+                t0 = time.perf_counter()
+                for d in self.detecteur.detecte(bgr):
+                    pos = point_vise(d.centre, self.K, cam_pos, cam_R, nuage, carte)
+                    if pos is None:
+                        continue
+                    if d.classe == "qr":
+                        self.compte["reperages"] += 1
+                        carte.integre_reperage(pos, None, t=t)
+                    else:
+                        self.compte["cartons_reperes"] += carte.marque(pos)
+                self.couts["detecteur"].append((time.perf_counter() - t0) * 1000)
             t0 = time.perf_counter()
             carte.integre_couverture(cam_pos, cam_R @ np.array([1.0, 0.0, 0.0]), t=t)
             self.couts["couverture"].append((time.perf_counter() - t0) * 1000)
             self.compte["images"] += 1
 
 
+SORTIE = Path(args.sortie) if args.sortie else HERE
+
+
 def mode_vol() -> None:
+    SORTIE.mkdir(parents=True, exist_ok=True)
     etages = [int(e) for e in args.etages.split(",")]
     layout = make_layout(args.seed)
     scene = scene_mod.build(layout, with_sitl=True, n_drones=1)
@@ -387,7 +427,13 @@ def mode_vol() -> None:
         raise RuntimeError("le drone n'a pas decolle")
     ctrl = control.Controleur(pilot, lambda: scene.position(0), lambda: scene.yaw(0),
                               lambda: scene.velocity(0), v_approche=V_PATROUILLE)
-    pat = Patrouille(scene, layout, K)
+    detecteur = None
+    if args.detecteur:
+        from swarm_qr.detecteur import Detecteur
+
+        detecteur = Detecteur() if args.detecteur == "auto" else Detecteur(args.detecteur)
+        print(f"oeil appris : {detecteur.imgsz} px, seuil {detecteur.conf}")
+    pat = Patrouille(scene, layout, K, detecteur)
 
     def pas(t_max: float | None = None) -> None:
         """Un pas de mission : commande, physique, rendu, observation."""
@@ -466,13 +512,14 @@ def mode_vol() -> None:
               f"{r['pistes']:3d} pistes")
         bilans.append({**leg, "transit": transit, "traversee": traversee})
         vues.append(mapping.vue_de_dessus(pat.carte, trajectoire=[p[1:] for p in pat.trajectoire]))
-        cv2.imwrite(str(HERE / f"vue_{k:02d}.png"), vues[-1])
+        cv2.imwrite(str(SORTIE / f"vue_{k:02d}.png"), vues[-1])
 
     pilot.hold(0.0)
     clock.pump(0.5)
-    pat.carte.sauve(HERE / "carte")
-    (HERE / "vol.json").write_text(json.dumps({
+    pat.carte.sauve(SORTIE / "carte")
+    (SORTIE / "vol.json").write_text(json.dumps({
         "seed": args.seed, "etages": etages, "t_sim_s": round(clock.t, 1),
+        "detecteur": args.detecteur,
         "compte": pat.compte,
         "ms": {k: round(float(np.median(v)), 1) for k, v in pat.couts.items() if v},
         "allers": bilans, "trajectoire": pat.trajectoire,
@@ -481,10 +528,10 @@ def mode_vol() -> None:
                    for t in scene.tags],
         "racks": [{"prim": r.prim, "x": r.x_bounds, "y": r.y_bounds} for r in layout.racks],
     }, indent=1))
-    cv2.imwrite(str(HERE / "carte_finale.png"),
+    cv2.imwrite(str(SORTIE / "carte_finale.png"),
                 mapping.vue_de_dessus(pat.carte, trajectoire=[p[1:] for p in pat.trajectoire]))
     if len(vues) > 1:
-        _img.video(vues, HERE / "carte_qui_se_remplit.mp4", fps=2)
+        _img.video(vues, SORTIE / "carte_qui_se_remplit.mp4", fps=2)
     print("\ncarte, trajectoire et verite enregistrees ; le jugement se fait par analyse.py")
 
 

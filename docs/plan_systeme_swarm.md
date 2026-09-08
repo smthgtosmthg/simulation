@@ -686,6 +686,35 @@ détecteur, quitte à repérer un peu moins loin.
 **Cohérence.** Le canal sémantique de la carte, laissé vide à l'étape 4, est maintenant rempli.
 Le guide de l'étape 8 pourra s'en servir.
 
+**Ce qui a été fait (2026-09-07) — `experiments/10_detecteur/`, fiche `RESULTATS.md`.**
+- *Les exemples se fabriquent seuls, et sont vérifiés.* Projection de la vérité dans l'image,
+  puis un rayon du moteur physique par point de surface confirme que rien ne s'interpose ; le
+  cadre entoure les points visibles. Huit entrepôts : six d'entraînement (graines 0 à 5), deux
+  scellés (9033, 9019) jamais vus à l'apprentissage ; 3 800 images rendues par une caméra libre
+  à des poses au hasard, plus les 3 577 images de l'étape 2 ré-annotées et gardées comme juge.
+  Contrôle : le centre du panneau visé, projeté par la fonction validée à l'étape 2, tombe dans
+  notre cadre à 99,4 % et 100 %.
+- *Deux classes, pas trois.* QR et carton. Les zones (allée, rack, mur) ne sont pas des objets
+  qu'un cadre délimite : elles viennent de la géométrie de la carte, le repli prévu ci-dessus.
+- *Le plus petit réseau suffit.* YOLO11 nano, 2,6 M de paramètres, 1024 px, demi-précision :
+  panneau visé repéré à 98 % entre 6 et 8 m sur les mêmes images où le classique tombe à 47 % ;
+  98 % des QR visibles trouvés jusqu'à 12 m sur les entrepôts scellés ; 0,7 % d'images sans QR
+  avec un QR inventé contre 27 % ; 12 ms par image. Le seuil de mission (0,5) est le plus bas
+  qui garde les fausses alertes sous 1 %.
+- *Branché sur la carte.* `swarm_qr/detecteur.py` ; dans la patrouille (`--detecteur auto`), un
+  QR repéré devient une piste placée par le lidar le long de la direction du cadre, un carton
+  repéré marque le canal sémantique (`Carte.marque`). Le repérage classique reste le repli
+  sans détecteur.
+- *En vol.* Patrouille d'une étagère et deux allées avec le réseau branché : 1 piste sur 143
+  hors d'un rack, 99 % à moins de 2 m d'un vrai panneau, 0 point de trajectoire dans une
+  structure de rack ; 33 ms par observation pour le détecteur.
+- *Deux bugs de la scène trouvés par les rayons.* Les cartons non retenus gardaient leur
+  collider (le lidar de l'étape 4 voyait des cartons invisibles ; corrigé, prim désactivé) ; le
+  collider d'un carton est plus petit que sa forme visible (visibilité jugée par l'identité de
+  l'objet touché, pas par la distance). Et un troisième, mesuré en vol : les racks de
+  l'entrepôt n'ont aucune structure solide sur 0,70 m au sud et 0,77 m au nord de leur
+  emprise ; l'arbitre juge maintenant la structure, pas le rectangle.
+
 ---
 
 ## Étape 8 — Le guide vision-langage
@@ -904,7 +933,7 @@ Les étapes sont listées dans **l'ordre où elles se font**.
 | — | 2 | Le décodeur | **L'enveloppe de lecture est mesurée** |
 | 1 | 3 | Le contrôleur | **Le drone tient la pose**, et trois drones volent ensemble |
 | 2 | 4 | La carte | Capteur vérifié contre la physique, carte exacte, itinéraires sûrs, réservations qui expirent, vue lisible |
-| 3 | 7 | L'œil appris | Portée gagnée, peu de fausses détections |
+| 3 | 7 | L'œil appris | **FAIT** : portée 8 m contre 4 m, 0,7 % de fausses alertes contre 27 % |
 | 4 | 5 + 8 | Cibles, décision et guide | **Première mission complète à 3 drones** |
 | 5 | 6 | Les références | Le tableau balayage / système / oracle |
 | 6 | 9 | L'évaluation | Le tableau complet des scénarios |

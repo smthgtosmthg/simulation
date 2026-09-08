@@ -1,0 +1,136 @@
+{
+ "vol": {
+  "seed": 9033,
+  "etages": [
+   1
+  ],
+  "t_sim_s": 212.8,
+  "detecteur": "auto",
+  "compte": {
+   "images": 1634,
+   "lectures": 1913,
+   "reperages": 10138,
+   "lectures_placees": 1859,
+   "cartons_reperes": 10890,
+   "replanifications": 3
+  },
+  "ms": {
+   "lidar": 43.8,
+   "couverture": 2.5,
+   "decodage": 1.9,
+   "detecteur": 33.1
+  }
+ },
+ "verification": {},
+ "carte": {
+  "cases": 258048,
+  "occupees": 11456,
+  "libres": 199270,
+  "inconnues": 47322,
+  "couvertes": 64022,
+  "part_connue": 0.8166,
+  "codes_lus": 45,
+  "faces_lues": 58,
+  "pistes": 143,
+  "reservations": 0,
+  "octets": 1548288
+ },
+ "faux_obstacles": {
+  "cases": 10375,
+  "part": 0.0044
+ },
+ "par_etagere": {
+  "etagere_0": {
+   "panneaux": 70,
+   "obstacle": 62,
+   "couvert": 23,
+   "lu": 16,
+   "part_obstacle": 0.8857,
+   "part_couvert": 0.3286,
+   "part_lu": 0.2286
+  },
+  "etagere_1": {
+   "panneaux": 62,
+   "obstacle": 39,
+   "couvert": 41,
+   "lu": 41,
+   "part_obstacle": 0.629,
+   "part_couvert": 0.6613,
+   "part_lu": 0.6613
+  },
+  "etagere_2": {
+   "panneaux": 96,
+   "obstacle": 80,
+   "couvert": 2,
+   "lu": 1,
+   "part_obstacle": 0.8333,
+   "part_couvert": 0.0208,
+   "part_lu": 0.0104
+  }
+ },
+ "panneaux": {
+  "codes_vrais": 114,
+  "panneaux_vrais": 228,
+  "tailles_d_etiquette_m": [
+   0.12,
+   0.13,
+   0.21,
+   0.4
+  ],
+  "codes_lus": 45,
+  "faces_lues": 58,
+  "codes_inventes": [],
+  "part_codes_lus": 0.3947,
+  "err_cm": 1.0,
+  "err_p90_cm": 1.4,
+  "err_max_cm": 4.8,
+  "err_cm_par_taille": {
+   "0.4": 1.0
+  },
+  "faces_confirmees": 58,
+  "err_max_cm_confirmees": 4.8
+ },
+ "lisibilite": {
+  "panneaux_couverts": 66,
+  "lus_parmi_couverts": 57,
+  "part_lus_si_couvert": 0.8636,
+  "panneaux_non_couverts": 162,
+  "lus_parmi_non_couverts": 1,
+  "part_lus_si_non_couvert": 0.0062
+ },
+ "pistes": {
+  "total": 143,
+  "sur_un_vrai_panneau": 73,
+  "part_fausses": 0.4895,
+  "part_a_moins_de_1_m": 0.7692,
+  "part_a_moins_de_2_m": 0.993,
+  "hors_de_toute_emprise": 1
+ },
+ "semantique": {
+  "cubes_carton": 826,
+  "sur_un_vrai_carton": 561,
+  "part_fausses": 0.3208
+ },
+ "securite": {
+  "points_de_trajectoire": 819,
+  "points_dans_un_rack": 0,
+  "points_dans_le_bout_vide_d_un_rack": 4,
+  "distance_min_a_un_rack_m": 0.55,
+  "allers": 4,
+  "debuts_inaccessibles": 0,
+  "transits_atteints": 4,
+  "traversees_atteintes": 4,
+  "abandons": [],
+  "replanifications": 3,
+  "points_de_passage_median": 0.0,
+  "t_transit_median_s": 6.9,
+  "t_traversee_median_s": 28.3
+ },
+ "chemins": {
+  "essais": 12,
+  "trouves": 12,
+  "hors_de_toute_emprise": 12,
+  "coupent_une_emprise_par_l_inconnu_ou_le_libre": 0,
+  "passent_sur_un_obstacle_connu": 0
+ }
+}

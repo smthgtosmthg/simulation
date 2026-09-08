@@ -146,12 +146,21 @@
  "pistes": {
   "total": 182,
   "sur_un_vrai_panneau": 12,
-  "part_fausses": 0.9341
+  "part_fausses": 0.9341,
+  "part_a_moins_de_1_m": 0.467,
+  "part_a_moins_de_2_m": 0.8626,
+  "hors_de_toute_emprise": 6
+ },
+ "semantique": {
+  "cubes_carton": 0,
+  "sur_un_vrai_carton": 0,
+  "part_fausses": null
  },
  "securite": {
   "points_de_trajectoire": 2738,
   "points_dans_un_rack": 0,
-  "distance_min_a_un_rack_m": 0.05,
+  "points_dans_le_bout_vide_d_un_rack": 0,
+  "distance_min_a_un_rack_m": 0.66,
   "allers": 15,
   "debuts_inaccessibles": 0,
   "transits_atteints": 15,
@@ -165,8 +174,8 @@
  "chemins": {
   "essais": 12,
   "trouves": 12,
-  "hors_de_toute_emprise": 8,
-  "coupent_une_emprise_par_l_inconnu_ou_le_libre": 4,
+  "hors_de_toute_emprise": 10,
+  "coupent_une_emprise_par_l_inconnu_ou_le_libre": 2,
   "passent_sur_un_obstacle_connu": 0
  }
 }

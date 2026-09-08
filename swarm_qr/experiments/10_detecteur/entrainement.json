@@ -1,0 +1,56 @@
+[
+  {
+    "variante": "n1024",
+    "modele": "yolo11n.pt",
+    "imgsz": 1024,
+    "batch": 8,
+    "epochs": 50,
+    "poids": "/home/djihene_guitoun/simulation_mc02/swarm_qr/experiments/10_detecteur/runs/n1024/weights/best.pt",
+    "duree_min": 48.0,
+    "parametres": 2582542,
+    "map50": 0.9863,
+    "map5095": 0.8593,
+    "par_classe": {
+      "qr": {
+        "map50": 0.9934,
+        "map5095": 0.9144,
+        "rappel": 0.9768,
+        "precision": 0.9755
+      },
+      "carton": {
+        "map50": 0.9793,
+        "map5095": 0.8041,
+        "rappel": 0.9246,
+        "precision": 0.9525
+      }
+    },
+    "ms_inference": 3.26
+  },
+  {
+    "variante": "n640",
+    "modele": "yolo11n.pt",
+    "imgsz": 640,
+    "batch": 16,
+    "epochs": 50,
+    "poids": "/home/djihene_guitoun/simulation_mc02/swarm_qr/experiments/10_detecteur/runs/n640/weights/best.pt",
+    "duree_min": 21.4,
+    "parametres": 2582542,
+    "map50": 0.9736,
+    "map5095": 0.8142,
+    "par_classe": {
+      "qr": {
+        "map50": 0.9842,
+        "map5095": 0.8676,
+        "rappel": 0.9469,
+        "precision": 0.9731
+      },
+      "carton": {
+        "map50": 0.963,
+        "map5095": 0.7607,
+        "rappel": 0.9112,
+        "precision": 0.9318
+      }
+    },
+    "ms_inference": 1.49
+  }
+]

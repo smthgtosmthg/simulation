@@ -47,11 +47,13 @@ LIRE_MIN = 1.5
 LIRE_MAX = 4.0
 
 RAYON_DRONE = 0.6          # hélices (0,34 m) plus l'oscillation de tenue mesurée à l'étape 2 (0,21 m)
+EPAISSEUR = 0.85           # tranche d'altitude du planificateur : le rayon plus l'oscillation verticale (0,25 m)
 FUSION = 0.45              # deux détections à moins de ça sont le même panneau
 COUT_INCONNU = 3.0         # traverser une case inconnue coûte trois fois une case libre
 RESERVATION_S = 45.0       # une réservation non renouvelée expire
 SILENCE_S = 5.0            # un drone muet depuis plus longtemps libère ses cibles
 LISTE_NOIRE_S = 120.0
+SEM_CARTON = 1               # canal sémantique : un carton repéré par l'œil appris (étape 7)
 
 INCONNU, LIBRE, OCCUPE = 0, 1, 2
 
@@ -235,6 +237,32 @@ class Carte:
 
     # ------------------------------------------------------------ panneaux
 
+    def premier_obstacle(self, origine, direction, portee: float = PORTEE_CARTE,
+                         pas: float = 0.1) -> float | None:
+        """Distance, le long d'un rayon, du premier cube connu occupé ; None s'il n'y en a pas
+        avant `portee`. Sert à placer un motif repéré de loin : la carte accumule les tours de
+        lidar, là où un rayon isolé, à 8 m, passe à 28 cm de son voisin et peut tomber sur le
+        carton d'à côté ou, par un trou, sur le fond du rack."""
+        o = np.asarray(origine, dtype=float)
+        d = np.asarray(direction, dtype=float)
+        d = d / max(np.linalg.norm(d), 1e-9)
+        ts = np.arange(pas, portee + pas / 2, pas)
+        pts = o + ts[:, None] * d
+        idx = self.indice(pts)
+        ok = self.dedans(idx)
+        occ = np.zeros(len(ts), dtype=bool)
+        occ[ok] = self.occupation[tuple(idx[ok].T)] > SEUIL_OCCUPE
+        k = np.flatnonzero(occ)
+        return float(ts[k[0]]) if len(k) else None
+
+    def marque(self, points, valeur: int = SEM_CARTON) -> int:
+        """Étiquette sémantique sur les cubes de `points` ; rend le nombre de cubes marqués."""
+        idx = self.indice(points)
+        ok = self.dedans(idx)
+        if ok.any():
+            self.semantique[tuple(idx[ok].T)] = valeur
+        return int(ok.sum())
+
     @property
     def codes(self) -> set[str]:
         """Les cartons dont on connaît le contenu : c'est la mesure de la mission."""
@@ -393,7 +421,7 @@ class Carte:
         return cout
 
     def chemin(self, depart, arrivee, altitude: float | None = None,
-               epaisseur: float = 0.6) -> list[np.ndarray] | None:
+               epaisseur: float = EPAISSEUR) -> list[np.ndarray] | None:
         """Points de passage de `depart` à `arrivee`, à altitude constante. Liste vide si la
         ligne droite passe par du libre connu ; None si aucun chemin n'existe."""
         a = np.asarray(depart, dtype=float)
@@ -419,7 +447,7 @@ class Carte:
         lisse = self._elague(brut, cout)
         return [np.array([*self.centre([i, j, 0])[0][:2], z]) for i, j in lisse[1:-1]]
 
-    def segment_libre(self, a, b, altitude: float | None = None, epaisseur: float = 0.6) -> bool:
+    def segment_libre(self, a, b, altitude: float | None = None, epaisseur: float = EPAISSEUR) -> bool:
         """Un segment déjà planifié passe-t-il encore ? Faux dès qu'un obstacle connu élargi le
         coupe : c'est le signal pour recalculer le chemin pendant le transit."""
         a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)

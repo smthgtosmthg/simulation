@@ -1,0 +1,9 @@
+{
+  "variante": "n1024",
+  "imgsz": 1024,
+  "conf": 0.5,
+  "classes": [
+    "qr",
+    "carton"
+  ]
+}

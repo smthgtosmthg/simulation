@@ -182,12 +182,14 @@ def _find_boxes(stage) -> list[str]:
 
 
 def _hide(stage, paths) -> None:
-    from pxr import UsdGeom
-
+    """Désactive les cartons non retenus. Les rendre seulement invisibles laissait leur
+    collider en place : le lidar et les rayons de contrôle butaient sur des cartons que la
+    caméra ne voyait pas (mesuré à l'étape 7 : neuf cartons cachés sur neuf arrêtaient les
+    rayons). Un prim désactivé sort de la composition : ni rendu, ni physique."""
     for p in paths:
         prim = stage.GetPrimAtPath(p)
         if prim and prim.IsValid():
-            UsdGeom.Imageable(prim).MakeInvisible()
+            prim.SetActive(False)
 
 
 def _drone_cameras(drone_prim: str) -> dict[str, Camera]:

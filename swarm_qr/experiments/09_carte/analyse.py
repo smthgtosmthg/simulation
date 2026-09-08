@@ -32,11 +32,24 @@ BANDE_VOL = (0.6, 5.5)
 HAUTEUR_PANNEAU = 0.225
 
 
-def dans_un_rack(points, layout, marge: float = 0.0) -> np.ndarray:
+# Les racks de l'entrepôt n'ont aucune structure solide aux deux bouts de leur emprise : ni
+# montant, ni traverse, ni planche sur 0,70 m au sud et 0,77 m au nord — seulement un panneau
+# de signalisation en haut et un pare-chocs bas. Mesuré par rayons physiques sur les trois racks
+# (étape 7). L'arbitre juge la structure, pas le rectangle du plan.
+BOUT_VIDE_SUD = 0.70
+BOUT_VIDE_NORD = 0.77
+
+
+def emprise_solide(r):
+    (x0, x1), (y0, y1) = r.x_bounds, r.y_bounds
+    return (x0, x1), (y0 + BOUT_VIDE_SUD, y1 - BOUT_VIDE_NORD)
+
+
+def dans_un_rack(points, layout, marge: float = 0.0, solide: bool = True) -> np.ndarray:
     p = np.atleast_2d(np.asarray(points, float))
     out = np.zeros(len(p), dtype=bool)
     for r in layout.racks:
-        (x0, x1), (y0, y1) = r.x_bounds, r.y_bounds
+        (x0, x1), (y0, y1) = emprise_solide(r) if solide else (r.x_bounds, r.y_bounds)
         out |= ((p[:, 0] > x0 - marge) & (p[:, 0] < x1 + marge)
                 & (p[:, 1] > y0 - marge) & (p[:, 1] < y1 + marge))
     return out
@@ -145,20 +158,44 @@ def promesse_de_lisibilite(carte, verite) -> dict:
             "part_lus_si_non_couvert": round(non_couverts_lus / max(non_couverts, 1), 4)}
 
 
-def pistes(carte, verite) -> dict:
+def semantique(carte, verite) -> dict:
+    """Le canal sémantique rempli par l'œil appris (étape 7) : les cubes marqués « carton »
+    sont-ils sur de vrais cartons ? Un vrai carton porte un panneau sur chacune de ses deux
+    faces ; un cube à moins de 60 cm d'un panneau est sur un carton ou contre lui."""
+    idx = np.argwhere(carte.semantique == mapping.SEM_CARTON)
+    if not len(idx):
+        return {"cubes_carton": 0, "sur_un_vrai_carton": 0, "part_fausses": None}
+    centres = carte.centre(idx)
     vrais = np.array([t["position"] for t in verite], float)
-    proches = sum(1 for q in carte.pistes if np.linalg.norm(vrais - q.position, axis=1).min() < 0.5)
-    return {"total": len(carte.pistes), "sur_un_vrai_panneau": proches,
-            "part_fausses": round(1.0 - proches / max(len(carte.pistes), 1), 4)}
+    d = np.array([np.linalg.norm(vrais - c, axis=1).min() for c in centres])
+    return {"cubes_carton": int(len(idx)), "sur_un_vrai_carton": int((d < 0.6).sum()),
+            "part_fausses": round(float((d >= 0.6).mean()), 4)}
+
+
+def pistes(carte, verite, layout=None) -> dict:
+    """Les motifs repérés non lus : à quelle distance du vrai panneau le plus proche ? Une piste
+    à un mètre d'un panneau, dans un rack, est un vrai carton placé grossièrement ; une piste
+    hors de toute emprise de rack est un fantôme."""
+    vrais = np.array([t["position"] for t in verite], float)
+    d = np.array([np.linalg.norm(vrais - q.position, axis=1).min() for q in carte.pistes])
+    n = max(len(d), 1)
+    hors = int((~dans_un_rack(np.array([q.position for q in carte.pistes]), layout, marge=0.3)).sum()) \
+        if layout is not None and len(d) else 0
+    return {"total": len(carte.pistes), "sur_un_vrai_panneau": int((d < 0.5).sum()),
+            "part_fausses": round(float((d >= 0.5).mean()) if len(d) else 0.0, 4),
+            "part_a_moins_de_1_m": round(float((d < 1.0).mean()) if len(d) else 0.0, 4),
+            "part_a_moins_de_2_m": round(float((d < 2.0).mean()) if len(d) else 0.0, 4),
+            "hors_de_toute_emprise": hors}
 
 
 def securite_du_vol(vol, layout) -> dict:
     """Le drone n'a connu que sa carte. Est-il passé sans entrer dans un rack ?"""
     traj = np.array([t[1:] for t in vol["trajectoire"]], float)
     dedans = dans_un_rack(traj, layout)
+    bout_vide = dans_un_rack(traj, layout, solide=False) & ~dedans
     dist = np.full(len(traj), np.inf)
     for r in layout.racks:
-        (x0, x1), (y0, y1) = r.x_bounds, r.y_bounds
+        (x0, x1), (y0, y1) = emprise_solide(r)
         dx = np.maximum(np.maximum(x0 - traj[:, 0], traj[:, 0] - x1), 0.0)
         dy = np.maximum(np.maximum(y0 - traj[:, 1], traj[:, 1] - y1), 0.0)
         dist = np.minimum(dist, np.hypot(dx, dy))
@@ -168,6 +205,7 @@ def securite_du_vol(vol, layout) -> dict:
     return {
         "points_de_trajectoire": int(len(traj)),
         "points_dans_un_rack": int(dedans.sum()),
+        "points_dans_le_bout_vide_d_un_rack": int(bout_vide.sum()),
         "distance_min_a_un_rack_m": round(float(dist.min()), 2),
         "allers": len(allers),
         "debuts_inaccessibles": sum(1 for a in allers if a["transit"] is None),
@@ -236,6 +274,12 @@ def figure_comparaison(carte, vol, layout, sortie: Path) -> None:
         cv2.rectangle(img, px([x0, y0, 0]), px([x1, y1, 0]), (0, 0, 255), 2)
     for t in vol["verite"]:
         cv2.circle(img, px(t["position"]), 2, (0, 0, 255), -1)
+    # les codes lus sont à un centimètre de la vérité : dessinés avant elle, le rouge les
+    # recouvre et la carte paraît sans vert. On les repasse par-dessus, ainsi que les pistes.
+    for q in carte.pistes:
+        cv2.circle(img, px(q.position), 2, (0, 140, 255), -1)
+    for pan in carte.panneaux:
+        cv2.circle(img, px(pan.position), 3, (0, 200, 0), -1)
     cv2.putText(img, "rouge = verite (racks, panneaux) ; vert = lus ; orange = pistes ; bleu = trajet",
                 (8, img.shape[0] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (30, 30, 30), 1, cv2.LINE_AA)
     cv2.imwrite(str(sortie), img)
@@ -243,11 +287,11 @@ def figure_comparaison(carte, vol, layout, sortie: Path) -> None:
 
 # ---------------------------------------------------------------- résumé
 
-def main() -> None:
-    carte = mapping.Carte.charge(HERE / "carte")
-    vol = json.loads((HERE / "vol.json").read_text())
+def main(dossier: Path = HERE) -> None:
+    carte = mapping.Carte.charge(dossier / "carte")
+    vol = json.loads((dossier / "vol.json").read_text())
     layout = make_layout(vol["seed"])
-    verif = json.loads((HERE / "verification.json").read_text()) if (HERE / "verification.json").exists() else {}
+    verif = json.loads((dossier / "verification.json").read_text()) if (dossier / "verification.json").exists() else {}
 
     res = {
         "vol": {k: v for k, v in vol.items() if k not in ("verite", "trajectoire", "allers", "racks")},
@@ -257,14 +301,15 @@ def main() -> None:
         "par_etagere": par_etagere(carte, vol["verite"]),
         "panneaux": panneaux(carte, vol["verite"]),
         "lisibilite": promesse_de_lisibilite(carte, vol["verite"]),
-        "pistes": pistes(carte, vol["verite"]),
+        "pistes": pistes(carte, vol["verite"], layout),
+        "semantique": semantique(carte, vol["verite"]),
         "securite": securite_du_vol(vol, layout),
         "chemins": chemins_sur_la_carte(carte, layout),
     }
-    (HERE / "resultats.json").write_text(json.dumps(res, indent=1))
-    figure_comparaison(carte, vol, layout, HERE / "comparaison.png")
-    vue3d.genere(carte, vol, HERE / "carte_3d.html")
-    vue3d.image(carte, vol, HERE / "carte_3d.png")
+    (dossier / "resultats.json").write_text(json.dumps(res, indent=1))
+    figure_comparaison(carte, vol, layout, dossier / "comparaison.png")
+    vue3d.genere(carte, vol, dossier / "carte_3d.html")
+    vue3d.image(carte, vol, dossier / "carte_3d.png")
 
     c, p, f, s, li, q, ch = (res["carte"], res["panneaux"], res["faux_obstacles"], res["securite"],
                              res["lisibilite"], res["pistes"], res["chemins"])
@@ -288,9 +333,14 @@ def main() -> None:
     print(f"lisibilite : lus {li['lus_parmi_couverts']}/{li['panneaux_couverts']} = "
           f"{li['part_lus_si_couvert']:.0%} des panneaux couverts, contre "
           f"{li['part_lus_si_non_couvert']:.0%} des non couverts")
-    print(f"pistes     : {q['total']} motifs reperes non lus, {q['part_fausses']:.0%} loin de tout panneau")
+    print(f"pistes     : {q['total']} motifs reperes non lus, {q['part_fausses']:.0%} a plus de 50 cm d'un panneau, "
+          f"{q['part_a_moins_de_1_m']:.0%} a moins de 1 m, {q['part_a_moins_de_2_m']:.0%} a moins de 2 m, "
+          f"{q['hors_de_toute_emprise']} hors de toute emprise de rack")
+    sm = res["semantique"]
+    if sm["cubes_carton"]:
+        print(f"semantique : {sm['cubes_carton']} cubes marques carton, {sm['part_fausses']:.0%} loin de tout carton")
     print(f"securite   : {s['points_dans_un_rack']}/{s['points_de_trajectoire']} points de trajectoire "
-          f"dans un rack, au plus pres {s['distance_min_a_un_rack_m']} m ; transits "
+          f"dans un rack ({s['points_dans_le_bout_vide_d_un_rack']} dans un bout vide d'emprise), au plus pres {s['distance_min_a_un_rack_m']} m ; transits "
           f"{s['transits_atteints']}/{s['allers'] - s['debuts_inaccessibles']} atteints, "
           f"traversees {s['traversees_atteintes']}, abandons {s['abandons']}, "
           f"{s['debuts_inaccessibles']} debuts inaccessibles, {s['replanifications']} chemins recalcules en route")
@@ -302,4 +352,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dossier", default=str(HERE), help="dossier de la carte à juger (carte.npz, vol.json)")
+    main(Path(ap.parse_args().dossier))

@@ -18,11 +18,16 @@ env/            le socle
 perception.py   lire un QR dans une image : lecteurs, coins, position 3D
 control.py      le contrôleur : amener un drone à une pose, l'y tenir, dire s'il a réussi
 mapping.py      la carte partagée : occupation et couverture orientée, panneaux, réservations,
-                frontières, itinéraires, vue de dessus
-tests/          les tests sans simulateur (contrôleur sur un faux pilote)
+                frontières, itinéraires, vue de dessus, canal sémantique
+detecteur.py    l'œil appris : un réseau qui repère les QR et les cartons sans les lire
+tests/          les tests sans simulateur (contrôleur sur un faux pilote, carte sur un monde de boîtes)
 experiments/    un dossier par test, avec ses images et sa fiche de résultats
 assets/qr/      les images de QR générées
+assets/detecteur/  les poids retenus par le banc de l'étape 7 et leurs réglages
 ```
+
+Toute installation dans `~/isaac5_env` passe par `pip install -c ../contraintes_isaac.txt` :
+sans ce fichier, une dépendance peut remonter numpy et casser le simulateur.
 
 ## Lancer les tests de l'étape 1
 
@@ -136,3 +141,22 @@ bas** et ne se rafraîchit qu'au **rendu** ; **les étiquettes n'ont pas toutes 
 taille**, donc la distance d'un code vient du lidar et non de sa taille dans l'image ; chaque
 carton porte le même code sur ses deux faces ; une case vue à travers un rack ne rend pas
 lisible la face opposée ; et le décodeur lisait les codes-barres imprimés sur le décor.
+
+## Étape 7 — L'œil appris
+
+Un réseau YOLO11 nano qui **repère** les QR et les cartons, sans les lire, de beaucoup plus
+loin que le décodeur. Ses exemples se fabriquent sans un seul clic : la vérité de la scène est
+projetée dans l'image, et un rayon du moteur physique confirme, point par point, que l'objet
+est visible. Six entrepôts pour apprendre, deux entrepôts scellés pour juger, et les images de
+l'étape 2 comme juge commun avec le repérage classique. Détail dans
+[`10_detecteur/RESULTATS.md`](experiments/10_detecteur/RESULTATS.md).
+
+| Question posée | Réponse mesurée |
+|---|---|
+| Repère-t-il plus loin que le classique ? | oui : **98 %** des panneaux visés entre 6 et 8 m sur les mêmes images où le classique tombe à 47 % ; 98 % des QR visibles jusqu'à 12 m sur les entrepôts jamais vus |
+| Invente-t-il des objets ? | **0,7 %** des images sans QR, contre 27 % pour le classique |
+| Voit-il les cartons ? | 94 % des cartons visibles |
+| Ce que ça coûte | 2,6 M de paramètres, 63 Mo, 12 ms par image |
+| Les cadres appris sont-ils justes ? | le centre validé de l'étape 2 tombe dans notre cadre à 99,4 % et 100 % |
+| En vol, fait-il courir les drones après des fantômes ? | non : 1 piste sur 143 hors d'un rack, 99 % à moins de 2 m d'un vrai panneau ; 0 point de trajectoire dans une structure de rack |
+| Ce qu'il a révélé | les cartons cachés gardaient leur collider (corrigé) ; le collider d'un carton est plus petit que sa forme visible ; les racks n'ont aucune structure sur 0,7 m à chaque bout de leur emprise |

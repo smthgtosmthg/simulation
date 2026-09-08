@@ -157,3 +157,14 @@ la carte aller par aller.
 
 **Pour refaire.** `bash campagne.sh` enchaîne les tests, les contrôles, la patrouille et
 l'analyse ; `analyse.py` seul refait le jugement sur la carte enregistrée, sans simulateur.
+
+## Post-scriptum (étape 7, 2026-09-07)
+
+Trois choses apprises après ces mesures. **Les cartons non retenus gardaient leur collider** :
+le lidar de cette patrouille voyait des cartons que la caméra ne voyait pas, des obstacles
+fantômes à l'intérieur des racks. Corrigé à la source (le prim est désactivé). **Les racks n'ont
+aucune structure solide sur 0,70 m au sud et 0,77 m au nord de leur emprise**, mesuré par rayons
+physiques : l'arbitre compte maintenant la structure, pas le rectangle du plan. Et le lidar a
+maintenant un anneau tous les 2 degrés, le planificateur une tranche de ±0,85 m. Les chiffres
+ci-dessus ont été mesurés avant ces changements ; la patrouille complète sera refaite avec la
+décision de l'étape 5.

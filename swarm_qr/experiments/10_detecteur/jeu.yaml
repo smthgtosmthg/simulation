@@ -1,0 +1,14 @@
+path: /home/djihene_guitoun/simulation_mc02/swarm_qr/experiments/10_detecteur/jeu
+train:
+  - rendu_0/images
+  - rendu_1/images
+  - rendu_2/images
+  - rendu_3/images
+  - rendu_4/images
+  - rendu_5/images
+val:
+  - rendu_9033/images
+  - rendu_9019/images
+names:
+  0: qr
+  1: carton

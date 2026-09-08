@@ -1,0 +1,15 @@
+# Versions imposées par Isaac Sim 5.1 / Isaac Lab 2.3 / numba.
+# À utiliser pour TOUTE installation dans ~/isaac5_env :
+#   ~/isaac5_env/bin/pip install -c ~/simulation_mc02/contraintes_isaac.txt <paquet>
+#
+# Sans ce fichier, une dépendance peut remonter numpy en 2.x et casser le simulateur.
+# Arrivé le 2026-09-07 : ultralytics a tiré opencv-python 5.0, qui exige numpy>=2.
+numpy==1.26.0
+filelock==3.13.1
+opencv-python-headless==4.11.0.86
+
+# ultralytics 8.4 exige filelock>=3.16 (AsyncFileLock), incompatible avec le pin d'Isaac.
+# La branche 8.3 ne dépend pas de filelock, et tout le reste de ses dépendances est déjà
+# présent, d'où l'installation avec --no-deps :
+#   ~/isaac5_env/bin/pip install --no-deps -c contraintes_isaac.txt ultralytics==8.3.253
+ultralytics==8.3.253

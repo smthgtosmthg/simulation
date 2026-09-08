@@ -370,3 +370,21 @@ if __name__ == "__main__":
     import pytest
 
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_le_canal_semantique_se_marque_par_position():
+    c = Carte()
+    p = np.array([[-5.0, 0.0, 1.5], [-5.0, 0.0, 1.5], [999.0, 0.0, 1.5]])
+    assert c.marque(p) == 2                       # le point hors carte est ignoré
+    assert (c.semantique == M.SEM_CARTON).sum() == 1
+    assert c.semantique[tuple(c.indice(p[:1])[0])] == M.SEM_CARTON
+
+
+def test_le_premier_obstacle_sur_un_rayon_vient_de_la_carte():
+    c = _carte_avec_mur()
+    origine = np.array([-5.0, 0.0, 1.5])
+    d = c.premier_obstacle(origine, np.array([1.0, 0.0, 0.0]), portee=8.0)
+    assert d is not None
+    mur = c.centre(np.argwhere(c.occupation > M.SEUIL_OCCUPE))[:, 0].min()
+    assert abs((origine[0] + d) - mur) < 0.3               # au cube près
+    assert c.premier_obstacle(origine, np.array([-1.0, 0.0, 0.0]), portee=3.0) is None
