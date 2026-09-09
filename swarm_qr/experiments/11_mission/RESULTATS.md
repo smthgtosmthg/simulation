@@ -168,6 +168,12 @@ propre, et la panne d'un drone est absorbée sans une ligne de code qui la surve
 drones ne touchent ni les racks ni leurs coéquipiers. Et l'inventaire est lu : 96 % puis 100 %,
 avec 90 % des codes en trois minutes après le décollage.
 
+**Le vol refait sur 9019 (`autre_v2`, même code, durée de chaque cycle datée).** 5 vérifications
+sur 5, **63 codes sur 65**, aucune chute, inclinaison maximale 20°, 0 point dans un rack sur
+7 692, 2,45 m au plus près entre drones, 90 % des codes à 166 s. La durée des cycles est stable
+du début à la fin, 1,25 s en médiane, sans ralentissement. Le dérèglement du premier vol ne s'est
+donc pas reproduit : il est intermittent, et le journal daté permettra de le saisir s'il revient.
+
 **Ce que la troisième révèle, et qui reste ouvert.** Sur l'entrepôt 9019, les trois drones,
 à 5 à 12 mètres les uns des autres, passent au même moment, vers 300 secondes, d'une inclinaison
 inférieure à 18° à des oscillations d'attitude de 40 à 55°, et tombent cent secondes plus tard.

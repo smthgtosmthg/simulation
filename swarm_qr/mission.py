@@ -124,9 +124,15 @@ def zones_candidates(cibles, n_max: int = 6, taille: float = 3.0) -> list[dict]:
     zones = []
     for cle, cs in groupes.items():
         centre = np.mean([c.origine[:2] for c in cs], axis=0)
+        cotes = [c.cote for c in cs if c.genre != "explorer"]
         zones.append({"centre": [round(float(v), 2) for v in centre], "rayon": taille * 0.75,
                       "utilite": round(float(sum(c.utilite for c in cs)), 1), "cibles": len(cs),
-                      "genres": sorted({c.genre for c in cs})})
+                      "genres": sorted({c.genre for c in cs}),
+                      "n_lire": sum(1 for c in cs if c.genre == "lire"),
+                      "n_couvrir": sum(1 for c in cs if c.genre == "couvrir"),
+                      "n_couvrir_cartons": sum(1 for c in cs if c.genre == "couvrir" and c.utilite > planning.UTILITE_SURFACE * planning.SURFACE_MIN * 2),
+                      "n_explorer": sum(1 for c in cs if c.genre == "explorer"),
+                      "cote": planning.NOMS_COTES[max(set(cotes), key=cotes.count)] if cotes else None})
     zones.sort(key=lambda z: -z["utilite"])
     for k, z in enumerate(zones[:n_max]):
         z["numero"] = k + 1

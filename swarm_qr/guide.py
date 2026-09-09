@@ -31,8 +31,42 @@ CONTEXTE = (
     "medium grey is unknown, orange dots are boxes seen but not read yet, and the red numbered "
     "circles are the candidate zones. "
 )
-QUESTION_ZONE = CONTEXTE + "Which zone number should the drone go to next to read the most unread boxes? Answer with the number only."
-QUESTION_COTE = CONTEXTE + "The drone goes to zone {n}. From which side should it approach the shelf there: north, south, east or west? Answer with one word."
+QUESTION_ZONE = CONTEXTE + "{description}Which zone number should the drone go to next to read the most unread boxes? Answer with the number only."
+QUESTION_COTE = CONTEXTE + "{description}The drone goes to zone {n}. From which side should it approach the shelf there: north, south, east or west? Answer with one word."
+
+
+def decrit(zones: list[dict], position=None, codes_lus: int | None = None) -> str:
+    """Ce que la carte sait de chaque zone, en phrases : des faits, jamais la note du cerveau,
+    sinon le modèle recopierait le choix de la géométrie."""
+    lignes = []
+    for z in zones:
+        faits = []
+        if z.get("n_lire") is not None:
+            if z["n_lire"]:
+                faits.append(f"{z['n_lire']} QR code(s) spotted but not read yet")
+            if z.get("n_couvrir_cartons"):
+                faits.append(f"{z['n_couvrir_cartons']} shelf section(s) with boxes never looked at")
+            elif z.get("n_couvrir"):
+                faits.append(f"{z['n_couvrir']} surface(s) never looked at")
+            if z.get("n_explorer"):
+                faits.append("unexplored space")
+        else:
+            genres = set(z.get("genres", []))
+            if "lire" in genres:
+                faits.append("QR codes spotted but not read yet")
+            if "couvrir" in genres:
+                faits.append("surfaces never looked at")
+            if "explorer" in genres:
+                faits.append("unexplored space")
+            faits.append(f"{z['cibles']} candidate target(s)")
+        if z.get("cote"):
+            faits.append(f"shelf faces looking {z['cote']}")
+        d = ""
+        if position is not None:
+            d = f", {float(np.hypot(z['centre'][0] - position[0], z['centre'][1] - position[1])):.0f} m from the drone"
+        lignes.append(f"Zone {z['numero']}: " + ", ".join(faits) + d + ".")
+    tete = f"So far {codes_lus} codes have been read. " if codes_lus is not None else ""
+    return tete + "The map says: " + " ".join(lignes) + " "
 
 
 class Guide:
@@ -91,22 +125,25 @@ class Guide:
                 return COTES[mot]
         return None
 
-    def conseille(self, image_bgr, vue_bgr, zones: list[dict], position=None) -> planning.Avis | None:
+    def conseille(self, image_bgr, vue_bgr, zones: list[dict], position=None,
+                  description: str | None = None) -> planning.Avis | None:
         """Deux questions courtes plutôt qu'une longue : un petit modèle suit mieux une consigne
-        à la fois. D'abord la zone, puis le côté d'abordage pour cette zone."""
-        numero = self.zone_dans(self.repond(image_bgr, vue_bgr, QUESTION_ZONE), zones)
+        à la fois. D'abord la zone, puis le côté d'abordage pour cette zone. `description` :
+        ce que la carte sait des zones, en phrases, en plus des deux images."""
+        desc = description or ""
+        numero = self.zone_dans(self.repond(image_bgr, vue_bgr, QUESTION_ZONE.format(description=desc)), zones)
         if numero is None:
             return None
-        texte_cote = self.repond(image_bgr, vue_bgr, QUESTION_COTE.format(n=numero))
+        texte_cote = self.repond(image_bgr, vue_bgr, QUESTION_COTE.format(description=desc, n=numero))
         cote = self.cote_dans(texte_cote)
         z = next(z for z in zones if z["numero"] == numero)
         phrase = f"zone {numero}" + (f", cote {planning.NOMS_COTES[cote]}" if cote is not None else "")
         return planning.Avis(centre=np.array([*z["centre"][:2], 0.0]), rayon=float(z["rayon"]), cote=cote,
                              phrase=phrase + f" ({self.reponses[-2][:40]!r} / {texte_cote[:40]!r})")
 
-    def demande(self, image_bgr, vue_bgr, zones, position=None) -> Future:
+    def demande(self, image_bgr, vue_bgr, zones, position=None, description: str | None = None) -> Future:
         """Le même avis, calculé en arrière-plan."""
-        return self._pool.submit(self.conseille, image_bgr.copy(), vue_bgr.copy(), zones, position)
+        return self._pool.submit(self.conseille, image_bgr.copy(), vue_bgr.copy(), zones, position, description)
 
     def bilan(self) -> dict:
         return {"modele": self.nom, "appels": len(self.latences),

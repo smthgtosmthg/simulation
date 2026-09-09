@@ -37,17 +37,20 @@ def instantanes(missions: list[Path]) -> list[dict]:
             if len(inst["zones"]) < 2 or v["zone"] is None or v["panneaux_restants"] <= 0:
                 continue
             vue = m / "instantanes" / f"{inst['k']:03d}_vue.png"
+            codes_t = journal.get("codes_par_t", [])
+            codes_lus = next((c for t, c in reversed(codes_t) if t <= inst["t"]), 0) if codes_t else None
             for d in inst["drones"]:
                 cam = m / "instantanes" / f"{inst['k']:03d}_cam{d['i']}.jpg"
                 if d["vivant"] and cam.exists() and vue.exists():
                     cas.append({"mission": m.name, "k": inst["k"], "t": inst["t"], "drone": d["i"],
+                                "position": d["position"], "codes_lus": codes_lus,
                                 "vue": str(vue), "cam": str(cam), "zones": inst["zones"], "verite": v})
     return cas
 
 
-def juge(nom: str, cas: list[dict]) -> dict:
+def juge(nom: str, cas: list[dict], description: bool = False) -> dict:
     import torch
-    from swarm_qr.guide import Guide
+    from swarm_qr.guide import Guide, decrit
 
     torch.cuda.reset_peak_memory_stats()
     t0 = time.perf_counter()
@@ -58,7 +61,8 @@ def juge(nom: str, cas: list[dict]) -> dict:
     details = []
     for c in cas:
         cam, vue = cv2.imread(c["cam"]), cv2.imread(c["vue"])
-        avis = g.conseille(cam, vue, c["zones"])
+        texte = decrit(c["zones"], c.get("position"), c.get("codes_lus")) if description else None
+        avis = g.conseille(cam, vue, c["zones"], description=texte)
         v = c["verite"]
         hasard_zone += 1.0 / len(c["zones"])
         zone = None if avis is None else int(avis.phrase.split()[1].rstrip(","))
@@ -73,7 +77,7 @@ def juge(nom: str, cas: list[dict]) -> dict:
                         "bonne_zone": v["zone"], "bon_cote": v["cote"],
                         "reponses": g.reponses[-2:] if zone is not None else g.reponses[-1:]})
     n = max(len(cas), 1)
-    return {"modele": g.nom, "cas": len(cas), "chargement_s": round(chargement, 1),
+    return {"modele": g.nom + (" + description" if description else ""), "cas": len(cas), "chargement_s": round(chargement, 1),
             "repondus": repondus, "accord_zone": round(accords_zone / n, 4),
             "hasard_zone": round(hasard_zone / n, 4),
             "accord_cote": round(accords_cote / max(cotes_repondus, 1), 4), "cotes_repondus": cotes_repondus,
@@ -102,6 +106,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--missions", nargs="+", required=True)
     ap.add_argument("--modeles", nargs="+", default=["smolvlm"])
+    ap.add_argument("--description", action="store_true", help="ajoute aux deux images ce que la carte sait des zones, en phrases")
     a = ap.parse_args()
     cas = instantanes([Path(m) for m in a.missions])
     print(f"{len(cas)} cas (instantane x drone) avec une bonne reponse connue")
@@ -109,12 +114,13 @@ def main() -> None:
     print("references :", refs)
     bilans = []
     for nom in a.modeles:
-        b = juge(nom, cas)
+        b = juge(nom, cas, a.description)
         bilans.append(b)
         print(f"{b['modele']}: zone juste {b['accord_zone']:.0%} (hasard {b['hasard_zone']:.0%}), "
               f"cote juste {b['accord_cote']:.0%} sur {b['cotes_repondus']} reponses (hasard 25 %), "
               f"{b['latence_mediane_s']} s par question, {b['memoire_gpu_mo']} Mo, repondus {b['repondus']}/{b['cas']}")
-    (HERE / "resultats.json").write_text(json.dumps({"cas": len(cas), "references": refs, "modeles": bilans}, indent=1))
+    sortie = HERE / ("resultats_description.json" if a.description else "resultats.json")
+    sortie.write_text(json.dumps({"cas": len(cas), "references": refs, "description": a.description, "modeles": bilans}, indent=1))
     print("BANC GUIDE FINI")
 
 

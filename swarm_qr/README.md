@@ -178,5 +178,5 @@ obstacles mobiles. Détail dans [`11_mission/RESULTATS.md`](experiments/11_missi
 | La mécanique à trois drones tient-elle ? | mission nominale et mission avec panne : **5 vérifications sur 5**, aucune chute, aucun point dans un rack, 2 m au plus près entre drones |
 | L'inventaire est-il lu sans plan ? | **110 puis 114 sur 114**, 90 % des codes trois minutes après le décollage |
 | La panne d'un drone ? | absorbée : sa zone reprise 20 s après, inventaire complet |
-| Sur un entrepôt jamais vu ? | 61 codes sur 65 lus, puis les trois drones se dérèglent en même temps vers 300 s : cause dans la simulation, non datée, laissée ouverte |
+| Sur un entrepôt jamais vu ? | 63 codes sur 65, 5 vérifications sur 5, aucune chute ; un premier vol avait vu les trois drones se dérégler ensemble vers 300 s, non reproduit, journal daté en place |
 | Ce que huit missions ont appris | neuf règles, chacune née d'un vol qui l'a rendue nécessaire, listées dans le bilan |

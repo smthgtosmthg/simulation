@@ -57,6 +57,12 @@ sont presque tous sur les faces ouest, donc un mot constant suffit.
 | SmolVLM-500M-Instruct | **7 %** | 42 % | 0,7 s | 1,7 Go |
 | SmolVLM-Instruct, 2,2 milliards | non mesuré : le téléchargement de ses 4,5 Go s'est arrêté à 1,7 Go après trois heures | | | |
 
+**Avec une description en phrases en plus des deux images**, ce que la carte sait de chaque zone
+— codes aperçus non lus, surfaces jamais regardées, distance au drone, codes déjà lus — le
+petit modèle passe à **13 %** sur la zone et tombe à 12 % sur le côté. Le texte l'aide un peu,
+sans le sortir du hasard. Le banc avec description (`banc.py --description`,
+`resultats_description.json`) est prêt pour les modèles plus gros.
+
 **Conclusion, écrite telle quelle.** Le petit modèle fait pire que le hasard sur la zone, 7 %
 contre 17 %, et six fois moins bien que la géométrie seule, 42 %. Sur le côté, 42 % contre 96 %
 pour un mot constant. Lire une carte vue de dessus avec des cercles numérotés est hors de sa
