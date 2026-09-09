@@ -792,6 +792,16 @@ l'évaluation.
 
 ---
 
+**Ce qui a été fait (2026-09-08) — `experiments/12_guide/`, fiche `RESULTATS.md`.** Le guide
+est écrit (`swarm_qr/guide.py`, SmolVLM-500M, deux questions courtes, fil d'arrière-plan, avis
+pesé par λ) et jugé hors ligne sur 165 cartes réelles des trois missions finales. Références :
+hasard 17 % sur la zone, géométrie seule 42 %, « toujours ouest » 96 % sur le côté. Le modèle :
+7 % sur la zone, 42 % sur le côté. **Il n'est pas branché** ; le système final est géométrique.
+Le modèle de 2,2 milliards n'a pas pu être téléchargé. Piste non explorée : décrire les zones en
+texte plutôt que sur une image.
+
+---
+
 ## Étape 9 — L'évaluation complète
 
 **Pourquoi maintenant.** Le système est complet. Il faut produire les chiffres finaux, sur tous
@@ -934,7 +944,7 @@ Les étapes sont listées dans **l'ordre où elles se font**.
 | 1 | 3 | Le contrôleur | **Le drone tient la pose**, et trois drones volent ensemble |
 | 2 | 4 | La carte | Capteur vérifié contre la physique, carte exacte, itinéraires sûrs, réservations qui expirent, vue lisible |
 | 3 | 7 | L'œil appris | **FAIT** : portée 8 m contre 4 m, 0,7 % de fausses alertes contre 27 % |
-| 4 | 5 + 8 | Cibles, décision et guide | **Première mission complète à 3 drones** |
+| 4 | 5 + 8 | Cibles, décision et guide | **Étape 5 FAITE** : missions nominale et panne 5/5, 110 et 114 codes sur 114 ; entrepôt 9019 ouvert (dérèglement simultané) ; **étape 8** : guide écrit et mesuré, non branché (voir 12_guide) |
 | 5 | 6 | Les références | Le tableau balayage / système / oracle |
 | 6 | 9 | L'évaluation | Le tableau complet des scénarios |
 | 7 | 10 | La décision apprise (option) | Bat la géométrie, sinon on l'écrit |

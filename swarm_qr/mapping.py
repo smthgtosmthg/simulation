@@ -48,8 +48,9 @@ LIRE_MAX = 4.0
 
 RAYON_DRONE = 0.6          # hélices (0,34 m) plus l'oscillation de tenue mesurée à l'étape 2 (0,21 m)
 EPAISSEUR = 0.85           # tranche d'altitude du planificateur : le rayon plus l'oscillation verticale (0,25 m)
+DESSOUS = 2.0              # un drone ne survole pas une structure à moins de 2 m sous lui : un rack se contourne
 FUSION = 0.45              # deux détections à moins de ça sont le même panneau
-COUT_INCONNU = 3.0         # traverser une case inconnue coûte trois fois une case libre
+COUT_INCONNU = 20.0        # traverser une case inconnue coûte vingt fois une case libre : l'inconnu au milieu d'un rack est du rack
 RESERVATION_S = 45.0       # une réservation non renouvelée expire
 SILENCE_S = 5.0            # un drone muet depuis plus longtemps libère ses cibles
 LISTE_NOIRE_S = 120.0
@@ -100,6 +101,7 @@ class Carte:
         self.couverture = np.zeros(self.forme, dtype=np.uint8)
         # ce que l'œil appris dira de chaque case — allée, rack, mur — vide jusqu'à l'étape 7
         self.semantique = np.zeros(self.forme, dtype=np.uint8)
+        self.obstacles_mobiles: list = []          # [(position, rayon)] : les coéquipiers, pour les chemins
         self.panneaux: list[Panneau] = []
         self.pistes: list[Piste] = []
         self.reservations: dict[int, Reservation] = {}
@@ -317,11 +319,25 @@ class Carte:
                 piste.vues = k + 1
                 piste.vu_le = self.t
                 if normale is not None:
-                    piste.normale = np.asarray(normale, dtype=float)
+                    # la direction d'aperçu moyennée sur toutes les vues : un drone qui longe
+                    # une allée voit le même code de biais puis de face, la moyenne tend vers
+                    # la normale du panneau
+                    n = np.asarray(normale, dtype=float)
+                    if piste.normale is not None:
+                        n = piste.normale * k + n
+                    piste.normale = n / max(np.linalg.norm(n), 1e-9)
                 return piste
         piste = Piste(p, None if normale is None else np.asarray(normale, dtype=float), self.t)
         self.pistes.append(piste)
         return piste
+
+    def oublie_pistes(self, point, rayon: float) -> int:
+        """Efface les pistes autour d'un point : après une lecture réussie devant une piste,
+        les pistes voisines sont le même panneau placé à quelques dizaines de centimètres."""
+        p = np.asarray(point, dtype=float)
+        avant = len(self.pistes)
+        self.pistes = [q for q in self.pistes if np.linalg.norm(q.position - p) > rayon]
+        return avant - len(self.pistes)
 
     # ------------------------------------------------------------ équipe
 
@@ -418,7 +434,25 @@ class Carte:
         cout = np.full(dur.shape, COUT_INCONNU, dtype=np.float32)
         cout[libre] = 1.0
         cout[gros] = np.inf
+        # les coéquipiers en vol sont des obstacles qui bougent : un chemin les contourne, une
+        # pose ne se prend pas contre eux — c'est en amont, pas à la dernière seconde, que
+        # deux drones s'évitent
+        for position, rayon in self.obstacles_mobiles:
+            i, j, _ = self.indice(position)[0]
+            n = int(math.ceil(rayon / self.g.cell))
+            i0, i1 = max(i - n, 0), min(i + n + 1, nx)
+            j0, j1 = max(j - n, 0), min(j + n + 1, ny)
+            if i0 < i1 and j0 < j1:
+                ii, jj = np.mgrid[i0:i1, j0:j1]
+                cout[i0:i1, j0:j1][((ii - i) ** 2 + (jj - j) ** 2) * self.g.cell ** 2 <= rayon ** 2] = np.inf
         return cout
+
+    def couts_de_vol(self, z: float) -> np.ndarray:
+        """Les coûts de passage pour un vol à l'altitude `z` : tout obstacle connu entre 2 m
+        sous le drone et 0,85 m au-dessus bloque la colonne. Survoler les cartons du dernier
+        étage d'un rack, entre ses montants, est possible dans le simulateur ; ce serait une
+        collision dans un vrai entrepôt."""
+        return self.couts(z - DESSOUS, z + EPAISSEUR)
 
     def chemin(self, depart, arrivee, altitude: float | None = None,
                epaisseur: float = EPAISSEUR) -> list[np.ndarray] | None:
@@ -427,14 +461,14 @@ class Carte:
         a = np.asarray(depart, dtype=float)
         b = np.asarray(arrivee, dtype=float)
         z = float(a[2] if altitude is None else altitude)
-        cout = self.couts(z - epaisseur, z + epaisseur)
+        cout = self.couts(z - DESSOUS, z + epaisseur)
         ia, ib = tuple(self.indice(a)[0][:2]), tuple(self.indice(b)[0][:2])
         if not self._praticable(ib, cout):
             return None
         if not self._praticable(ia, cout):
             # le drone est dans la marge élargie d'un obstacle, pas dans l'obstacle : il doit
             # pouvoir en sortir, sinon il resterait bloqué là où il se trouve
-            k0, k1 = self._tranche(z - epaisseur, z + epaisseur)
+            k0, k1 = self._tranche(z - DESSOUS, z + epaisseur)
             if (self.occupation[ia[0], ia[1], k0:k1] > SEUIL_OCCUPE).any():
                 return None
             cout = cout.copy()
@@ -452,7 +486,7 @@ class Carte:
         coupe : c'est le signal pour recalculer le chemin pendant le transit."""
         a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
         z = float(a[2] if altitude is None else altitude)
-        cout = self.couts(z - epaisseur, z + epaisseur)
+        cout = self.couts(z - DESSOUS, z + epaisseur)
         ia, ib = tuple(self.indice(a)[0][:2]), tuple(self.indice(b)[0][:2])
         return np.isfinite(self._cout_droite(ia, ib, cout))
 

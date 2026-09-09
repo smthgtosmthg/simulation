@@ -388,3 +388,15 @@ def test_le_premier_obstacle_sur_un_rayon_vient_de_la_carte():
     mur = c.centre(np.argwhere(c.occupation > M.SEUIL_OCCUPE))[:, 0].min()
     assert abs((origine[0] + d) - mur) < 0.3               # au cube près
     assert c.premier_obstacle(origine, np.array([-1.0, 0.0, 0.0]), portee=3.0) is None
+
+
+def test_un_coequipier_est_un_obstacle_pour_les_chemins():
+    c = _carte_avec_mur()
+    depart, arrivee = np.array([0.0, -4.0, 1.6]), np.array([0.0, 4.0, 1.6])
+    assert c.chemin(depart, arrivee) == []                     # ligne droite libre
+    c.obstacles_mobiles = [(np.array([0.0, 0.0, 1.6]), 1.5)]
+    points = c.chemin(depart, arrivee)
+    assert points is not None and len(points) >= 1            # il contourne le coéquipier
+    assert all(np.linalg.norm(p[:2]) > 1.2 for p in points)
+    c.obstacles_mobiles = []
+    assert c.chemin(depart, arrivee) == []

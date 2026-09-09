@@ -19,7 +19,6 @@ import json
 import math
 import sys
 import time
-from collections import deque
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -51,7 +50,6 @@ import omni.timeline  # noqa: E402
 from scipy.spatial.transform import Rotation  # noqa: E402
 
 from swarm_qr import control, mapping  # noqa: E402
-from swarm_qr import perception as P  # noqa: E402
 from swarm_qr.env import scene as scene_mod  # noqa: E402
 from swarm_qr.env.config import CAMERAS, INTERIOR, LIDAR, RACKS  # noqa: E402
 from swarm_qr.env.layout import make_layout  # noqa: E402
@@ -255,153 +253,27 @@ def trajets(layout, etages, spawn_x: float, n_allees: int):
     return out
 
 
-def _isaac(v_opencv):
-    """OpenCV regarde selon z, x à droite, y en bas ; la caméra d'Isaac regarde selon x, y à
-    gauche, z en haut."""
-    return np.array([v_opencv[2], -v_opencv[0], -v_opencv[1]])
-
-
-def distance_par_le_lidar(origine, direction, nuage):
-    """Distance le long d'un rayon de caméra, lue dans le nuage lidar : le point du nuage le
-    plus proche du rayon, s'il en passe un à moins de quelques centimètres. Le lidar donne
-    la distance, l'image donne la direction et l'identité — la taille de l'étiquette n'a
-    plus à être connue."""
-    if nuage is None or not len(nuage):
-        return None
-    v = nuage - origine
-    t = v @ direction
-    perp = np.linalg.norm(v - t[:, None] * direction[None, :], axis=1)
-    perp[t < 0.3] = np.inf
-    k = int(np.argmin(perp))
-    if perp[k] > min(0.25, 0.06 + 0.04 * t[k]):
-        return None
-    return float(t[k])
-
-
-def point_vise(pixel, K, cam_pos, cam_R, nuage, carte, portee: float = mapping.PORTEE_CARTE):
-    """Point du monde visé par un pixel. C'est tout ce qu'un cadre de l'œil appris donne : une
-    direction, sans les quatre coins d'un code. De près, la distance vient du rayon lidar qui
-    passe au plus près de la direction ; de loin, les rayons sont trop espacés (28 cm à 8 m) et
-    c'est la carte, qui accumule les tours, qui donne le premier obstacle sur la direction."""
-    rayon_cam = np.array([(pixel[0] - K[0, 2]) / K[0, 0], (pixel[1] - K[1, 2]) / K[1, 1], 1.0])
-    rayon = cam_R @ _isaac(rayon_cam / np.linalg.norm(rayon_cam))
-    d = distance_par_le_lidar(cam_pos, rayon, nuage)
-    if d is not None and d <= mapping.LIRE_MAX:
-        pass
-    else:
-        d = carte.premier_obstacle(cam_pos, rayon, portee)
-    if d is None or not (0.3 < d <= portee):
-        return None
-    return cam_pos + rayon * d
-
-
-def position_monde(coins, K, cam_pos, cam_R, nuage):
-    """Position et normale en monde d'un motif vu dans l'image, ou None hors de l'enveloppe.
-
-    Les cartons de l'entrepôt n'ont pas tous la même taille, ni donc leurs étiquettes : la
-    distance déduite de la taille du code est fausse du même rapport. La distance vient donc
-    du lidar, le long du rayon qui passe par le centre du code ; l'ancienne méthode ne sert
-    qu'en repli, quand aucun rayon lidar ne passe par là. L'orientation, elle, ne dépend pas
-    de la taille et vient toujours des quatre coins.
-    """
-    t3, R3 = P.pose_3d(coins, P.taille_code(PANNEAU_M), K)
-    if t3 is None:
-        return None
-    inc = P.incidence_deg(t3, R3[:, 2])
-    if min(inc, 180.0 - inc) > INCIDENCE_MAX:
-        return None
-    centre = coins.mean(axis=0)
-    rayon_cam = np.array([(centre[0] - K[0, 2]) / K[0, 0], (centre[1] - K[1, 2]) / K[1, 1], 1.0])
-    rayon = cam_R @ _isaac(rayon_cam / np.linalg.norm(rayon_cam))
-    d = distance_par_le_lidar(cam_pos, rayon, nuage)
-    if d is None or not (0.3 < d <= mapping.LIRE_MAX):
-        return None                     # sans distance mesurée, pas de position
-    monde = cam_pos + rayon * d
-    n = cam_R @ _isaac(R3[:, 2])
-    if np.dot(n, cam_pos - monde) < 0:
-        n = -n
-    return monde, n
-
-
-def poses_cameras(scene, origine, dirs, portees):
-    """Les poses des deux caméras et le nuage lidar du même instant : l'image lue au pas
-    suivant est celle de cet instant-là."""
-    out = {}
-    for nom in ("left", "right"):
-        p, q = scene.cameras[0][nom].get_world_pose()
-        out[nom] = (np.asarray(p, float), Rotation.from_quat(np.asarray(q)[[1, 2, 3, 0]]).as_matrix())
-    ok = np.isfinite(portees) & (portees > 0)
-    out["nuage"] = origine + dirs[ok] * portees[ok, None]
-    return out
+from swarm_qr.observation import Observateur  # noqa: E402
 
 
 class Patrouille:
+    """La patrouille d'un drone : ses observations versées dans une carte neuve. La mécanique
+    d'observation est celle du système (`swarm_qr.observation`), commune à la mission."""
+
     def __init__(self, scene, layout, K, detecteur=None):
         self.scene, self.layout, self.K = scene, layout, K
-        self.detecteur = detecteur
         self.carte = mapping.Carte()
-        self.poses = deque(maxlen=2)
-        self.trajectoire = []
-        self.compte = {"images": 0, "lectures": 0, "reperages": 0, "lectures_placees": 0,
-                       "cartons_reperes": 0, "replanifications": 0}
-        self.couts = {"lidar": [], "couverture": [], "decodage": [], "detecteur": []}
+        self.obs = Observateur(scene, self.carte, K, drone=0, detecteur=detecteur)
+        self.compte = self.obs.compte
+        self.compte["replanifications"] = 0
+        self.couts = self.obs.couts
+
+    @property
+    def trajectoire(self):
+        return self.obs.trajectoire
 
     def observe(self, t: float) -> None:
-        """Une observation complète depuis la pose courante : lidar, lectures, couverture."""
-        scene, carte = self.scene, self.carte
-        pos = scene.position(0)
-        self.trajectoire.append([round(t, 2), *[round(float(x), 3) for x in pos]])
-        dirs, portees = scene.lidar(0)
-        t0 = time.perf_counter()
-        carte.integre_lidar(pos, dirs, portees, t=t)
-        self.couts["lidar"].append((time.perf_counter() - t0) * 1000)
-        carte.annonce(0, pos, t=t)
-        self.poses.append(poses_cameras(scene, pos, dirs, portees))
-        if len(self.poses) < 2:
-            return
-        # l'image montre la pose d'il y a une image, mesuré à l'étape 2
-        anciennes = self.poses[0]
-        nuage = anciennes["nuage"]
-        for nom in ("left", "right"):
-            img = scene.cameras[0][nom].get_rgb()
-            if img is None or getattr(img, "ndim", 0) != 3 or not img.size:
-                continue
-            cam_pos, cam_R = anciennes[nom]
-            bgr = _img.to_bgr(img)
-            gris = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-            t0 = time.perf_counter()
-            for code, coins in P.DECODEURS["zxing"](gris):
-                self.compte["lectures"] += 1
-                pn = position_monde(coins, self.K, cam_pos, cam_R, nuage)
-                if pn is not None:
-                    carte.integre_lecture(code, pn[0], pn[1], t=t)
-                    self.compte["lectures_placees"] += 1
-            if self.detecteur is None:
-                for quad in P.repere_motifs(bgr):
-                    self.compte["reperages"] += 1
-                    pn = position_monde(quad, self.K, cam_pos, cam_R, nuage)
-                    if pn is not None:
-                        carte.integre_reperage(pn[0], pn[1], t=t)
-            self.couts["decodage"].append((time.perf_counter() - t0) * 1000)
-            if self.detecteur is not None:
-                # l'œil appris remplace le repérage classique : un QR repéré devient une
-                # piste, un carton repéré marque le canal sémantique, tous deux placés par
-                # le lidar le long de la direction du cadre
-                t0 = time.perf_counter()
-                for d in self.detecteur.detecte(bgr):
-                    pos = point_vise(d.centre, self.K, cam_pos, cam_R, nuage, carte)
-                    if pos is None:
-                        continue
-                    if d.classe == "qr":
-                        self.compte["reperages"] += 1
-                        carte.integre_reperage(pos, None, t=t)
-                    else:
-                        self.compte["cartons_reperes"] += carte.marque(pos)
-                self.couts["detecteur"].append((time.perf_counter() - t0) * 1000)
-            t0 = time.perf_counter()
-            carte.integre_couverture(cam_pos, cam_R @ np.array([1.0, 0.0, 0.0]), t=t)
-            self.couts["couverture"].append((time.perf_counter() - t0) * 1000)
-            self.compte["images"] += 1
+        self.obs.observe(t)
 
 
 SORTIE = Path(args.sortie) if args.sortie else HERE

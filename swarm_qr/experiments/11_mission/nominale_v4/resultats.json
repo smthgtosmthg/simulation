@@ -1,0 +1,434 @@
+{
+ "blocages": {
+  "sans_cible_prolonge": [],
+  "immobile_avec_cible": [],
+  "ok": true
+ },
+ "doublons": {
+  "cas": [],
+  "ok": true
+ },
+ "dispersion": {
+  "distances_m": [
+   24.7,
+   18.4,
+   16.3
+  ],
+  "min_m": 16.3,
+  "ok": true
+ },
+ "panne": {
+  "simulee": false,
+  "ok": true
+ },
+ "fin": {
+  "fin": "budget epuise",
+  "t_sim_s": 600.7,
+  "ok": true
+ },
+ "securite": {
+  "points": 7618,
+  "dans_un_rack": 26,
+  "distance_min_entre_drones_m": 0.34,
+  "attentes_de_priorite": 2629
+ },
+ "lecture": {
+  "codes_vrais": 114,
+  "codes_lus": 113,
+  "part": 0.9912,
+  "inventes": [],
+  "t_50pct_s": 140.4,
+  "t_80pct_s": 178.2,
+  "t_90pct_s": 196.6,
+  "part_connue": 0.8757,
+  "decisions_par_genre": {
+   "couvrir": {
+    "n": 58,
+    "atteintes": 15,
+    "lus": 0
+   },
+   "lire": {
+    "n": 81,
+    "atteintes": 63,
+    "lus": 46
+   }
+  }
+ },
+ "mur_min": 57.9,
+ "abandons": [
+  {
+   "t": 283.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 286.6,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 295.4,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 296.6,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 312.6,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 336.0,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 350.4,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 359.2,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 359.8,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 372.8,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 374.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 375.0,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 389.6,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 390.2,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 391.8,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 404.8,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 405.4,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 412.2,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 420.0,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 420.6,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 433.8,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 435.2,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 435.8,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 450.4,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 450.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 451.0,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 465.8,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 466.2,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 469.0,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 481.0,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 481.4,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 487.4,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 496.2,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 496.6,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 511.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 511.8,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 512.6,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "immobile"
+  },
+  {
+   "t": 526.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "immobile"
+  },
+  {
+   "t": 526.8,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 528.2,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 533.4,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 536.2,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 541.8,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "immobile"
+  },
+  {
+   "t": 543.8,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 557.4,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 560.2,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 562.6,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 572.6,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 573.0,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 575.0,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 575.0,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "trop de recalculs"
+  },
+  {
+   "t": 576.2,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 577.0,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 578.6,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 580.2,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 581.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 583.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 583.8,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 583.8,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "chemin coupe"
+  }
+ ],
+ "ms_par_observation": {
+  "0": {
+   "lidar": 40.8,
+   "couverture": 2.1,
+   "decodage": 1.7,
+   "detecteur": 151.9
+  },
+  "1": {
+   "lidar": 78.8,
+   "couverture": 2.3,
+   "decodage": 4.2,
+   "detecteur": 63.8
+  },
+  "2": {
+   "lidar": 77.2,
+   "couverture": 2.4,
+   "decodage": 4.2,
+   "detecteur": 32.7
+  }
+ }
+}

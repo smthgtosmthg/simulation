@@ -1,0 +1,113 @@
+"""Le guide vision-langage (étape 8) : un avis de bon sens sur où aller et par quel côté.
+
+Le modèle regarde deux images — la caméra du drone et la carte vue de dessus, avec des zones
+numérotées — et répond par un numéro de zone, un côté d'abordage et une phrase. Il conseille,
+il ne commande pas : la géométrie garde la main sur la pose exacte, et le poids λ de son avis
+dans la note peut être nul. Il travaille en arrière-plan pour ne jamais bloquer la boucle de
+mission ; en son absence, la décision se fait sans lui.
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import time
+from concurrent.futures import Future, ThreadPoolExecutor
+
+import cv2
+import numpy as np
+
+from . import planning
+
+MODELES = {
+    "smolvlm": "HuggingFaceTB/SmolVLM-500M-Instruct",
+    "smolvlm-2b": "HuggingFaceTB/SmolVLM-Instruct",
+}
+COTES = {"north": 2, "nord": 2, "south": 3, "sud": 3, "east": 0, "est": 0, "west": 1, "ouest": 1}
+CONTEXTE = (
+    "You guide a drone that must read QR codes glued on cardboard boxes stored on warehouse "
+    "shelves. The first image is the drone's side camera. The second image is the map seen from "
+    "above: dark grey is a shelf or a wall, white has already been read, light grey is free, "
+    "medium grey is unknown, orange dots are boxes seen but not read yet, and the red numbered "
+    "circles are the candidate zones. "
+)
+QUESTION_ZONE = CONTEXTE + "Which zone number should the drone go to next to read the most unread boxes? Answer with the number only."
+QUESTION_COTE = CONTEXTE + "The drone goes to zone {n}. From which side should it approach the shelf there: north, south, east or west? Answer with one word."
+
+
+class Guide:
+    def __init__(self, nom: str = "smolvlm", max_tokens: int = 60, device: str = "cuda"):
+        os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+        import torch
+        from transformers import AutoModelForImageTextToText, AutoProcessor
+
+        self.nom = MODELES.get(nom, nom)
+        self.processor = AutoProcessor.from_pretrained(self.nom)
+        self.modele = AutoModelForImageTextToText.from_pretrained(self.nom, dtype=torch.float16).to(device)
+        self.modele.eval()
+        self.device, self.max_tokens = device, max_tokens
+        self.latences: list[float] = []
+        self.reponses: list[str] = []
+        self._pool = ThreadPoolExecutor(max_workers=1)
+
+    # ---------------------------------------------------------------- appel
+
+    def repond(self, image_bgr: np.ndarray, vue_bgr: np.ndarray, question: str) -> str:
+        """La réponse brute du modèle aux deux images et à une question."""
+        import torch
+        from PIL import Image
+
+        images = [Image.fromarray(cv2.cvtColor(im, cv2.COLOR_BGR2RGB)) for im in (image_bgr, vue_bgr)]
+        messages = [{"role": "user", "content": [{"type": "image"}, {"type": "image"},
+                                                 {"type": "text", "text": question}]}]
+        prompt = self.processor.apply_chat_template(messages, add_generation_prompt=True)
+        entrees = self.processor(text=prompt, images=images, return_tensors="pt")
+        entrees = {k: (v.to(self.device, dtype=torch.float16) if v.dtype.is_floating_point else v.to(self.device))
+                   for k, v in entrees.items()}
+        t0 = time.perf_counter()
+        with torch.no_grad():
+            sortie = self.modele.generate(**entrees, max_new_tokens=self.max_tokens, do_sample=False)
+        self.latences.append(time.perf_counter() - t0)
+        texte = self.processor.batch_decode(sortie[:, entrees["input_ids"].shape[1]:], skip_special_tokens=True)[0]
+        texte = texte.strip()
+        self.reponses.append(texte)
+        return texte
+
+    @staticmethod
+    def zone_dans(texte: str, zones: list[dict]) -> int | None:
+        """Le numéro de zone lu dans la réponse : « zone 3 », « 3. », « Zone: 3 » ; None si absent
+        ou hors liste."""
+        numeros = {z["numero"] for z in zones}
+        m = re.search(r"zone\s*[:=]?\s*(\d+)", texte, re.IGNORECASE) or re.search(r"(\d+)", texte)
+        if not m:
+            return None
+        n = int(m.group(1))
+        return n if n in numeros else None
+
+    @staticmethod
+    def cote_dans(texte: str) -> int | None:
+        for mot in re.findall(r"[a-zA-Zéè]+", texte.lower()):
+            if mot in COTES:
+                return COTES[mot]
+        return None
+
+    def conseille(self, image_bgr, vue_bgr, zones: list[dict], position=None) -> planning.Avis | None:
+        """Deux questions courtes plutôt qu'une longue : un petit modèle suit mieux une consigne
+        à la fois. D'abord la zone, puis le côté d'abordage pour cette zone."""
+        numero = self.zone_dans(self.repond(image_bgr, vue_bgr, QUESTION_ZONE), zones)
+        if numero is None:
+            return None
+        texte_cote = self.repond(image_bgr, vue_bgr, QUESTION_COTE.format(n=numero))
+        cote = self.cote_dans(texte_cote)
+        z = next(z for z in zones if z["numero"] == numero)
+        phrase = f"zone {numero}" + (f", cote {planning.NOMS_COTES[cote]}" if cote is not None else "")
+        return planning.Avis(centre=np.array([*z["centre"][:2], 0.0]), rayon=float(z["rayon"]), cote=cote,
+                             phrase=phrase + f" ({self.reponses[-2][:40]!r} / {texte_cote[:40]!r})")
+
+    def demande(self, image_bgr, vue_bgr, zones, position=None) -> Future:
+        """Le même avis, calculé en arrière-plan."""
+        return self._pool.submit(self.conseille, image_bgr.copy(), vue_bgr.copy(), zones, position)
+
+    def bilan(self) -> dict:
+        return {"modele": self.nom, "appels": len(self.latences),
+                "latence_mediane_s": round(float(np.median(self.latences)), 2) if self.latences else None}

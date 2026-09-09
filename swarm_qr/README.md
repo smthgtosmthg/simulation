@@ -20,6 +20,10 @@ control.py      le contrôleur : amener un drone à une pose, l'y tenir, dire s'
 mapping.py      la carte partagée : occupation et couverture orientée, panneaux, réservations,
                 frontières, itinéraires, vue de dessus, canal sémantique
 detecteur.py    l'œil appris : un réseau qui repère les QR et les cartons sans les lire
+observation.py  une observation d'un drone versée dans la carte : lidar, lectures, œil appris, couverture
+planning.py     le cerveau géométrique : cibles à lire, à couvrir, à explorer ; note ; choix
+guide.py        le guide vision-langage : une zone et un côté conseillés, en arrière-plan
+mission.py      le chef d'orchestre : plusieurs drones, trois rythmes, une carte, un rapport
 tests/          les tests sans simulateur (contrôleur sur un faux pilote, carte sur un monde de boîtes)
 experiments/    un dossier par test, avec ses images et sa fiche de résultats
 assets/qr/      les images de QR générées
@@ -160,3 +164,19 @@ l'étape 2 comme juge commun avec le repérage classique. Détail dans
 | Les cadres appris sont-ils justes ? | le centre validé de l'étape 2 tombe dans notre cadre à 99,4 % et 100 % |
 | En vol, fait-il courir les drones après des fantômes ? | non : 1 piste sur 143 hors d'un rack, 99 % à moins de 2 m d'un vrai panneau ; 0 point de trajectoire dans une structure de rack |
 | Ce qu'il a révélé | les cartons cachés gardaient leur collider (corrigé) ; le collider d'un carton est plus petit que sa forme visible ; les racks n'ont aucune structure sur 0,7 m à chaque bout de leur emprise |
+
+## Étape 5 — Le cerveau et la mission à trois drones
+
+Chaque drone choisit ses cibles sur la carte que les trois construisent, jamais sur le plan :
+pistes à lire, surfaces jamais regardées du bon côté, frontières. Une note par cible, un chemin
+sur la carte, des réservations qui expirent, une règle de priorité, et les coéquipiers comme
+obstacles mobiles. Détail dans [`11_mission/RESULTATS.md`](experiments/11_mission/RESULTATS.md).
+
+| Question posée | Réponse mesurée |
+|---|---|
+| Le cerveau raisonne-t-il juste avant de voler ? | 12 cartes jouets, 60 tests verts |
+| La mécanique à trois drones tient-elle ? | mission nominale et mission avec panne : **5 vérifications sur 5**, aucune chute, aucun point dans un rack, 2 m au plus près entre drones |
+| L'inventaire est-il lu sans plan ? | **110 puis 114 sur 114**, 90 % des codes trois minutes après le décollage |
+| La panne d'un drone ? | absorbée : sa zone reprise 20 s après, inventaire complet |
+| Sur un entrepôt jamais vu ? | 61 codes sur 65 lus, puis les trois drones se dérèglent en même temps vers 300 s : cause dans la simulation, non datée, laissée ouverte |
+| Ce que huit missions ont appris | neuf règles, chacune née d'un vol qui l'a rendue nécessaire, listées dans le bilan |
