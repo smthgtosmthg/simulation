@@ -48,13 +48,15 @@ def instantanes(missions: list[Path]) -> list[dict]:
     return cas
 
 
-def juge(nom: str, cas: list[dict], description: bool = False) -> dict:
+def juge(nom: str, cas: list[dict], description: bool = False, device: str = "cuda",
+         quant: str | None = None) -> dict:
     import torch
     from swarm_qr.guide import Guide, decrit
 
-    torch.cuda.reset_peak_memory_stats()
+    if device == "cuda":
+        torch.cuda.reset_peak_memory_stats()
     t0 = time.perf_counter()
-    g = Guide(nom)
+    g = Guide(nom, device=device, quantisation=quant)
     chargement = time.perf_counter() - t0
     accords_zone = accords_cote = repondus = cotes_repondus = 0
     hasard_zone = 0.0
@@ -107,6 +109,9 @@ def main() -> None:
     ap.add_argument("--missions", nargs="+", required=True)
     ap.add_argument("--modeles", nargs="+", default=["smolvlm"])
     ap.add_argument("--description", action="store_true", help="ajoute aux deux images ce que la carte sait des zones, en phrases")
+    ap.add_argument("--device", default="cuda", help="cuda ou cpu")
+    ap.add_argument("--quant", default=None, help="4bit ou 8bit : poids compressés par bitsandbytes (GPU)")
+    ap.add_argument("--sortie", default=None, help="nom du fichier de résultats (défaut : resultats[_description].json)")
     a = ap.parse_args()
     cas = instantanes([Path(m) for m in a.missions])
     print(f"{len(cas)} cas (instantane x drone) avec une bonne reponse connue")
@@ -114,12 +119,12 @@ def main() -> None:
     print("references :", refs)
     bilans = []
     for nom in a.modeles:
-        b = juge(nom, cas, a.description)
+        b = juge(nom, cas, a.description, device=a.device, quant=a.quant)
         bilans.append(b)
         print(f"{b['modele']}: zone juste {b['accord_zone']:.0%} (hasard {b['hasard_zone']:.0%}), "
               f"cote juste {b['accord_cote']:.0%} sur {b['cotes_repondus']} reponses (hasard 25 %), "
               f"{b['latence_mediane_s']} s par question, {b['memoire_gpu_mo']} Mo, repondus {b['repondus']}/{b['cas']}")
-    sortie = HERE / ("resultats_description.json" if a.description else "resultats.json")
+    sortie = HERE / (a.sortie or ("resultats_description.json" if a.description else "resultats.json"))
     sortie.write_text(json.dumps({"cas": len(cas), "references": refs, "description": a.description, "modeles": bilans}, indent=1))
     print("BANC GUIDE FINI")
 

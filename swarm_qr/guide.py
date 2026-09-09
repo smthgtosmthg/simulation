@@ -69,15 +69,32 @@ def decrit(zones: list[dict], position=None, codes_lus: int | None = None) -> st
     return tete + "The map says: " + " ".join(lignes) + " "
 
 
+MAX_PIXELS = 640 * 28 * 28      # pour les modèles Qwen : une image de caméra vaut ~640 jetons
+
+
 class Guide:
-    def __init__(self, nom: str = "smolvlm", max_tokens: int = 60, device: str = "cuda"):
+    def __init__(self, nom: str = "smolvlm", max_tokens: int = 60, device: str = "cuda",
+                 quantisation: str | None = None):
+        """`quantisation` : None (poids en fp16), "4bit" ou "8bit" (bitsandbytes, sur GPU) —
+        un modèle de 7 milliards de paramètres ne tient dans 8 Go de mémoire vidéo qu'en 4 bits.
+        Sur `device="cpu"`, les poids sont en bf16 : lent sans AMX, mais sans installation."""
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
         import torch
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         self.nom = MODELES.get(nom, nom)
-        self.processor = AutoProcessor.from_pretrained(self.nom)
-        self.modele = AutoModelForImageTextToText.from_pretrained(self.nom, dtype=torch.float16).to(device)
+        options = {"max_pixels": MAX_PIXELS} if "qwen" in self.nom.lower() else {}
+        self.processor = AutoProcessor.from_pretrained(self.nom, **options)
+        self.dtype = torch.bfloat16 if device == "cpu" else torch.float16
+        if quantisation:
+            from transformers import BitsAndBytesConfig
+            config = (BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                                         bnb_4bit_compute_dtype=torch.float16, bnb_4bit_use_double_quant=True)
+                      if quantisation == "4bit" else BitsAndBytesConfig(load_in_8bit=True))
+            self.modele = AutoModelForImageTextToText.from_pretrained(
+                self.nom, quantization_config=config, device_map={"": device}, dtype=torch.float16)
+        else:
+            self.modele = AutoModelForImageTextToText.from_pretrained(self.nom, dtype=self.dtype).to(device)
         self.modele.eval()
         self.device, self.max_tokens = device, max_tokens
         self.latences: list[float] = []
@@ -96,7 +113,7 @@ class Guide:
                                                  {"type": "text", "text": question}]}]
         prompt = self.processor.apply_chat_template(messages, add_generation_prompt=True)
         entrees = self.processor(text=prompt, images=images, return_tensors="pt")
-        entrees = {k: (v.to(self.device, dtype=torch.float16) if v.dtype.is_floating_point else v.to(self.device))
+        entrees = {k: (v.to(self.device, dtype=self.dtype) if v.dtype.is_floating_point else v.to(self.device))
                    for k, v in entrees.items()}
         t0 = time.perf_counter()
         with torch.no_grad():

@@ -1,0 +1,8986 @@
+{
+ "cas": 165,
+ "references": {
+  "hasard_zone": 0.1667,
+  "zone_la_plus_utile_geometrie": 0.4182,
+  "hasard_cote": 0.25,
+  "toujours_ouest": 0.9576,
+  "cote_le_plus_frequent": {
+   "cote": "ouest",
+   "part": 0.9576
+  }
+ },
+ "modele": "/home/djihene_guitoun/Documents/qwen2.5-vl-3b",
+ "variantes": [
+  {
+   "variante": "comptage",
+   "cas": 165,
+   "repondus": 164,
+   "justes": 0.6848,
+   "accord_avec_la_geometrie": 0.1524,
+   "latence_mediane_s": 0.87,
+   "details": [
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 2,
+     "reponse": null,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 32,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "5"
+    }
+   ]
+  },
+  {
+   "variante": "image",
+   "cas": 165,
+   "repondus": 164,
+   "justes": 0.1697,
+   "accord_avec_la_geometrie": 0.189,
+   "latence_mediane_s": 0.78,
+   "details": [
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 2,
+     "reponse": null,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 32,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "4"
+    }
+   ]
+  },
+  {
+   "variante": "lisible",
+   "cas": 165,
+   "repondus": 164,
+   "justes": 0.2485,
+   "accord_avec_la_geometrie": 0.2012,
+   "latence_mediane_s": 0.9,
+   "details": [
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 2,
+     "reponse": null,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 32,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1"
+    }
+   ]
+  },
+  {
+   "variante": "description",
+   "cas": 165,
+   "repondus": 164,
+   "justes": 0.4788,
+   "accord_avec_la_geometrie": 0.3049,
+   "latence_mediane_s": 1.0,
+   "details": [
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "Zone 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "2"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "3"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 6,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "2"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "4"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 2,
+     "reponse": null,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "6"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "3"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "4"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 3,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "2"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "5"
+    },
+    {
+     "mission": "autre",
+     "k": 32,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "2"
+    }
+   ]
+  },
+  {
+   "variante": "raisonnement",
+   "cas": 165,
+   "repondus": 164,
+   "justes": 0.3576,
+   "accord_avec_la_geometrie": 0.4451,
+   "latence_mediane_s": 2.53,
+   "details": [
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets and is relatively close to the drone is Zone 5. ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The zone with the highest number of candidate targets (Zone 6) is also the closest option, making it the best choice for"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The best choice is Zone 3 because it has the most candidate targets (35) and is only 8 meters away, which is closer than"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The best choice is Zone 4 because it has the most candidate targets (16) and is the closest distance (4 meters) from the"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets for reading QR codes while being relatively close to the drone is Zone 4. There"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The best choice is Zone 2 because it has the most candidate targets (46) and is relatively close (8 meters). ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The best choice is Zone 6 because it has the most candidate targets (20) and is only 3 meters away, which is the closest"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The best choice is Zone 5 because it has the most candidate targets (50) and is only 4 meters away, which is the closest"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets (Zone 6) is also the closest to the drone's current position. Ther"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets (Zone 6) is also the closest to the drone's current position. Ther"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The zone with the highest number of candidate targets (Zone 3) is also the closest option, making it the best choice for"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. Therefore, the"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. Therefore, the"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets (31) and relatively close proximity (7 meters) is Zone 6. Therefor"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets (25) and being relatively close to the drone (10 meters) would be "
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 5 because it has the most candidate targets (15) and is relatively close (14 meters). ANSW"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The best choice is Zone 4 because it has the most candidate targets (9) and is relatively close to the drone (7 meters)."
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The best choice is Zone 5 because it has the most candidate targets (26) and is not too far away (12 meters). ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (26) and is relatively close (18 meters). ANSW"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets (Zone 6) is also the closest to the drone's current position. Ther"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 2 because it has the highest number of candidate targets (11) and is relatively close to t"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (26) and is relatively close (19 meters). ANSW"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: Zone 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and which is not too far away is Zone 5. ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "The best choice would be Zone 3 because it has the most candidate targets (26) and is relatively close (9 meters). ANSWE"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 4 because it contains the most unknown QR codes (7) and is relatively close to the drone's"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 3 because it has the most candidate targets (22) and is relatively close (20 meters). ANSW"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (21) and is relatively close (4 meters). ANSWE"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (21) and is only 22 meters away, which is with"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The zone with the highest number of candidate targets and proximity to the drone is Zone 5. ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and the closest distance is Zone 6, which has 21 candidate targets and is 17 me"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 6 because it contains the most unknown QR codes (7) and is relatively close to the drone's"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The zone with the highest number of candidate targets (Zone 6) is also the closest option, making it the best choice for"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 2 because it has the highest number of candidate targets and is relatively close to the dr"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (25) and is only 20 meters away, which is with"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 4 because it has the highest number of candidate targets (25) and is relatively close to t"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (5) and is only 5 meters away, which is closer"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "The best choice is Zone 4 because it has the fewest candidate targets and is closest to the drone, which means it will l"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 6"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it is the closest option with only 2 meters distance and it has 5 candidate targ"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The best choice is Zone 5 because it has the most candidate targets (25) and is relatively close (16 meters). ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (25) and is only 21 meters away, which is clos"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The best choice would be Zone 2 because it contains the most unscanned QR codes among the options available. ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 5 because it contains the most unknown QR codes among the available options. ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 4 because it has the highest number of candidate targets (25) and is within the acceptable"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (25) and is only 17 meters away, which is with"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "The best choice is Zone 4 because it has the most candidate targets (26) and is relatively close (7 meters). ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "The best choice is Zone 5 because it has the most candidate targets (26) and is relatively close (17 meters). ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (21) and is only 21 meters away, which is with"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 6"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 4 because it has the most candidate targets (8) and is only 2 meters away, which is closer"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone should be chosen. ANSWER: Zo"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 5 because it has the most candidate targets (25) and is relatively close (9 meters). ANSWE"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 3 because it has the fewest candidate targets and is closest to the drone, which means it'"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "The best choice would be Zone 3 because it has the most candidate targets (25) and is only 20 meters away, which is with"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it is the closest and has the most candidate targets among the zones that haven'"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it is the closest and has the most candidate targets among the options available"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (26) and is only 7 meters away, which is close"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it has the highest number of candidate targets (7) and is relatively close to th"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 5 because it has the highest number of candidate targets (26) and is relatively close to t"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (27) and is only 8 meters away, which is close"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 5 because it has the highest number of candidate targets (27) and is relatively close (18 "
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (27) and is only 18 meters away, which is clos"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "The best choice is Zone 3 because it has the most candidate targets (27) and is relatively close (19 meters). ANSWER: 3"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "The best choice would be Zone 3 because it has the most candidate targets (27) and is relatively close (14 meters). ANSW"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "The best choice would be Zone 6 because it has the highest number of candidate targets (27) and is relatively close to t"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "The best choice is Zone 4 because it has the most candidate targets (27) and is relatively close (19 meters). ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: Zone 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets (Zone 6) is also closest to the drone's current position. Therefor"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 6 because it contains the most unscanned QR codes (7) and is relatively close to the drone"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. Therefore, the drone should"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: Zone 6"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "The best choice would be Zone 3 because it has the most candidate targets (27) and is relatively close (17 meters). ANSW"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 5 because it has the most candidate targets (27) and is only 14 meters away, which is with"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. Therefore, the drone should"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (27) and is relatively close (17 meters). ANSW"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets and the closest distance is Zone 4, which contains 7 candidate targets within 6"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets and the closest distance is Zone 5. ANSWER: 5"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. Therefore, the drone should"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 5 because it has the most candidate targets (21) and is only 6 meters away, which is close"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 6 because it is the closest and contains the most candidate targets among the zones that h"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The best choice would be Zone 3 because it has the highest number of candidate targets (9) and is only 3 meters away, wh"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The zone with the highest number of unknown QR codes and is closest to the drone is Zone 5. ANSWER: 5"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 6"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The best choice is Zone 4 because it is the closest (7 meters) and has the most candidate targets (17) among the zones t"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The best choice is Zone 5 because it has the most candidate targets (31) and is relatively close (14 meters). ANSWER: 5"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The best choice is Zone 3 because it has the most candidate targets (31) and is relatively close (6 meters). ANSWER: 3"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The best choice is Zone 4 because it has the most candidate targets (31) and is relatively close (9 meters). ANSWER: 4"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The best choice is Zone 6 because it has the most candidate targets (21) and is relatively close (12 meters). ANSWER: 6"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. ANSWER: 5"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The best choice would be Zone 6 because it contains the most unknown QR codes (30) and is relatively close (6 meters). A"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (20) and is only 5 meters away, which is close"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and the closest distance is Zone 4, which contains 27 candidate targets and is "
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. Therefore, the"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets (Zone 5) is also the closest option, making it the best choice for"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 6,
+     "brut": "The zone with the most candidate targets (Zone 6) is also the closest, making it the best choice for reading the largest"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. Therefore, the drone should"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The best choice is Zone 5 because it has the most candidate targets (31) and is relatively close (15 meters). ANSWER: 5"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: Zone 2"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone is Zone 5. Therefore, the drone "
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (13) and is only 3 meters away from the drone,"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 6"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 2 because it has the highest number of candidate targets (9) and is only 3 meters away, wh"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it has the highest number of candidate targets (9) and is only 3 meters away fro"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: Zone 2"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (23) and is only 16 meters away, which is clos"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 5 because it contains the fewest number of unknown QR codes among all the options availabl"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 6 because it is the closest and contains the most candidate targets among the zones that h"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it is the closest and has the most candidate targets among the zones that haven'"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 3 because it has the most candidate targets (27) and is only 13 meters away from the drone"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "The zone with the most candidate targets and the closest distance is Zone 2, which has 27 candidate targets and is 9 met"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it has the fewest candidate targets and is closest to the drone, which means it'"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "The zone with the most candidate targets and the closest distance is Zone 2, which is 18 meters away. Therefore, the dro"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 2 because it is the closest option with 27 candidate targets within its range. ANSWER: 2"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 6 because it is the closest and has the highest number of candidate targets among the zone"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "The best choice is Zone 6 because it has the most candidate targets (26) and is relatively close (7 meters). ANSWER: 6"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 4 because it is the closest (4 meters) and has the highest number of candidate targets (23"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 2,
+     "reponse": null,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and the closest distance is Zone 3. ANSWER: 3"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 4 because it is the closest option with 11 candidate targets, which is more than any other"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (21) and is only 7 meters away, which is close"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. Therefore, the"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. Therefore, the drone should"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone is Zone 2. Therefore, the dr"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The zone with the highest number of candidate targets and the closest distance is Zone 4. Therefore, the drone should go"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and the closest distance is Zone 4, which has 27 candidate targets and is 9 met"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: Zone 5"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets (Zone 5) and the closest distance (8 meters) should be the best ch"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The zone with the highest number of unknown QR codes is Zone 4, which is also the closest option. Therefore, the drone s"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. ANSWER: Zone 6"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The best choice would be Zone 2 because it has the most candidate targets (27) and is only 16 meters away, which is with"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone should be chosen. ANSWER: 6"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "The zone with the most candidate targets and which is closest to the drone should be chosen. ANSWER: 4"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "The best choice would be Zone 2 because it contains the most candidate targets (6) and is only 2 meters away, which is c"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "The best choice would be Zone 5 because it contains the fewest number of unknown QR codes among the available options. A"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 3,
+     "brut": "The zone with the highest number of candidate targets and the closest distance to the drone should be chosen. ANSWER: 2"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "The best choice would be Zone 6 because it is the closest and contains the most candidate targets among the options avai"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "The best choice would be Zone 5 because it contains the most unknown QR codes among the available options. ANSWER: 5"
+    },
+    {
+     "mission": "autre",
+     "k": 32,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "The zone with the highest number of candidate targets and which is closest to the drone should be chosen. ANSWER: 2"
+    }
+   ]
+  },
+  {
+   "variante": "notes",
+   "cas": 165,
+   "repondus": 164,
+   "justes": 0.1636,
+   "accord_avec_la_geometrie": 0.2927,
+   "latence_mediane_s": 6.04,
+   "details": [
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:5 2:5 3:5 4:3 5:8 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 1,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:8 2:3 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:5 2:7 3:3 4:8 5:6 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:8 4:3 5:5 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 3,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:8 4:5 5:6 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 4,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:6 3:8 4:7 5:5 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:3 2:6 3:8 4:8 5:8 6:3"
+    },
+    {
+     "mission": "nominale",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:3 2:6 3:6 4:8 5:3 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 6,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:8 2:5 3:7 4:5 5:6 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 7,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:0 2:5 3:5 4:9 5:9 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "1:8 2:5 3:8 4:8 5:6 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 8,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "1:5 2:5 3:5 4:8 5:6 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "1:5 2:7 3:5 4:5 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 9,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "1:5 2:7 3:9 4:9 5:6 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 10,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1:7 2:9 3:6 4:9 5:6 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:5 2:7 3:5 4:6 5:5 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:9 3:5 4:5 5:9 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 28,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:3 4:6 5:6 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:7 2:9 3:9 4:9 5:3 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:7 2:7 3:3 4:8 5:5 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 29,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:7 2:7 3:5 4:8 5:3 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 31,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1:6 2:5 3:10 4:5 5:6 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 3,
+     "brut": "1:5 2:9 3:9 4:3 5:5 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 32,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:3 2:7 3:3 4:7 5:8 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 33,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:7 2:5 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 34,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1:7 2:8 3:8 4:8 5:6 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "1:5 2:7 3:5 4:9 5:9 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 35,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1:9 2:7 3:9 4:3 5:9 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "1:5 2:8 3:6 4:10 5:5 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "1:5 2:5 3:5 4:9 5:9 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 36,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "1:5 2:5 3:5 4:3 5:6 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 37,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "1:3 2:7 3:3 4:3 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 38,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "1:7 2:5 3:5 4:5 5:8 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 39,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:7 4:5 5:5 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "1:5 2:8 3:9 4:5 5:8 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 40,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "1:8 2:6 3:9 4:3 5:6 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "1:5 2:9 3:6 4:9 5:6 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:5 2:3 3:7 4:6 5:8 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 41,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "1:5 2:8 3:7 4:8 5:8 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "1:3 2:7 3:3 4:7 5:6 6:3"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:5 2:3 3:7 4:6 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 42,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "1:5 2:3 3:6 4:8 5:6 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1:5 2:9 3:7 4:5 5:6 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1:3 2:9 3:3 4:9 5:9 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 43,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:8 4:7 5:5 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1:7 2:5 3:9 4:3 5:6 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1:5 2:7 3:9 4:6 5:9 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 44,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "1:5 2:8 3:3 4:8 5:7 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "1:5 2:3 3:9 4:9 5:9 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1:7 2:8 3:6 4:3 5:6 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 45,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1:9 2:6 3:5 4:5 5:9 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 1,
+     "brut": "1:9 2:5 3:9 4:5 5:5 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "1:5 2:5 3:6 4:3 5:5 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 46,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1:9 2:5 3:9 4:5 5:9 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "1:5 2:9 3:5 4:6 5:9 6:5"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:8 4:10 5:5 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 47,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1:5 2:7 3:6 4:6 5:5 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:3 2:5 3:9 4:7 5:9 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:5 2:6 3:7 4:3 5:7 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 48,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:3 2:7 3:8 4:7 5:5 6:6"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 5,
+     "brut": "1:3 2:5 3:5 4:9 5:9 6:9"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "1:5 2:8 3:6 4:8 5:6 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 49,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 2,
+     "brut": "1:5 2:5 3:6 4:3 5:9 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:5 2:5 3:7 4:10 5:5 6:10"
+    },
+    {
+     "mission": "nominale",
+     "k": 50,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:3 3:5 4:7 5:5 6:6"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:5 2:9 3:3 4:5 5:9 6:3"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 1,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:8 2:8 3:3 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:5 2:5 3:3 4:3 5:9 6:2"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:9 4:5 5:5 6:9"
+    },
+    {
+     "mission": "panne",
+     "k": 2,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:5 2:6 3:5 4:8 5:3 6:5"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "panne",
+     "k": 3,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:5 2:9 3:9 4:3 5:9 6:9"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:3 2:7 3:7 4:6 5:3 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 4,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:7 2:3 3:8 4:7 5:7 6:6"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:0 2:3 3:7 4:6 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 6,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 5,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "1:5 2:3 3:8 4:6 5:8 6:6"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:8 2:3 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 6,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:8 2:3 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:5 4:5 5:6 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "1:3 2:6 3:3 4:5 5:8 6:7"
+    },
+    {
+     "mission": "panne",
+     "k": 7,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 2,
+     "brut": "1:3 2:5 3:7 4:4 5:7 6:5"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "1:3 2:3 3:7 4:7 5:5 6:5"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 9,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 1,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "1:5 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 10,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "1:5 2:9 3:3 4:9 5:9 6:9"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "1:8 2:8 3:5 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 11,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:10 2:5 3:9 4:9 5:9 6:3"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 12,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 2,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:10 2:6 3:7 4:6 5:7 6:7"
+    },
+    {
+     "mission": "panne",
+     "k": 14,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "1:3 2:5 3:5 4:10 5:6 6:5"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 15,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "1:8 2:3 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "panne",
+     "k": 16,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "1:3 2:5 3:3 4:5 5:7 6:7"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "1:3 2:5 3:5 4:3 5:5 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 1,
+     "brut": "1:7 2:7 3:7 4:7 5:7 6:7"
+    },
+    {
+     "mission": "autre",
+     "k": 1,
+     "drone": 2,
+     "reponse": null,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1:!!!!!! 2:!!!!!! 3:!!!!!! 4:!!!!!! 5:!!!!!! 6:!!!!!!"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1:5 2:3 3:7 4:8 5:7 6:6"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 1,
+     "brut": "1:9 2:5 3:5 4:10 5:9 6:9"
+    },
+    {
+     "mission": "autre",
+     "k": 2,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "1:5 2:7 3:5 4:7 5:7 6:6"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:9 2:5 3:9 4:3 5:9 6:9"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:10 2:3 3:6 4:9 5:9 6:9"
+    },
+    {
+     "mission": "autre",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:5 2:7 3:5 4:7 5:5 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:8 2:8 3:5 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 4,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:7 4:8 5:10 6:6"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:3 2:7 3:3 4:7 5:8 6:7"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:8 2:7 3:6 4:10 5:7 6:3"
+    },
+    {
+     "mission": "autre",
+     "k": 5,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "1:10 2:3 3:6 4:10 5:8 6:3"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "1:5 2:7 3:5 4:7 5:5 6:5"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 6,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1:5 2:7 3:8 4:8 5:5 6:10"
+    },
+    {
+     "mission": "autre",
+     "k": 7,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 3,
+     "brut": "1:7 2:5 3:7 4:8 5:5 6:6"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 1,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 8,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 4,
+     "geometrie": 6,
+     "brut": "1:5 2:5 3:10 4:5 5:7 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "1:10 2:6 3:9 4:9 5:9 6:9"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 5,
+     "brut": "1:10 2:6 3:9 4:5 5:9 6:9"
+    },
+    {
+     "mission": "autre",
+     "k": 23,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 3,
+     "brut": "1:5 2:5 3:7 4:9 5:6 6:5"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1:6 2:9 3:9 4:9 5:5 6:9"
+    },
+    {
+     "mission": "autre",
+     "k": 24,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "1:8 2:8 3:8 4:8 5:8 6:8"
+    },
+    {
+     "mission": "autre",
+     "k": 32,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 6,
+     "brut": "1:6 2:9 3:9 4:9 5:5 6:9"
+    }
+   ]
+  }
+ ]
+}
