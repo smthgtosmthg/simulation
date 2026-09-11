@@ -1,0 +1,92 @@
+{
+ "blocages": {
+  "sans_cible_prolonge": [],
+  "immobile_avec_cible": [],
+  "ok": true
+ },
+ "doublons": {
+  "cas": [],
+  "ok": true
+ },
+ "dispersion": {
+  "distances_m": [
+   23.5,
+   19.7,
+   15.6
+  ],
+  "min_m": 15.6,
+  "ok": true
+ },
+ "panne": {
+  "simulee": true,
+  "drone": 1,
+  "t": 200.2,
+  "decisions_des_autres_apres": 24,
+  "reprise_de_sa_zone": {
+   "n": 3,
+   "premiere_t": 281.6
+  },
+  "codes_avant": 110,
+  "codes_fin": 110,
+  "ok": false
+ },
+ "fin": {
+  "fin": "sans code nouveau depuis 120 s",
+  "t_sim_s": 317.3,
+  "ok": true
+ },
+ "securite": {
+  "points": 2873,
+  "dans_un_rack": 0,
+  "distance_min_entre_drones_m": 3.82,
+  "attentes_de_priorite": 0
+ },
+ "obstacle": {
+  "simule": false,
+  "ok": true
+ },
+ "lecture": {
+  "codes_vrais": 114,
+  "codes_lus": 110,
+  "part": 0.9649,
+  "inventes": [],
+  "t_50pct_s": 130.8,
+  "t_80pct_s": 154.4,
+  "t_90pct_s": 186.6,
+  "part_connue": 0.8604,
+  "decisions_par_genre": {
+   "couvrir": {
+    "n": 3,
+    "atteintes": 3,
+    "lus": 0
+   },
+   "lire": {
+    "n": 62,
+    "atteintes": 59,
+    "lus": 36
+   }
+  }
+ },
+ "mur_min": 25.8,
+ "abandons": [],
+ "ms_par_observation": {
+  "0": {
+   "lidar": 44.9,
+   "couverture": 2.4,
+   "decodage": 3.0,
+   "detecteur": 170.7
+  },
+  "1": {
+   "lidar": 78.2,
+   "couverture": 2.4,
+   "decodage": 5.5,
+   "detecteur": 70.8
+  },
+  "2": {
+   "lidar": 72.4,
+   "couverture": 2.4,
+   "decodage": 4.0,
+   "detecteur": 62.0
+  }
+ }
+}

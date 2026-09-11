@@ -1,0 +1,944 @@
+{
+ "cas": 102,
+ "references": {
+  "hasard_zone": 0.1667,
+  "zone_la_plus_utile_geometrie": 0.8529,
+  "hasard_cote": 0.25,
+  "toujours_ouest": 1.0,
+  "cote_le_plus_frequent": {
+   "cote": "ouest",
+   "part": 1.0
+  }
+ },
+ "modele": "/home/djihene_guitoun/Documents/qwen2.5-vl-3b",
+ "variantes": [
+  {
+   "variante": "texte_melange",
+   "cas": 102,
+   "repondus": 101,
+   "justes": 0.549,
+   "accord_avec_la_geometrie": 0.5347,
+   "latence_mediane_s": 3.42,
+   "details": [
+    {
+     "mission": "fin_de_mission",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 1,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 1,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 2,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes (15) that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 2,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes (15) that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 3,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (16)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 3,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the highest number of unread QR codes (16)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 4,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 4,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the highest number of unread QR codes (15)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the highest number of unread QR codes (16)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 5,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 6,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most unknown QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 6,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 6,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 7,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 7,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most QR codes (21) that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 7,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (8)."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 8,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 8,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes (8) that are still unread."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 8,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most surfaces and shelf sections that haven't been checked yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 9,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most surfaces and shelf sections that haven't been checked yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 9,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most QR codes (5) that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 9,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the fewest QR codes that need reading and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 10,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most surfaces and shelf sections that haven't been checked yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 10,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most potential for reading QR codes as it has the highest number of shelf sections and surfaces that have not been scanned yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 10,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most unknown QR codes (3) compared to other zones."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 1,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most QR codes yet to be read."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 1,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (8)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 1,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the highest number of unread QR codes (12)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 2,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 2,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the highest number of unread QR codes (12)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 2,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 3,
+     "drone": 0,
+     "reponse": null,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 3,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 3,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 4,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the highest number of unread QR codes (13)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 4,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (13)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes that need reading."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 5,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most unknown QR codes (21)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 6,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 6,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most unknown QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 6,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (13)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 7,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the highest number of unread QR codes (13)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 7,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most surfaces and shelf sections to explore."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 7,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the highest number of unread QR codes (13)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 8,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 8,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most surfaces and shelf sections to explore."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 8,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most unknown QR codes (20)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 9,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 9,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 9,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most surfaces and shelf sections that have never been looked at from the right side."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 10,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (13)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 10,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 10,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 11,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (10)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 11,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 11,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the highest number of unread QR codes (27)."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 12,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most unknown QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 12,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most surfaces and shelf sections to explore."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 12,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most shelf sections and surfaces to explore."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 1,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (16)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 1,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 2,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most QR codes that need reading."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 2,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most QR codes that need reading and is closest to the drone's current position."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 2,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 3,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 3,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most QR codes yet to be read."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 3,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most unscanned QR codes and the largest number of surfaces and shelf sections that have not been explored."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 4,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most QR codes that need reading."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 4,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the highest number of unread QR codes (9)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 4,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 5,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most QR codes (14) that are still unread."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 5,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 6,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the highest number of unread QR codes (14)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 6,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the highest number of unread QR codes (14)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 6,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the highest number of unread QR codes (14)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 7,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most unknown QR codes (21) and is closest to the drone's current position."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 7,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 7,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the highest number of unread QR codes (14)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 8,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes (14) that are still unread."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 8,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (14)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 8,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 9,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (5)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 9,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the highest number of unread QR codes (4)."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 9,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most QR codes that haven't been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 10,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most unscanned surfaces and shelf sections, maximizing the chance of finding new QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 10,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 6  \nWHY: It has the most surfaces and shelf sections that haven't been checked yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 10,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most unscanned surfaces and shelf sections, maximizing the chance of finding more QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 11,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the most surfaces and shelf sections to explore."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 11,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "ANSWER: Zone 3  \nWHY: It has the most surfaces and shelf sections that haven't been checked yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 11,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 1  \nWHY: It has the fewest surfaces and shelf sections that haven't been checked yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 12,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "ANSWER: Zone 4  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 12,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 3,
+     "brut": "ANSWER: Zone 2  \nWHY: It has the most unscanned QR codes and is closest to the drone's current position."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 12,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 4,
+     "brut": "ANSWER: Zone 5  \nWHY: It has the fewest QR codes that haven't been read yet."
+    }
+   ]
+  }
+ ]
+}

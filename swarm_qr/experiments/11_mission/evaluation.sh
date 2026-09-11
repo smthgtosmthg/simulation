@@ -1,21 +1,14 @@
 #!/bin/bash
 # L'évaluation finale : un vol par cas, avec vidéo, jugement et assemblage vidéo.
-#   bash evaluation.sh systeme     les 4 cas avec le système : géométrie seule, λ = 0
-#   bash evaluation.sh zigzag      les 4 cas avec le balayage fixe de Pore et al.
-#   bash evaluation.sh glouton     les 4 cas avec l'oracle
+#   bash evaluation.sh             les 4 cas du système : géométrie seule, λ = 0
 # Rien d'autre ne doit tourner sur la machine pendant les vols.
 set -u
 ICI="$(cd "$(dirname "$0")" && pwd)"
 SQ="$ICI/../.."
 PY=~/isaac5_env/bin/python
 export DISPLAY=:1 PYTHONUNBUFFERED=1
-POLITIQUE="${1:-systeme}"
-case "$POLITIQUE" in
-  systeme) OPT="--lam 0.0";                 TAG="eval" ;;   # géométrie seule (décision de l'utilisatrice : le modèle n'est pas consulté)
-  zigzag)  OPT="--politique zigzag";        TAG="zigzag" ;;
-  glouton) OPT="--politique glouton";       TAG="glouton" ;;
-  *) echo "politique inconnue"; exit 1 ;;
-esac
+OPT="--lam 0.0"   # géométrie seule : le modèle n'est pas consulté
+TAG="eval"
 vole() {  # nom, arguments propres au cas
   local nom="$1"; shift
   local sortie="$ICI/${TAG}_$nom"
@@ -31,4 +24,4 @@ vole nominal  --seed 9033
 vole panne    --seed 9033 --panne 1:200
 vole 9019     --seed 9019
 vole obstacle --seed 9033 --obstacle=-4.96,4.0,200
-echo "=== EVALUATION $POLITIQUE FINIE $(date +%H:%M)"
+echo "=== EVALUATION FINIE $(date +%H:%M)"

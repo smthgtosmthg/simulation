@@ -1,0 +1,113 @@
+{
+ "blocages": {
+  "sans_cible_prolonge": [],
+  "immobile_avec_cible": [],
+  "ok": true
+ },
+ "doublons": {
+  "cas": [],
+  "ok": true
+ },
+ "dispersion": {
+  "distances_m": [
+   26.3,
+   19.7,
+   17.7
+  ],
+  "min_m": 17.7,
+  "ok": true
+ },
+ "panne": {
+  "simulee": false,
+  "ok": true
+ },
+ "fin": {
+  "fin": "sans code nouveau depuis 120 s",
+  "t_sim_s": 342.9,
+  "ok": true
+ },
+ "securite": {
+  "points": 3840,
+  "dans_un_rack": 0,
+  "distance_min_entre_drones_m": 1.6,
+  "attentes_de_priorite": 10
+ },
+ "obstacle": {
+  "simule": true,
+  "ok": true,
+  "t": 200.2,
+  "points_apres": 2136,
+  "dedans": 0,
+  "a_moins_de_30_cm": 0,
+  "distance_min_m": 0.57
+ },
+ "lecture": {
+  "codes_vrais": 114,
+  "codes_lus": 110,
+  "part": 0.9649,
+  "inventes": [],
+  "t_50pct_s": 135.2,
+  "t_80pct_s": 192.0,
+  "t_90pct_s": 206.4,
+  "part_connue": 0.8795,
+  "decisions_par_genre": {
+   "couvrir": {
+    "n": 24,
+    "atteintes": 22,
+    "lus": 0
+   },
+   "lire": {
+    "n": 54,
+    "atteintes": 49,
+    "lus": 37
+   }
+  }
+ },
+ "mur_min": 29.8,
+ "abandons": [
+  {
+   "t": 211.2,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 219.6,
+   "genre": "abandon",
+   "drone": 2,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 224.4,
+   "genre": "abandon",
+   "drone": 1,
+   "raison": "chemin coupe"
+  },
+  {
+   "t": 324.8,
+   "genre": "abandon",
+   "drone": 0,
+   "raison": "chemin coupe"
+  }
+ ],
+ "ms_par_observation": {
+  "0": {
+   "lidar": 45.4,
+   "couverture": 2.4,
+   "decodage": 3.4,
+   "detecteur": 163.9
+  },
+  "1": {
+   "lidar": 65.9,
+   "couverture": 2.4,
+   "decodage": 2.1,
+   "detecteur": 75.1
+  },
+  "2": {
+   "lidar": 73.6,
+   "couverture": 2.2,
+   "decodage": 3.8,
+   "detecteur": 39.5
+  }
+ }
+}

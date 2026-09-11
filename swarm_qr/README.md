@@ -192,12 +192,6 @@ la carte, sans image, et conseille une zone ; son avis vaut λ × 10 points dans
 --sans-progres 120` (défauts) — arrêt 60 s après 95 % des codes lus, ou après 120 s sans code
 nouveau, ou au budget. `--codes-attendus N` remplace le nombre de cartons de la scène.
 
-**Les références**, même perception, même contrôleur, même juge (`baselines.py`) :
-`--politique zigzag` suit la méthode statique de Pore et al. (Symmetry 2026) — arrêts
-hover-and-scan tous les 1,5 m le long des faces accessibles, hauteur par paliers d'étagère, faces
-réparties entre drones, serpentins en miroir ; `--politique glouton` est l'oracle qui connaît la
-position de tous les codes et va au plus proche non lu.
-
 **Les cas** : nominal (9033), panne d'un drone à 200 s (`--panne 1:200`), entrepôt jamais vu (9019),
 obstacle apparu à 200 s au milieu du couloir central (`--obstacle -4.96,4.0,200`, un bloc de
 1 × 1 × 2 m avec collision ; le juge compte les passages dans son emprise).
@@ -207,5 +201,5 @@ cycle, écrites en JPEG dans `<sortie>/video/` ; `experiments/11_mission/video.p
 assemble une vidéo par caméra et `mission.mp4`, la mosaïque des quatre couloirs avec la vue
 d'ensemble et la caméra de lecture en médaillons — à vitesse réelle, cinq images par seconde.
 
-**Tout enchaîner** : `bash experiments/11_mission/evaluation.sh systeme|zigzag|glouton` fait les
-quatre cas d'une politique, avec jugement et vidéo, dans `experiments/11_mission/{eval,zigzag,glouton}_<cas>`.
+**Tout enchaîner** : `bash experiments/11_mission/evaluation.sh` fait les quatre cas,
+avec jugement et vidéo, dans `experiments/11_mission/eval_<cas>`.

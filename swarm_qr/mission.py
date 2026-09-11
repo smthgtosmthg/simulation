@@ -42,8 +42,6 @@ parser.add_argument("--part-arret", type=float, default=0.95, dest="part_arret",
 parser.add_argument("--grace", type=float, default=60.0, help="secondes de vol accordées après la part atteinte")
 parser.add_argument("--sans-progres", type=float, default=120.0, dest="sans_progres",
                     help="secondes sans code nouveau après lesquelles on s'arrête (0 = jamais)")
-parser.add_argument("--politique", default="geometrie", choices=["geometrie", "zigzag", "glouton"],
-                    help="geometrie = le système ; zigzag = la méthode statique de Pore et al. ; glouton = l'oracle qui connaît les codes")
 parser.add_argument("--video", action="store_true", help="enregistre les caméras fixes à chaque rendu (vidéo à vitesse réelle)")
 parser.add_argument("--cameras", type=int, default=2, choices=[2, 3, 5],
                     help="2 = couloir central + grande zone (choix de l'utilisatrice) ; 3 = + vue d'ensemble ; 5 = tous les couloirs")
@@ -64,7 +62,6 @@ import numpy as np  # noqa: E402
 import omni.timeline  # noqa: E402
 
 from swarm_qr import control, mapping, planning  # noqa: E402
-from swarm_qr import baselines  # noqa: E402
 from swarm_qr.env import scene as scene_mod  # noqa: E402
 from swarm_qr.env.config import CAMERAS  # noqa: E402
 from swarm_qr.env.layout import make_layout  # noqa: E402
@@ -83,9 +80,6 @@ DECISION_REPOS_S = 2.0        # s entre deux décisions d'un drone sans cible
 V_APPROCHE = 0.6              # m/s ; l'approche d'une pose tenue, comme la patrouille de l'étape 4
 RAYON_COEQUIPIER = 2.0        # m ; un coéquipier en vol est un obstacle de ce rayon pour les chemins
 MARGE_ALTITUDE = 1.5          # m ; on change d'altitude à au moins ça de tout obstacle connu
-FENETRE_ZIGZAG = 12           # arrêts examinés au plus par décision : la physique ne doit pas attendre
-CHEMINS_ZIGZAG = 3            # calculs de chemin au plus par décision, pour la même raison
-PASSES_ZIGZAG = 3             # un arrêt mis de côté est repris aux passages suivants, pas au-delà
 TOL_ARRIVEE = 0.35            # m ; à trois drones, une pose tenue oscille de 30 cm : 15 cm ne s'atteint jamais
 GAIN_MISSION = 0.5            # vitesse commandée par mètre d'écart ; 0,9 (étape 3, un drone) oscille à trois drones
 V_TRANSIT_MISSION = 1.0       # m/s ; un transit plus lent dépasse moins près des racks
@@ -243,15 +237,7 @@ def main() -> None:
         ox, oy, ot = (float(v) for v in args.obstacle.split(","))
         obstacle_prevu = {"x": ox, "y": oy, "t": ot, "pose": False}
     racks_connus = [{"prim": r.prim, "x": list(r.x_bounds), "y": list(r.y_bounds)} for r in layout.racks]
-    secteurs = baselines.arrets_zigzag(layout, args.drones) if args.politique == "zigzag" else []
-    if secteurs:
-        secteurs = baselines.attribue(secteurs, [scene.position(i) for i in range(args.drones)])
-    plans = [baselines.PlanFixe(l, fenetre=FENETRE_ZIGZAG, chemins=CHEMINS_ZIGZAG, passes=PASSES_ZIGZAG)
-             for l in secteurs]
-    if args.politique == "zigzag":
-        print("zigzag : " + ", ".join(f"drone {i} {len(p.arrets)} arrets" for i, p in enumerate(plans)))
-
-    journal = {"seed": args.seed, "drones": args.drones, "budget_s": args.budget, "politique": args.politique,
+    journal = {"seed": args.seed, "drones": args.drones, "budget_s": args.budget,
                "arret": {"codes_attendus": args.codes_attendus or len({t.tag_id for t in tags}), "part": args.part_arret,
                          "grace_s": args.grace, "sans_progres_s": args.sans_progres},
                "detecteur": args.detecteur, "guide": args.guide, "lam": args.lam,
@@ -316,21 +302,12 @@ def main() -> None:
             a.cerveau.constate(a.cible, lu)
             if a.ctrl.phase is control.Phase.ABANDON:
                 carte.ecarte(a.cible.position)
-                if args.politique == "zigzag":
-                    plans[a.i].remet(a.cible)
             a.decisions[-1].update({"fin": round(clock.t, 1), "phase": a.ctrl.phase.value,
                                     "lu": bool(lu), "raison": a.ctrl.bilan.raison if a.ctrl.bilan else ""})
             carte.libere(a.i)
             a.cible = None
         avec_coequipiers(a)
-        if args.politique == "zigzag":
-            choix = plans[a.i].prochain(carte, lambda p, cs: a.cerveau.choisit(p, cibles=cs, t=clock.t),
-                                        scene.position(a.i))
-        elif args.politique == "glouton":
-            choix = a.cerveau.choisit(scene.position(a.i), cibles=baselines.cibles_omniscientes(tags, set(carte.codes)),
-                                      t=clock.t)
-        else:
-            choix = a.cerveau.choisit(scene.position(a.i), avis=a.avis, t=clock.t)
+        choix = a.cerveau.choisit(scene.position(a.i), avis=a.avis, t=clock.t)
         carte.obstacles_mobiles = []
         if choix is None:
             if a.t_sans_cible is None:
@@ -668,8 +645,6 @@ def main() -> None:
         # --- rapport ---
         carte.sauve(SORTIE / "carte")
         cm = np.array(cycles_ms) if cycles_ms else np.zeros(1)
-        if args.politique == "zigzag":
-            journal["zigzag"] = {i: p.bilan() for i, p in enumerate(plans)}
         journal.update({
             "fin": fin, "t_sim_s": round(clock.t, 1), "mur_min": round((time.monotonic() - mur0) / 60, 1),
             "cycles": {"n": int(len(cm)), "mediane_ms": round(float(np.median(cm)), 1),

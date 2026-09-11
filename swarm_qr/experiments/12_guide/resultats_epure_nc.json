@@ -1,0 +1,926 @@
+{
+ "cas": 100,
+ "references": {
+  "hasard_zone": 0.1667,
+  "zone_la_plus_utile_geometrie": 0.87,
+  "hasard_cote": 0.25,
+  "toujours_ouest": 1.0,
+  "cote_le_plus_frequent": {
+   "cote": "ouest",
+   "part": 1.0
+  }
+ },
+ "modele": "/home/djihene_guitoun/Documents/qwen2.5-vl-3b",
+ "variantes": [
+  {
+   "variante": "epure",
+   "cas": 100,
+   "repondus": 99,
+   "justes": 0.83,
+   "accord_avec_la_geometrie": 0.7273,
+   "latence_mediane_s": 5.83,
+   "details": [
+    {
+     "mission": "fin_de_mission",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 1,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 1,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 2,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the fewest surfaces never looked at (13), making it the most promising area for finding QR codes."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 2,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 2,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the highest number of QR codes that have not been read (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 3,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 1,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (16), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 3,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 4,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 4,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "<zone number> 3\nWHY: It has the highest number of QR codes that have not been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 5,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (16), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 5,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (16), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 5,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (16), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 6,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (8), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 6,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the fewest surfaces never looked at (23), making it the most promising area for finding more QR codes."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 6,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "ANSWER: 1\nWHY: This zone has the highest number of QR codes that have not been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 7,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the fewest QR codes spotted but not read (0), making it the optimal choice for the drone to maximize the number of QR codes it can read."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 7,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the fewest surfaces never looked at (9), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 7,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the fewest surfaces never looked at (26), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 8,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 1 next.\n\nWHY: Zone 1 has the highest number of QR codes that have not been read yet (8 codes), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 8,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (8 codes), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 8,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read (8), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 9,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "ANSWER: 5\nWHY: Zone 5 has the highest number of QR codes that have not been read yet."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 9,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes spotted but not read (5), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 9,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the fewest surfaces never looked at (8) and the fewest shelf sections with a box seen but face never looked at (7), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 10,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read (3), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 10,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 1 next.\n\nWHY: Zone 1 has the highest number of QR codes that have not been read yet (3), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission",
+     "k": 10,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes spotted but not read (3), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 1,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2.\n\nWHY: Zone 2 has the highest number of QR codes that have not been read (12), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 1,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (12), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 1,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (12), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 2,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read (7), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 2,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the highest number of QR codes spotted but not read (12), making it the most promising area for the drone to continue its mission."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 2,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 6. WHY: It has the highest number of QR codes that have not been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 3,
+     "drone": 0,
+     "reponse": null,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 3,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the highest number of QR codes that have not been read (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 3,
+     "drone": 2,
+     "reponse": 1,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 1 next.\n\nWHY: Zone 1 has the highest number of QR codes that have not been read (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 4,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 4,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 4,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 5,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 5,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 6,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the fewest surfaces never looked at (22), which means there is more potential for QR codes to be found."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 6,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the fewest QR codes spotted but not read (0), making it the optimal choice for the drone to maximize the number of QR codes it can read."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 6,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 7,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the fewest surfaces never looked at (27) and the fewest shelf sections with a box seen but face never looked at (18), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 7,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 7,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 8,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 8,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 8,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "<zone number> 6\n\nWHY: It has the highest number of QR codes that have not been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 9,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 1 next.\n\nWHY: Zone 1 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 9,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 9,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "<zone number> 6\n\nWHY: It has the highest number of QR codes that have not been read yet."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 10,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "<zone number> 5\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 10,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 10,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (13), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 11,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (10), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 11,
+     "drone": 1,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 1 next.\n\nWHY: Zone 1 has the highest number of QR codes that have not been read yet (10), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 11,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (10), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 12,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 1 next.\n\nWHY: Zone 1 has the highest number of QR codes that have not been read yet (5), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 12,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the fewest surfaces never looked at (7), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "fin_de_mission_v3",
+     "k": 12,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the highest number of QR codes spotted but not read (5), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 1,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (16), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 1,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (16), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 1,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the highest number of QR codes that have not been read yet (16), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 2,
+     "drone": 0,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2.\n\nWHY: Zone 2 has the highest number of QR codes that have not been read (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 2,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 2,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (15), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 3,
+     "drone": 0,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (12), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 3,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the highest number of QR codes that have not been read (12), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 3,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (12), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 4,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 4,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read yet (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 4,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 5,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 5,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 5,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the fewest surfaces never looked at (27) and the fewest shelf sections with a box seen but face never looked at (21), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 6,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 1,
+     "geometrie": 1,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the fewest surfaces never looked at (27) and the fewest shelf sections with a box seen but face never looked at (21), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 6,
+     "drone": 1,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 6,
+     "brut": "<zone number> 6\nWHY: It has the highest number of QR codes that have not been read yet."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 6,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 7,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 7,
+     "drone": 1,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 7,
+     "drone": 2,
+     "reponse": 5,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the fewest surfaces never looked at (27) and the fewest shelf sections with a box seen but face never looked at (21), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 8,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 8,
+     "drone": 1,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 8,
+     "drone": 2,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (14), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 9,
+     "drone": 0,
+     "reponse": 1,
+     "bonne": 5,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 1 next.\n\nWHY: Zone 1 has the highest number of QR codes that have not been read yet (4), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 9,
+     "drone": 1,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (5 codes), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 9,
+     "drone": 2,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the fewest surfaces never looked at (9), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 10,
+     "drone": 0,
+     "reponse": 5,
+     "bonne": 5,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 5 next.\n\nWHY: Zone 5 has the highest number of QR codes that have not been read yet (4 codes), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 10,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the fewest surfaces never looked at (7), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 10,
+     "drone": 2,
+     "reponse": 6,
+     "bonne": 6,
+     "geometrie": 3,
+     "brut": "The drone should go to Zone 6 next.\n\nWHY: Zone 6 has the highest number of QR codes that have not been read (4), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 11,
+     "drone": 0,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 2,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (4), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 11,
+     "drone": 1,
+     "reponse": 2,
+     "bonne": 2,
+     "geometrie": 6,
+     "brut": "The drone should go to Zone 2 next.\n\nWHY: Zone 2 has the fewest surfaces never looked at (7), making it the most promising area for reading QR codes."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 11,
+     "drone": 2,
+     "reponse": 3,
+     "bonne": 3,
+     "geometrie": 4,
+     "brut": "The drone should go to Zone 3 next.\n\nWHY: Zone 3 has the highest number of QR codes that have not been read (4), making it the most promising area for the drone to focus on."
+    },
+    {
+     "mission": "controle_code_restaure",
+     "k": 12,
+     "drone": 0,
+     "reponse": 4,
+     "bonne": 4,
+     "geometrie": 5,
+     "brut": "The drone should go to Zone 4 next.\n\nWHY: Zone 4 has the highest number of QR codes that have not been read yet (4 codes), making it the most promising area for the drone to focus on."
+    }
+   ]
+  }
+ ]
+}

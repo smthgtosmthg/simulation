@@ -142,10 +142,6 @@ def composee(dossier: Path, index: dict, ips_entree: float, entete: dict) -> Non
     print(f"  mission.mp4 : {len(index['images']) / ips_entree:.0f} s, {W}x{H + BANDE}, {sortie.ferme():.1f} Mo")
 
 
-NOMS = {"geometrie": "systeme : geometrie seule", "zigzag": "reference : balayage fixe (Pore et al.)",
-        "glouton": "reference : glouton omniscient"}
-
-
 def entete(dossier: Path) -> dict:
     """L'identité de la mission, lue dans son journal."""
     fichier = dossier / "mission.json"
@@ -157,8 +153,7 @@ def entete(dossier: Path) -> dict:
         cas = f"panne du drone {m['panne'].split(':')[0]}"
     elif m.get("obstacle"):
         cas = f"obstacle pose a {m['obstacle']['t']:.0f} s"
-    return {"titre": NOMS.get(m.get("politique"), m.get("politique", "")),
-            "entrepot": f"entrepot {m.get('seed')}", "cas": f"cas : {cas}"}
+    return {"titre": "systeme : geometrie seule", "entrepot": f"entrepot {m.get('seed')}", "cas": f"cas : {cas}"}
 
 
 def main() -> None:

@@ -1,0 +1,702 @@
+{
+ "modele": "/home/djihene_guitoun/Documents/qwen2.5-vl-3b",
+ "cas": 2,
+ "versions": [
+  {
+   "version": "4 bits",
+   "memoire_gpu_mo": 2463,
+   "chargement_s": 5.7,
+   "latence_mediane_s": 0.58,
+   "justes_plan_origine": "1/9",
+   "justes_plan_lisible": "5/9",
+   "taux_origine": 0.111,
+   "taux_lisible": 0.556,
+   "details": [
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 3,
+     "juste": false,
+     "brut": "3"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 3,
+     "juste": false,
+     "brut": "3"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 6,
+     "juste": true,
+     "brut": "6"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 4,
+     "juste": true,
+     "brut": "4"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 4,
+     "juste": false,
+     "brut": "4"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 5,
+     "juste": true,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 5,
+     "juste": true,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 2,
+     "juste": false,
+     "brut": "2"
+    }
+   ]
+  },
+  {
+   "version": "4 bits, vision en 16",
+   "memoire_gpu_mo": 4264,
+   "chargement_s": 2.8,
+   "latence_mediane_s": 0.55,
+   "justes_plan_origine": "1/9",
+   "justes_plan_lisible": "5/9",
+   "taux_origine": 0.111,
+   "taux_lisible": 0.556,
+   "details": [
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 3,
+     "juste": false,
+     "brut": "3"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 3,
+     "juste": false,
+     "brut": "3"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 6,
+     "juste": true,
+     "brut": "6"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 4,
+     "juste": true,
+     "brut": "4"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 4,
+     "juste": false,
+     "brut": "4"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 5,
+     "juste": true,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 5,
+     "juste": true,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 2,
+     "juste": false,
+     "brut": "2"
+    }
+   ]
+  },
+  {
+   "version": "8 bits",
+   "memoire_gpu_mo": 4184,
+   "chargement_s": 5.1,
+   "latence_mediane_s": 0.76,
+   "justes_plan_origine": "1/9",
+   "justes_plan_lisible": "5/9",
+   "taux_origine": 0.111,
+   "taux_lisible": 0.556,
+   "details": [
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 4,
+     "juste": false,
+     "brut": "4"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 10,
+     "juste": false,
+     "brut": "10"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 10,
+     "juste": false,
+     "brut": "10"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 2,
+     "juste": false,
+     "brut": "2"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 6,
+     "juste": true,
+     "brut": "6"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 4,
+     "juste": true,
+     "brut": "4"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 4,
+     "juste": false,
+     "brut": "4"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 5,
+     "juste": true,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 5,
+     "juste": true,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 3,
+     "juste": false,
+     "brut": "3"
+    }
+   ]
+  },
+  {
+   "version": "sans compression",
+   "memoire_gpu_mo": 6748,
+   "chargement_s": 1.8,
+   "latence_mediane_s": 0.7,
+   "justes_plan_origine": "1/9",
+   "justes_plan_lisible": "4/9",
+   "taux_origine": 0.111,
+   "taux_lisible": 0.444,
+   "details": [
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 4,
+     "juste": false,
+     "brut": "4"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 10,
+     "juste": false,
+     "brut": "10"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 10,
+     "juste": false,
+     "brut": "10"
+    },
+    {
+     "cas": 0,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 2,
+     "juste": false,
+     "brut": "2"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 6,
+     "juste": true,
+     "brut": "6"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "haut",
+     "attendu": 4,
+     "reponse": 4,
+     "juste": true,
+     "brut": "4"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 5,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 0,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 4,
+     "juste": false,
+     "brut": "4"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 5,
+     "juste": true,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "origine",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "compter",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "gauche",
+     "attendu": 2,
+     "reponse": 1,
+     "juste": false,
+     "brut": "1"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "droite",
+     "attendu": 5,
+     "reponse": 6,
+     "juste": false,
+     "brut": "6"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "bas",
+     "attendu": 3,
+     "reponse": 3,
+     "juste": true,
+     "brut": "3"
+    },
+    {
+     "cas": 1,
+     "plan": "lisible",
+     "question": "voisin",
+     "attendu": 6,
+     "reponse": 5,
+     "juste": false,
+     "brut": "5"
+    }
+   ]
+  }
+ ]
+}
