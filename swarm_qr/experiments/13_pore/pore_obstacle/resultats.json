@@ -1,0 +1,49 @@
+{
+ "lecture": {
+  "codes_vrais": 114,
+  "codes_lus": 103,
+  "part": 0.9035,
+  "inventes": [],
+  "manques": 11,
+  "t_50pct_s": 250.4,
+  "t_80pct_s": 354.4,
+  "t_90pct_s": 534.4
+ },
+ "securite": {
+  "points": 7218,
+  "dans_un_rack": 0,
+  "distance_min_entre_drones_m": 4.62,
+  "separation_tenue": true,
+  "attentes_de_priorite": 0
+ },
+ "obstacle": {
+  "simule": true,
+  "ok": true,
+  "t": 200.2,
+  "points_apres": 5517,
+  "dedans": 0,
+  "points_a_hauteur": 927,
+  "distance_min_m": 0.28,
+  "survols": 75,
+  "garde_au_dessus_m": 1.04,
+  "deflexions": 6
+ },
+ "plan": {
+  "arrets_prevus": 180,
+  "arrets_servis": 180,
+  "non_servis": 0,
+  "passages": 2
+ },
+ "inventaire": {
+  "codes_uniques": 103,
+  "lectures": 1951,
+  "doublons": 2230,
+  "a_relire": 0,
+  "confiance_moyenne": 1.0,
+  "confiance_min": 1.0
+ },
+ "fin": "plan termine",
+ "t_sim_s": 567.8,
+ "mur_min": 49.6,
+ "chutes": []
+}
