@@ -49,7 +49,17 @@ LIRE_MAX = 4.0
 RAYON_DRONE = 0.6          # hélices (0,34 m) plus l'oscillation de tenue mesurée à l'étape 2 (0,21 m)
 EPAISSEUR = 0.85           # tranche d'altitude du planificateur : le rayon plus l'oscillation verticale (0,25 m)
 DESSOUS = 2.0              # un drone ne survole pas une structure à moins de 2 m sous lui : un rack se contourne
+SOL = 0.5                  # le sol et ce qui y traîne ne sont pas une structure à contourner
+GARDE_SOL = 0.9            # ... à condition de passer au moins aussi haut au-dessus
 FUSION = 0.45              # deux détections à moins de ça sont le même panneau
+
+
+def tranche_de_vol(z: float, epaisseur: float = EPAISSEUR) -> tuple[float, float]:
+    """La tranche d'altitude qui bloque le passage à l'altitude `z`. Un rack se contourne, mais
+    le sol ne se contourne pas : le lidar marque occupées les cases de plancher qu'il voit, et
+    sans cette règle un drone ne pourrait plus voler à hauteur du premier étage au-dessus d'un
+    plancher déjà cartographié."""
+    return min(max(z - DESSOUS, SOL), z - GARDE_SOL), z + epaisseur
 COUT_INCONNU = 20.0        # traverser une case inconnue coûte vingt fois une case libre : l'inconnu au milieu d'un rack est du rack
 RESERVATION_S = 45.0       # une réservation non renouvelée expire
 SILENCE_S = 5.0            # un drone muet depuis plus longtemps libère ses cibles
@@ -452,7 +462,7 @@ class Carte:
         sous le drone et 0,85 m au-dessus bloque la colonne. Survoler les cartons du dernier
         étage d'un rack, entre ses montants, est possible dans le simulateur ; ce serait une
         collision dans un vrai entrepôt."""
-        return self.couts(z - DESSOUS, z + EPAISSEUR)
+        return self.couts(*tranche_de_vol(z))
 
     def chemin(self, depart, arrivee, altitude: float | None = None,
                epaisseur: float = EPAISSEUR) -> list[np.ndarray] | None:
@@ -461,14 +471,14 @@ class Carte:
         a = np.asarray(depart, dtype=float)
         b = np.asarray(arrivee, dtype=float)
         z = float(a[2] if altitude is None else altitude)
-        cout = self.couts(z - DESSOUS, z + epaisseur)
+        cout = self.couts(*tranche_de_vol(z, epaisseur))
         ia, ib = tuple(self.indice(a)[0][:2]), tuple(self.indice(b)[0][:2])
         if not self._praticable(ib, cout):
             return None
         if not self._praticable(ia, cout):
             # le drone est dans la marge élargie d'un obstacle, pas dans l'obstacle : il doit
             # pouvoir en sortir, sinon il resterait bloqué là où il se trouve
-            k0, k1 = self._tranche(z - DESSOUS, z + epaisseur)
+            k0, k1 = self._tranche(*tranche_de_vol(z, epaisseur))
             if (self.occupation[ia[0], ia[1], k0:k1] > SEUIL_OCCUPE).any():
                 return None
             cout = cout.copy()
@@ -486,9 +496,15 @@ class Carte:
         coupe : c'est le signal pour recalculer le chemin pendant le transit."""
         a, b = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
         z = float(a[2] if altitude is None else altitude)
-        cout = self.couts(z - DESSOUS, z + epaisseur)
+        cout = self.couts(*tranche_de_vol(z, epaisseur))
         ia, ib = tuple(self.indice(a)[0][:2]), tuple(self.indice(b)[0][:2])
         return np.isfinite(self._cout_droite(ia, ib, cout))
+
+    def pose_atteignable(self, point, marge: float = RAYON_DRONE) -> bool:
+        """Un drone peut-il tenir cette pose ? Vrai si sa case est libre de tout obstacle connu
+        élargi du rayon du drone. Test à une case, sans calcul de chemin."""
+        cout = self.couts(*tranche_de_vol(float(point[2])), marge=marge)
+        return self._praticable(tuple(self.indice(point)[0][:2]), cout)
 
     def _praticable(self, ij, cout) -> bool:
         i, j = int(ij[0]), int(ij[1])

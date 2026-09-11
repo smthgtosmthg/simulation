@@ -119,7 +119,7 @@ class Cerveau:
     def _couts_a(self, z: float) -> np.ndarray:
         k = int(round(z / 0.25))
         if k not in self._couts:
-            self._couts[k] = self.carte.couts(z - mapping.DESSOUS, z + mapping.EPAISSEUR, marge=MARGE_POSE)
+            self._couts[k] = self.carte.couts(*mapping.tranche_de_vol(z), marge=MARGE_POSE)
         return self._couts[k]
 
     def _praticable(self, p) -> bool:
@@ -150,7 +150,7 @@ class Cerveau:
         """Le point praticable le plus proche de `position`, à `marge` de tout obstacle connu, à
         la même altitude ; None s'il n'y en a pas à moins de 3 m."""
         p = np.asarray(position, dtype=float)
-        cout = self.carte.couts(p[2] - mapping.DESSOUS, p[2] + mapping.EPAISSEUR, marge=marge)
+        cout = self.carte.couts(*mapping.tranche_de_vol(float(p[2])), marge=marge)
         pas = self.carte.g.cell
         n = int(3.0 / pas)
         for dx, dy in sorted(((dx, dy) for dx in range(-n, n + 1) for dy in range(-n, n + 1)),

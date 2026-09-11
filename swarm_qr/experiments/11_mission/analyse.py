@@ -120,7 +120,8 @@ def panne(m) -> dict:
 
 
 def fin_propre(m) -> dict:
-    return {"fin": m["fin"], "t_sim_s": m["t_sim_s"], "ok": m["fin"] in ("plus aucune cible", "budget epuise")}
+    propre = m["fin"] in ("plus aucune cible", "budget epuise") or m["fin"].startswith(("inventaire a", "sans code nouveau"))
+    return {"fin": m["fin"], "t_sim_s": m["t_sim_s"], "ok": propre}
 
 
 def securite(m, layout) -> dict:
@@ -143,6 +144,26 @@ def securite(m, layout) -> dict:
     return {"points": int(len(pts)), "dans_un_rack": int(dedans.sum()),
             "distance_min_entre_drones_m": round(mini, 2) if np.isfinite(mini) else None,
             "attentes_de_priorite": sum(a["attentes"] for a in m["agents"])}
+
+
+def obstacle(m) -> dict:
+    """L'obstacle apparu en cours de mission : aucun drone ne doit passer dans son emprise après
+    son apparition, et la carte doit l'avoir posé (cases occupées sur son emprise à la fin)."""
+    o = m.get("obstacle")
+    if not o:
+        return {"simule": False, "ok": True}
+    marge = 0.3
+    pts = np.array([[p[0], *p[1:]] for a in m["agents"] for p in a["trajectoire"] if p[0] >= o["t"]], float)
+    if len(pts) == 0:
+        return {"simule": True, "ok": True, "points_apres": 0, "dedans": 0, "a_moins_de_30_cm": 0}
+    def dans(marge):
+        return ((pts[:, 1] > o["x"][0] - marge) & (pts[:, 1] < o["x"][1] + marge) &
+                (pts[:, 2] > o["y"][0] - marge) & (pts[:, 2] < o["y"][1] + marge) & (pts[:, 3] < o["z"][1] + marge))
+    dedans, pres = int(dans(0.0).sum()), int(dans(marge).sum())
+    d_min = float(np.min(np.hypot(np.clip(np.maximum(o["x"][0] - pts[:, 1], pts[:, 1] - o["x"][1]), 0, None),
+                                  np.clip(np.maximum(o["y"][0] - pts[:, 2], pts[:, 2] - o["y"][1]), 0, None))))
+    return {"simule": True, "ok": dedans == 0, "t": o["t"], "points_apres": int(len(pts)), "dedans": dedans,
+            "a_moins_de_30_cm": pres, "distance_min_m": round(d_min, 2)}
 
 
 def lecture(m, carte) -> dict:
@@ -190,7 +211,7 @@ def main(dossier: Path) -> None:
     m, carte = charge(dossier)
     layout = make_layout(m["seed"])
     res = {"blocages": blocages(m), "doublons": doublons(m), "dispersion": dispersion(m),
-           "panne": panne(m), "fin": fin_propre(m), "securite": securite(m, layout),
+           "panne": panne(m), "fin": fin_propre(m), "securite": securite(m, layout), "obstacle": obstacle(m),
            "lecture": lecture(m, carte), "mur_min": m["mur_min"],
            "abandons": [e for e in m["evenements"] if e["genre"] == "abandon"],
            "ms_par_observation": {a["i"]: a["ms"] for a in m["agents"]}}
@@ -207,6 +228,10 @@ def main(dossier: Path) -> None:
     print(f"4. panne absorbee     : {ok(p['ok'])}  " + (f"drone {p['drone']} a {p['t']} s, {p['decisions_des_autres_apres']} decisions des autres ensuite, "
           f"codes {p['codes_avant']} -> {p['codes_fin']}, reprise de sa zone {p['reprise_de_sa_zone']}" if p["simulee"] else "(pas de panne simulee)"))
     print(f"5. fin propre         : {ok(res['fin']['ok'])}  « {m['fin']} »")
+    o = res["obstacle"]
+    if o["simule"]:
+        print(f"6. obstacle evite     : {ok(o['ok'])}  apparu a {o['t']} s ; {o['dedans']} points dans son emprise, "
+              f"{o['a_moins_de_30_cm']} a moins de 30 cm, distance min {o.get('distance_min_m')} m sur {o['points_apres']} points")
     l = res["lecture"]
     print(f"lecture   : {l['codes_lus']}/{l['codes_vrais']} codes ({l['part']:.0%}), inventes {l['inventes']}, "
           f"50 % a {l['t_50pct_s']} s, 80 % a {l['t_80pct_s']} s, 90 % a {l['t_90pct_s']} s ; {l['part_connue']:.0%} connu")

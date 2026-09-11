@@ -180,3 +180,32 @@ obstacles mobiles. Détail dans [`11_mission/RESULTATS.md`](experiments/11_missi
 | La panne d'un drone ? | absorbée : sa zone reprise 20 s après, inventaire complet |
 | Sur un entrepôt jamais vu ? | 63 codes sur 65, 5 vérifications sur 5, aucune chute ; un premier vol avait vu les trois drones se dérégler ensemble vers 300 s, non reproduit, journal daté en place |
 | Ce que huit missions ont appris | neuf règles, chacune née d'un vol qui l'a rendue nécessaire, listées dans le bilan |
+
+## Étape 9 — L'évaluation : le système complet, ses références, ses vidéos
+
+**Le système complet** = la géométrie plus le guide entraîné : `mission.py --guide entraine --lam 1.0`.
+Le guide (`guide.GuideEntraine`) est le modèle Qwen2.5-VL 3B en 4 bits avec l'adaptateur LoRA
+appris sur la mission (`experiments/12_guide/adaptateur_lora`, 15 Mo) ; il lit le dossier épuré de
+la carte, sans image, et conseille une zone ; son avis vaut λ × 10 points dans la note des cibles.
+
+**L'arrêt de mission** utilise la taille connue de l'inventaire : `--part-arret 0.95 --grace 60
+--sans-progres 120` (défauts) — arrêt 60 s après 95 % des codes lus, ou après 120 s sans code
+nouveau, ou au budget. `--codes-attendus N` remplace le nombre de cartons de la scène.
+
+**Les références**, même perception, même contrôleur, même juge (`baselines.py`) :
+`--politique zigzag` suit la méthode statique de Pore et al. (Symmetry 2026) — arrêts
+hover-and-scan tous les 1,5 m le long des faces accessibles, hauteur par paliers d'étagère, faces
+réparties entre drones, serpentins en miroir ; `--politique glouton` est l'oracle qui connaît la
+position de tous les codes et va au plus proche non lu.
+
+**Les cas** : nominal (9033), panne d'un drone à 200 s (`--panne 1:200`), entrepôt jamais vu (9019),
+obstacle apparu à 200 s au milieu du couloir central (`--obstacle -4.96,4.0,200`, un bloc de
+1 × 1 × 2 m avec collision ; le juge compte les passages dans son emprise).
+
+**La vidéo** (`--video`) : cinq caméras fixes sur les murs (`scene.CAMERAS_VIDEO`), rendues à chaque
+cycle, écrites en JPEG dans `<sortie>/video/` ; `experiments/11_mission/video.py --dossier <sortie>`
+assemble une vidéo par caméra et `mission.mp4`, la mosaïque des quatre couloirs avec la vue
+d'ensemble et la caméra de lecture en médaillons — à vitesse réelle, cinq images par seconde.
+
+**Tout enchaîner** : `bash experiments/11_mission/evaluation.sh systeme|zigzag|glouton` fait les
+quatre cas d'une politique, avec jugement et vidéo, dans `experiments/11_mission/{eval,zigzag,glouton}_<cas>`.

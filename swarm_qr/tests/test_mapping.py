@@ -400,3 +400,26 @@ def test_un_coequipier_est_un_obstacle_pour_les_chemins():
     assert all(np.linalg.norm(p[:2]) > 1.2 for p in points)
     c.obstacles_mobiles = []
     assert c.chemin(depart, arrivee) == []
+
+
+def test_le_sol_vu_par_le_lidar_ne_ferme_pas_le_premier_etage():
+    """Le lidar marque occupées les cases de plancher qu'il voit. Sans la règle du sol, un
+    drone ne pourrait plus voler à hauteur du premier étage au-dessus d'un plancher déjà
+    cartographié : c'est ce qui bloquait le balayage fixe."""
+    c = Carte()
+    depart, arrivee = np.array([0.0, -4.0, 1.66]), np.array([0.0, 4.0, 1.66])
+    sol = np.array([[0.0, y, 0.1] for y in np.arange(-4.0, 4.0, 0.2)])
+    c.occupation[tuple(c.indice(sol).T)] = 5.0
+    assert c.chemin(depart, arrivee) == []                     # le sol n'est pas une structure
+    assert c.pose_atteignable(arrivee)
+    haut = np.array([[0.0, y, 1.2] for y in np.arange(-1.0, 1.0, 0.2)])
+    c.occupation[tuple(c.indice(haut).T)] = 5.0
+    assert c.chemin(depart, arrivee) != []                     # un vrai obstacle se contourne
+
+
+def test_le_sol_reste_un_obstacle_pour_un_vol_rasant():
+    c = Carte()
+    sol = np.array([[0.0, y, 0.3] for y in np.arange(-4.0, 4.0, 0.2)])
+    c.occupation[tuple(c.indice(sol).T)] = 5.0
+    assert not c.pose_atteignable(np.array([0.0, 0.0, 0.9]))   # 0,6 m au-dessus : trop bas
+    assert c.pose_atteignable(np.array([0.0, 0.0, 1.66]))      # 1,36 m au-dessus : on passe

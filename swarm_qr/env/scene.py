@@ -192,6 +192,59 @@ def _hide(stage, paths) -> None:
             prim.SetActive(False)
 
 
+def _orientation_monde(yaw_deg: float, plongee_deg: float) -> np.ndarray:
+    """Quaternion (w, x, y, z) en convention monde de la classe Camera (avant = +X, haut = +Z) :
+    un lacet autour de Z, puis une plongée vers le bas autour de Y."""
+    a, b = math.radians(yaw_deg) / 2.0, math.radians(plongee_deg) / 2.0
+    ca, sa, cb, sb = math.cos(a), math.sin(a), math.cos(b), math.sin(b)
+    return np.array([ca * cb, -sa * sb, ca * sb, sa * cb])
+
+
+# Cinq caméras fixes de vidéosurveillance, à 3,5 m sur les murs, qui regardent le long des
+# couloirs : à cette hauteur on voit toute la longueur d'un couloir, ses deux faces de rack, et
+# à quel étage vole chaque drone. La cinquième, en hauteur dans un coin, voit tout l'entrepôt.
+# Positions pour l'entrepôt 9033 (murs à x = -10,5 et 9,25, y = -12,25 et 17,75).
+CAMERAS_VIDEO = {
+    "sud_ouest":    dict(position=(-9.40, -11.6, 3.5), yaw=90.0,  plongee=8.0,  fov=60.0),
+    "sud_central":  dict(position=(-4.96, -11.6, 3.5), yaw=90.0,  plongee=8.0,  fov=60.0),
+    "nord_central": dict(position=(-4.96, 17.3, 3.5),  yaw=-90.0, plongee=8.0,  fov=60.0),
+    "sud_grande":   dict(position=(2.70, -11.6, 3.5),  yaw=90.0,  plongee=8.0,  fov=80.0),
+    "ensemble":     dict(position=(-10.1, -11.6, 5.8), yaw=56.0,  plongee=22.0, fov=95.0),
+}
+# Le jeu retenu par l'utilisatrice : les deux caméras qui regardent dans les deux couloirs
+# principaux, le couloir central et la grande zone. Les trois autres restent disponibles.
+CAMERAS_VIDEO_2 = {n: CAMERAS_VIDEO[n] for n in ("sud_central", "sud_grande")}
+CAMERAS_VIDEO_3 = {n: CAMERAS_VIDEO[n] for n in ("ensemble", "sud_central", "sud_grande")}
+RESOLUTION_VIDEO = (960, 540)
+
+
+def cameras_fixes(specs: dict = CAMERAS_VIDEO, resolution=RESOLUTION_VIDEO) -> dict[str, Camera]:
+    cams = {}
+    for nom, c in specs.items():
+        cam = Camera(prim_path=f"/World/Video/Cam_{nom}", position=np.array(c["position"], dtype=float),
+                     orientation=_orientation_monde(c["yaw"], c["plongee"]), resolution=resolution)
+        cam.initialize()                                # branche la caméra au rendu (après world.reset)
+        # ouverture ET focale, dans la même unité que les caméras des drones : avec l'ouverture par
+        # défaut, une focale de 18 donnait un téléobjectif dix fois trop serré
+        cam.set_horizontal_aperture(CAMERAS.horizontal_aperture)
+        cam.set_focal_length(CAMERAS.horizontal_aperture / (2.0 * math.tan(math.radians(c["fov"]) / 2.0)))
+        cam.set_clipping_range(0.2, 80.0)
+        cams[nom] = cam
+    return cams
+
+
+def ajoute_obstacle(nom: str, centre_xy, dims=(1.0, 1.0, 2.0)):
+    """Un bloc plein posé au sol en cours de mission, avec son collider : le lidar doit le
+    découvrir et la carte doit faire recalculer les chemins. Retourne son emprise."""
+    from isaacsim.core.api.objects import FixedCuboid
+
+    lx, ly, lz = dims
+    FixedCuboid(prim_path=f"/World/Obstacles/{nom}", position=np.array([centre_xy[0], centre_xy[1], lz / 2.0]),
+                scale=np.array([lx, ly, lz]), size=1.0, color=np.array([0.85, 0.35, 0.1]))
+    return {"nom": nom, "x": [centre_xy[0] - lx / 2, centre_xy[0] + lx / 2],
+            "y": [centre_xy[1] - ly / 2, centre_xy[1] + ly / 2], "z": [0.0, lz]}
+
+
 def _drone_cameras(drone_prim: str) -> dict[str, Camera]:
     """Deux latérales haute résolution pour lire, une frontale basse résolution pour voir.
     Montées sous le ventre (z -0,11) : au-dessus de ce plan, la coque de l'Iris (z -0,067 à

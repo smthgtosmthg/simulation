@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -44,6 +45,10 @@ def instantanes(missions: list[Path]) -> list[dict]:
                 if d["vivant"] and cam.exists() and vue.exists():
                     cas.append({"mission": m.name, "k": inst["k"], "t": inst["t"], "drone": d["i"],
                                 "position": d["position"], "codes_lus": codes_lus,
+                                "cap_deg": round(math.degrees(d.get("cap", 0.0)), 1),
+                                "coequipiers": inst["drones"], "racks": journal.get("racks", []),
+                                **{cle: inst[cle] for cle in ("resume", "panneaux", "pistes", "cibles",
+                                                             "frontieres", "reservations") if cle in inst},
                                 "vue": str(vue), "cam": str(cam), "zones": inst["zones"], "verite": v})
     return cas
 

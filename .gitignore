@@ -16,3 +16,7 @@ swarm_qr/experiments/07_enveloppe/images_traversee
 swarm_qr/experiments/07_enveloppe/images_vol
 swarm_qr/experiments/10_detecteur/jeu
 swarm_qr/experiments/11_mission/*/instantanes
+swarm_qr/experiments/11_mission/*/video
+swarm_qr/experiments/11_mission/*/ardupilot_logs
+# Résultats de vol mis de côté avant le correctif du sol (4 Go de vidéos)
+swarm_qr/experiments/11_mission/avant_correctif_sol/

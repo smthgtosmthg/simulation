@@ -29,10 +29,25 @@ parser.add_argument("--seed", type=int, default=9033)
 parser.add_argument("--drones", type=int, default=3)
 parser.add_argument("--budget", type=float, default=600.0, help="secondes de temps simulé")
 parser.add_argument("--detecteur", default="auto", help="'auto', un .pt, ou '' pour le repérage classique")
-parser.add_argument("--guide", default="", help="'' = sans guide ; sinon le nom d'un modèle (étape 8)")
+parser.add_argument("--guide", default="", help="'' = sans guide ; 'entraine' = le modèle 3B + adaptateur LoRA ; sinon un nom de modèle (étape 8)")
+parser.add_argument("--modele-guide", default=str(Path.home() / "Documents" / "qwen2.5-vl-3b"), dest="modele_guide")
+parser.add_argument("--adaptateur", default=str(Path(__file__).resolve().parent / "experiments" / "12_guide" / "adaptateur_lora"))
 parser.add_argument("--lam", type=float, default=0.0, help="poids de l'avis du guide dans la note")
 parser.add_argument("--panne", default="", help="drone:temps — ce drone cesse d'agir à cet instant simulé")
 parser.add_argument("--instantanes", type=float, default=10.0, help="secondes simulées entre deux instantanés (0 = aucun)")
+parser.add_argument("--codes-attendus", type=int, default=0, dest="codes_attendus",
+                    help="taille connue de l'inventaire (0 = le nombre de cartons de la scène)")
+parser.add_argument("--part-arret", type=float, default=0.95, dest="part_arret",
+                    help="part des codes attendus à partir de laquelle on accorde la grâce puis on s'arrête (0 = jamais)")
+parser.add_argument("--grace", type=float, default=60.0, help="secondes de vol accordées après la part atteinte")
+parser.add_argument("--sans-progres", type=float, default=120.0, dest="sans_progres",
+                    help="secondes sans code nouveau après lesquelles on s'arrête (0 = jamais)")
+parser.add_argument("--politique", default="geometrie", choices=["geometrie", "zigzag", "glouton"],
+                    help="geometrie = le système ; zigzag = la méthode statique de Pore et al. ; glouton = l'oracle qui connaît les codes")
+parser.add_argument("--video", action="store_true", help="enregistre les caméras fixes à chaque rendu (vidéo à vitesse réelle)")
+parser.add_argument("--cameras", type=int, default=2, choices=[2, 3, 5],
+                    help="2 = couloir central + grande zone (choix de l'utilisatrice) ; 3 = + vue d'ensemble ; 5 = tous les couloirs")
+parser.add_argument("--obstacle", default="", help="x,y,t — un bloc de 1x1x2 m apparaît à cet endroit à cet instant simulé")
 parser.add_argument("--sortie", required=True)
 args, _ = parser.parse_known_args()
 
@@ -49,6 +64,7 @@ import numpy as np  # noqa: E402
 import omni.timeline  # noqa: E402
 
 from swarm_qr import control, mapping, planning  # noqa: E402
+from swarm_qr import baselines  # noqa: E402
 from swarm_qr.env import scene as scene_mod  # noqa: E402
 from swarm_qr.env.config import CAMERAS  # noqa: E402
 from swarm_qr.env.layout import make_layout  # noqa: E402
@@ -67,6 +83,9 @@ DECISION_REPOS_S = 2.0        # s entre deux décisions d'un drone sans cible
 V_APPROCHE = 0.6              # m/s ; l'approche d'une pose tenue, comme la patrouille de l'étape 4
 RAYON_COEQUIPIER = 2.0        # m ; un coéquipier en vol est un obstacle de ce rayon pour les chemins
 MARGE_ALTITUDE = 1.5          # m ; on change d'altitude à au moins ça de tout obstacle connu
+FENETRE_ZIGZAG = 12           # arrêts examinés au plus par décision : la physique ne doit pas attendre
+CHEMINS_ZIGZAG = 3            # calculs de chemin au plus par décision, pour la même raison
+PASSES_ZIGZAG = 3             # un arrêt mis de côté est repris aux passages suivants, pas au-delà
 TOL_ARRIVEE = 0.35            # m ; à trois drones, une pose tenue oscille de 30 cm : 15 cm ne s'atteint jamais
 GAIN_MISSION = 0.5            # vitesse commandée par mètre d'écart ; 0,9 (étape 3, un drone) oscille à trois drones
 V_TRANSIT_MISSION = 1.0       # m/s ; un transit plus lent dépasse moins près des racks
@@ -199,9 +218,10 @@ def main() -> None:
         print(f"oeil appris : {detecteur.imgsz} px, seuil {detecteur.conf}")
     guide = None
     if args.guide:
-        from swarm_qr.guide import Guide
+        from swarm_qr.guide import Guide, GuideEntraine
 
-        guide = Guide(args.guide)
+        guide = (GuideEntraine(args.modele_guide, args.adaptateur) if args.guide == "entraine"
+                 else Guide(args.guide))
         print(f"guide : {args.guide}, lambda {args.lam}")
 
     clock = Clock(scene.world)
@@ -212,14 +232,37 @@ def main() -> None:
         d, t = args.panne.split(":")
         panne = (int(d), float(t))
     tags = scene.tags
+    jeux = {2: scene_mod.CAMERAS_VIDEO_2, 3: scene_mod.CAMERAS_VIDEO_3, 5: scene_mod.CAMERAS_VIDEO}
+    cams_video = scene_mod.cameras_fixes(jeux[args.cameras]) if args.video else {}
+    if args.video:
+        for nom in list(cams_video) + ["lecteur"]:
+            (SORTIE / "video" / nom).mkdir(parents=True, exist_ok=True)
+        index_video: list[dict] = []
+    obstacle_prevu = None
+    if args.obstacle:
+        ox, oy, ot = (float(v) for v in args.obstacle.split(","))
+        obstacle_prevu = {"x": ox, "y": oy, "t": ot, "pose": False}
+    racks_connus = [{"prim": r.prim, "x": list(r.x_bounds), "y": list(r.y_bounds)} for r in layout.racks]
+    secteurs = baselines.arrets_zigzag(layout, args.drones) if args.politique == "zigzag" else []
+    if secteurs:
+        secteurs = baselines.attribue(secteurs, [scene.position(i) for i in range(args.drones)])
+    plans = [baselines.PlanFixe(l, fenetre=FENETRE_ZIGZAG, chemins=CHEMINS_ZIGZAG, passes=PASSES_ZIGZAG)
+             for l in secteurs]
+    if args.politique == "zigzag":
+        print("zigzag : " + ", ".join(f"drone {i} {len(p.arrets)} arrets" for i, p in enumerate(plans)))
 
-    journal = {"seed": args.seed, "drones": args.drones, "budget_s": args.budget,
+    journal = {"seed": args.seed, "drones": args.drones, "budget_s": args.budget, "politique": args.politique,
+               "arret": {"codes_attendus": args.codes_attendus or len({t.tag_id for t in tags}), "part": args.part_arret,
+                         "grace_s": args.grace, "sans_progres_s": args.sans_progres},
                "detecteur": args.detecteur, "guide": args.guide, "lam": args.lam,
                "panne": args.panne, "evenements": [], "codes_par_t": [], "instantanes": []}
     mur0 = time.monotonic()
     n_cycle = 0
     t_fin_candidats = None
     fin = None
+    # un carton porte le même code sur ses deux faces : l'inventaire se compte en codes distincts
+    codes_attendus = args.codes_attendus or len({t.tag_id for t in tags})
+    t_dernier_code, t_part_atteinte = 0.0, None
     prochain_instantane = 0.0
     avis_en_cours: dict[int, object] = {}
 
@@ -273,12 +316,21 @@ def main() -> None:
             a.cerveau.constate(a.cible, lu)
             if a.ctrl.phase is control.Phase.ABANDON:
                 carte.ecarte(a.cible.position)
+                if args.politique == "zigzag":
+                    plans[a.i].remet(a.cible)
             a.decisions[-1].update({"fin": round(clock.t, 1), "phase": a.ctrl.phase.value,
                                     "lu": bool(lu), "raison": a.ctrl.bilan.raison if a.ctrl.bilan else ""})
             carte.libere(a.i)
             a.cible = None
         avec_coequipiers(a)
-        choix = a.cerveau.choisit(scene.position(a.i), avis=a.avis, t=clock.t)
+        if args.politique == "zigzag":
+            choix = plans[a.i].prochain(carte, lambda p, cs: a.cerveau.choisit(p, cibles=cs, t=clock.t),
+                                        scene.position(a.i))
+        elif args.politique == "glouton":
+            choix = a.cerveau.choisit(scene.position(a.i), cibles=baselines.cibles_omniscientes(tags, set(carte.codes)),
+                                      t=clock.t)
+        else:
+            choix = a.cerveau.choisit(scene.position(a.i), avis=a.avis, t=clock.t)
         carte.obstacles_mobiles = []
         if choix is None:
             if a.t_sans_cible is None:
@@ -341,6 +393,46 @@ def main() -> None:
         a.ctrl.bilan = control.Bilan(control.Phase.ABANDON, raison, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         evenement("abandon", drone=a.i, raison=raison)
 
+    def sauve_journaux_ardupilot() -> None:
+        """Les journaux de bord des autopilotes (dataflash) vivent dans un dossier temporaire
+        effacé à la sortie : on les copie avant, ils disent de l'intérieur pourquoi un drone tombe."""
+        import shutil
+        for i, d in enumerate(scene.drones):
+            try:
+                outil = d._backends[0].ardupilot_tool
+                src = Path(outil.root_fs.name) / "logs"
+                dst = SORTIE / "ardupilot_logs" / f"drone_{i}"
+                dst.mkdir(parents=True, exist_ok=True)
+                for f in src.glob("*.BIN"):
+                    shutil.copy2(f, dst / f.name)
+            except Exception as e:                              # noqa: BLE001
+                print(f"  journaux ArduPilot du drone {i} non copies ({type(e).__name__}: {e})", flush=True)
+
+    def enregistre_video() -> None:
+        """Une image par caméra fixe à chaque rendu, plus la caméra de lecture du drone qui lit ;
+        la vidéo est assemblée après le vol (experiments/11_mission/video.py)."""
+        n = len(index_video)
+        lecteur = next((a.i for a in agents if a.vivant and a.cible is not None and a.cible.genre == "lire"
+                        and a.ctrl.phase is control.Phase.ATTEINT), None)
+        if lecteur is None:
+            lecteur = next((a.i for a in agents if a.vivant), None)
+        for nom, cam in cams_video.items():
+            img = cam.get_rgb()
+            if img is not None and getattr(img, "ndim", 0) == 3 and img.size:
+                cv2.imwrite(str(SORTIE / "video" / nom / f"{n:05d}.jpg"), _img.to_bgr(img), [cv2.IMWRITE_JPEG_QUALITY, 85])
+        if lecteur is not None:
+            img = scene.cameras[lecteur]["left"].get_rgb()
+            if img is not None and getattr(img, "ndim", 0) == 3 and img.size:
+                cv2.imwrite(str(SORTIE / "video" / "lecteur" / f"{n:05d}.jpg"),
+                            cv2.resize(_img.to_bgr(img), (480, 360)), [cv2.IMWRITE_JPEG_QUALITY, 85])
+        index_video.append({"n": n, "t": round(clock.t, 1), "codes": len(carte.codes), "lecteur": lecteur,
+                            "drones": [{"i": a.i, "vivant": a.vivant,
+                                        "position": [round(float(v), 2) for v in scene.position(a.i)],
+                                        "genre": a.cible.genre if a.cible else None} for a in agents]})
+        if n % 100 == 0:
+            (SORTIE / "video" / "index.json").write_text(json.dumps(
+                {"pas_s": 0.2, "codes_attendus": codes_attendus, "images": index_video}))
+
     def instantane() -> None:
         cibles = agents[0].cerveau.candidats(clock.t)
         zones = zones_candidates(cibles)
@@ -352,20 +444,57 @@ def main() -> None:
         cv2.imwrite(str(SORTIE / "instantanes" / f"{k:03d}_vue.png"), vue)
         for a in agents:
             if a.vivant:
-                img = scene.cameras[a.i]["left"].get_rgb()
-                if img is not None and getattr(img, "ndim", 0) == 3 and img.size:
-                    cv2.imwrite(str(SORTIE / "instantanes" / f"{k:03d}_cam{a.i}.jpg"),
-                                cv2.resize(_img.to_bgr(img), (512, 384)), [cv2.IMWRITE_JPEG_QUALITY, 85])
+                for nom, suffixe in (("left", ""), ("right", "d")):
+                    img = scene.cameras[a.i][nom].get_rgb()
+                    if img is not None and getattr(img, "ndim", 0) == 3 and img.size:
+                        cv2.imwrite(str(SORTIE / "instantanes" / f"{k:03d}_cam{a.i}{suffixe}.jpg"),
+                                    cv2.resize(_img.to_bgr(img), (512, 384)), [cv2.IMWRITE_JPEG_QUALITY, 85])
         journal["instantanes"].append({
             "k": k, "t": round(clock.t, 1), "zones": zones,
             "drones": [{"i": a.i, "position": [round(float(v), 2) for v in scene.position(a.i)],
-                        "cap": round(scene.yaw(a.i), 3), "vivant": a.vivant} for a in agents],
-            "verite": verite_des_zones(zones, tags, carte)})
+                        "cap": round(scene.yaw(a.i), 3), "vivant": a.vivant,
+                        "phase": a.ctrl.phase.name if a.ctrl.phase is not None else None,
+                        "cible": None if a.cible is None else {
+                            "genre": a.cible.genre, "position": _liste(a.cible.position),
+                            "origine": _liste(a.cible.origine), "cote": a.cible.cote,
+                            "utilite": round(float(a.cible.utilite), 1), "note": round(float(a.cible.note), 1),
+                            "depuis": round(clock.t - a.t_cible, 1)}} for a in agents],
+            "verite": verite_des_zones(zones, tags, carte),
+            **dossier_de_la_carte(k, cibles)})
+
+    def _liste(v):
+        return [round(float(x), 2) for x in np.asarray(v).ravel()]
+
+    def dossier_de_la_carte(k: int, cibles) -> dict:
+        """Tout ce que la carte sait à cet instant, pour les bancs hors ligne : la grille
+        elle-même, les panneaux lus, les pistes, toutes les cibles candidates, les frontières et
+        les réservations. Un échec ici ne doit jamais arrêter un vol."""
+        try:
+            carte.sauve(SORTIE / "instantanes" / f"{k:03d}_carte")
+            front = carte.frontieres(planning.Z_MIN, planning.Z_MAX)
+            return {
+                "resume": carte.resume(),
+                "panneaux": [{"code": q.code, "position": _liste(q.position), "normale": _liste(q.normale),
+                              "lectures": q.lectures, "vu_le": round(q.vu_le, 1)} for q in carte.panneaux],
+                "pistes": [{"position": _liste(q.position),
+                            "normale": None if q.normale is None else _liste(q.normale),
+                            "vues": q.vues, "vu_le": round(q.vu_le, 1)} for q in carte.pistes],
+                "cibles": [{"genre": c.genre, "position": _liste(c.position), "origine": _liste(c.origine),
+                            "cote": c.cote, "utilite": round(float(c.utilite), 1)} for c in cibles],
+                "frontieres": {"cases": int(len(front)),
+                               "exemples": [_liste(f) for f in np.asarray(front)[:200]]},
+                "reservations": [{"drone": r.drone, "cible": _liste(r.cible), "jusqu_a": round(r.jusqu_a, 1)}
+                                 for r in carte.reservations.values()],
+            }
+        except Exception as e:                                  # noqa: BLE001
+            print(f"  instantane {k} : dossier incomplet ({type(e).__name__}: {e})", flush=True)
+            return {}
 
     def demande_avis(a: Agent) -> None:
         """Le guide travaille en arrière-plan ; l'avis sert à la prochaine décision."""
         if guide is None or clock.t - a.t_avis < AVIS_S:
             return
+        from swarm_qr.guide import GuideEntraine
         if a.i in avis_en_cours:
             if not avis_en_cours[a.i].done():
                 return
@@ -376,6 +505,17 @@ def main() -> None:
         cibles = a.cerveau.candidats(clock.t)
         zones = zones_candidates(cibles)
         if not zones:
+            return
+        if isinstance(guide, GuideEntraine):
+            # le guide entraîné lit le dossier de la carte, sans image
+            cas = {"t": round(clock.t, 1), "codes_lus": len(carte.codes), "drone": a.i,
+                   "position": [float(v) for v in scene.position(a.i)],
+                   "cap_deg": round(float(np.degrees(scene.yaw(a.i))), 1),
+                   "coequipiers": [{"i": b.i, "position": [float(v) for v in scene.position(b.i)],
+                                    "cap": float(scene.yaw(b.i)), "vivant": b.vivant} for b in agents if b.vivant],
+                   "racks": racks_connus}
+            avis_en_cours[a.i] = guide.demande(cas, zones)
+            a.t_avis = clock.t
             return
         img = scene.cameras[a.i]["left"].get_rgb()
         if img is None or getattr(img, "ndim", 0) != 3 or not img.size:
@@ -410,6 +550,14 @@ def main() -> None:
             for _ in range(PHYS_PAR_CYCLE - 1):
                 scene.world.step(render=False)
             scene.world.step(render=True)
+            if obstacle_prevu and not obstacle_prevu["pose"] and clock.t >= obstacle_prevu["t"]:
+                emprise = scene_mod.ajoute_obstacle("bloc_1", (obstacle_prevu["x"], obstacle_prevu["y"]))
+                obstacle_prevu["pose"] = True
+                journal["obstacle"] = {**emprise, "t": round(clock.t, 1)}
+                evenement("obstacle", t_apparition=round(clock.t, 1), x=obstacle_prevu["x"], y=obstacle_prevu["y"])
+                print(f"  t={clock.t:6.1f} s  OBSTACLE pose en ({obstacle_prevu['x']}, {obstacle_prevu['y']})")
+            if args.video:
+                enregistre_video()
             clock.t += PHYS_PAR_CYCLE * PHYS_DT
             n_cycle += 1
             # --- observation ---
@@ -474,6 +622,21 @@ def main() -> None:
             if not vivants:
                 fin = "aucun drone vivant"
                 break
+            # --- arrêt sur l'inventaire : la taille de l'inventaire est connue, on ne vole pas
+            #     600 s pour un dernier code introuvable ---
+            lus = len(carte.codes)
+            if journal["codes_par_t"] and len(journal["codes_par_t"]) > 1 and lus > journal["codes_par_t"][-2][1]:
+                t_dernier_code = clock.t
+            if args.part_arret > 0 and lus >= args.part_arret * codes_attendus:
+                if t_part_atteinte is None:
+                    t_part_atteinte = clock.t
+                    evenement("part_atteinte", codes=lus, attendus=codes_attendus)
+                elif clock.t - t_part_atteinte >= args.grace:
+                    fin = f"inventaire a {lus / codes_attendus:.0%} et grace ecoulee"
+                    break
+            if args.sans_progres > 0 and lus > 0 and clock.t - t_dernier_code >= args.sans_progres:
+                fin = f"sans code nouveau depuis {args.sans_progres:.0f} s"
+                break
             # --- instantanés et journal ---
             if args.instantanes and clock.t >= prochain_instantane:
                 instantane()
@@ -495,12 +658,18 @@ def main() -> None:
         if fin is None:
             fin = "budget epuise"
     finally:
+        if args.video:
+            (SORTIE / "video" / "index.json").write_text(json.dumps(
+                {"pas_s": 0.2, "codes_attendus": codes_attendus, "images": index_video}))
+        sauve_journaux_ardupilot()
         for a in agents:
             a.pilot.hold()
         clock.pump(0.5)
         # --- rapport ---
         carte.sauve(SORTIE / "carte")
         cm = np.array(cycles_ms) if cycles_ms else np.zeros(1)
+        if args.politique == "zigzag":
+            journal["zigzag"] = {i: p.bilan() for i, p in enumerate(plans)}
         journal.update({
             "fin": fin, "t_sim_s": round(clock.t, 1), "mur_min": round((time.monotonic() - mur0) / 60, 1),
             "cycles": {"n": int(len(cm)), "mediane_ms": round(float(np.median(cm)), 1),
