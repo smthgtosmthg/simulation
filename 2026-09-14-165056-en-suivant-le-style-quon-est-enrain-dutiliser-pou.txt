@@ -1,0 +1,280 @@
+╭─── Claude Code v2.1.220 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│                Welcome back djihen!                │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ What's new              │
+│                        ▘▘ ▝▝                       │ Bug fixes and reliabil… │
+│  Opus 5 · API Usage Billing · d_guitoun@esi.dz's   │ Added Claude Opus 5 (`… │
+│  Organization                                      │ Added `sandbox.network… │
+│                 ~/simulation_mc02                  │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+   Fable 5.1 writes better code and reports progress on long tasks. Switch anytime with /model.
+
+❯ en suivant le style quon est enrain dutiliser pour rediger notre systeme dan  
+  slautre chat je veux que tu me redige la soluton rl qui existe dans ce projet 
+  dcr je veux la quantite du texte ne depasse pas 3 page max et aussi active    
+  inference quise trouve aussi dans ce projet dcr dune qutite de texte qui ne   
+  depasse pas les 2 3 pages avec un language facile fluide lsl comme ce quon    
+  est entrain dutiliser dans lautre chat qui redige le systemes                 
+
+  Listed 1 directory (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ en suivant le style quon est enrain dutiliser pour rediger notre systeme dan  
+  slautre chat je veux que tu me redige la soluton rl qui existe dans ce projet 
+  dcr je veux la quantite du texte ne depasse pas 3 page max et aussi active    
+  inference quise trouve aussi dans ce projet dcr dune qutite de texte qui ne   
+  depasse pas les 2 3 pages avec un language facile fluide lsl comme ce quon    
+  est entrain dutiliser dans lautre chat qui redige le systemes                 
+
+  Searched for 1 pattern, read 6 files, listed 4 directories (ctrl+o to expand)
+
+● Bash(cat scripts/aif_core/swarm.py; echo "===== NETWORK ====="; sed -n 1,60p
+      scripts/aif_core/network.py)
+  ⎿  from __future__ import annotations
+
+     import math
+     … +314 lines (ctrl+o to expand)
+
+● Bash(wc -l scripts/aif_core/architecture.py; sed -n 1,80p
+      scripts/aif_core/architecture.py; echo "===== STRESSORS (résumé) =====";
+      grep -n "class \|def \|drop_obstac…)
+  ⎿  wc: scripts/aif_core/architecture.py: No such file or directory
+     sed: can't read scripts/aif_core/architecture.py: No such file or dire
+     ctory
+     … +38 lines (ctrl+o to expand)
+
+● Bash(git log --oneline --diff-filter=D --name-only -- scripts/aif_core/
+      rl_inventory/swarmscan_map/baselines/ | head -40)
+  ⎿  0216520 refactor: Remove obsolete baseline files and update configurat
+     ion comments
+     rl_inventory/swarmscan_map/baselines/__init__.py
+     … +3 lines (ctrl+o to expand)
+
+● Bash(git show 0216520^:rl_inventory/swarmscan_map/baselines/aif_controller.py
+      | head -120; echo "...."; git show
+      0216520^:rl_inventory/swarmscan_map/baselines/aif_co…)
+  ⎿  """Active Inference : sélection d'action par minimisation de l'énergie
+      libre attendue G.
+     … +119 lines (ctrl+o to expand)
+
+● Bash(sed -n 1,120p rl_inventory/swarmscan_map/config_map.py)
+  ⎿  """Paramètres SwarmScan-Map (docs/conception_solution_finale.md)."""
+
+     from __future__ import annotations
+     … +117 lines (ctrl+o to expand)
+● Bash(sed -n 120,206p rl_inventory/swarmscan_map/config_map.py; echo "=====
+      MODELS ====="; cat rl_inventory/swarmscan_map/models.py)
+  ⎿      def obs_dim(self) -> int:
+             return len(self.crop_spans_m) * self.n_channels * self.crop_px
+      * self.crop_px
+     … +178 lines (ctrl+o to expand)
+
+● Bash(sed -n 1,150p rl_inventory/swarmscan_map/env_map.py)
+  ⎿  """SwarmScanMapEnv : l'arène v2 (conception_solution_finale.md).
+
+     Hérite de SwarmQREnv (scène, drones, raycast statique, drive) et rempl
+     … +147 lines (ctrl+o to expand)
+
+● Bash(sed -n 150,330p rl_inventory/swarmscan_map/env_map.py)
+  ⎿              face_cos = (-direction * self._qr_normal.unsqueeze(0)).sum
+     (-1)
+                 lin = torch.norm(
+     … +178 lines (ctrl+o to expand)
+
+● Bash(sed -n 330,470p rl_inventory/swarmscan_map/env_map.py)
+  ⎿               th["max_speed_mps"] / 2.0, th["max_yawrate_rps"] / 2.0],
+                 device=self.device,
+             ).expand(self.num_envs, 4)
+     … +138 lines (ctrl+o to expand)
+
+● Bash(sed -n 470,588p rl_inventory/swarmscan_map/env_map.py)
+  ⎿                  "episode/read_frac_gate": sum(fracs) / max(1, len(frac
+     s)),
+                     "episode/read_frac_nominal": (nom.sum(dim=1).float() /
+     … +116 lines (ctrl+o to expand)
+
+● Bash(cat rl_inventory/swarmscan_map/curriculum.py; echo "===== MAPPING
+      (extraits) ====="; sed -n 1,60p rl_inventory/swarmscan_map/mapping.py)
+  ⎿  """Curriculum ADR bidirectionnel sur le gate de lecture (OpenAI ADR /
+     DORAEMON), piloté par le
+     taux de lecture mesuré. Pur python/torch, testable sans Isaac."""
+     … +146 lines (ctrl+o to expand)
+
+● Bash(cat rl_inventory/swarmscan_map/train.py; echo "===== EVAL ====="; sed -n
+      1,80p rl_inventory/swarmscan_map/eval_map.py)
+  ⎿  """Entraîne SwarmScan-Map (PS-PPO partagé, rsl_rl 3.0).
+
+       bash ../launch.sh swarmscan_map/train.py --headless --num_envs 32 --
+     … +197 lines (ctrl+o to expand)
+
+● Bash(sed -n 1,60p rl_inventory/env.py; echo "..."; grep -n "class \|def
+      \|AGENTS\|NUM_DRONES\|MAX_DIST" rl_inventory/env.py | head -50)
+  ⎿  """L'ARÈNE RL d'inspection d'inventaire QR (Isaac Sim 5.1 / Isaac Lab
+     2.3).
+     … +108 lines (ctrl+o to expand)
+
+● Bash(cat rl_inventory/config_rl.py | sed -n 1,154p)
+  ⎿  from __future__ import annotations
+
+     from dataclasses import dataclass, field
+     … +149 lines (ctrl+o to expand)
+
+  Listed 2 directories (ctrl+o to expand)
+
+● Bash(cd /home/djihene_guitoun/.claude/projects/-home-djihene-guitoun-simulatio
+      n-mc02/memory/ && cat project_resultat_barre088.md
+      project_cause_echec_ppo_deterministe…)
+  ⎿  ---
+     name: project_resultat_barre088
+     description: "Premier résultat solide du PFE (2026-07-29) — barre 0,88
+     … +142 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /home/djihene_guitoun/simulation_mc02
+
+● Bash(cd /home/djihene_guitoun/.claude/projects/-home-djihene-guitoun-simulatio
+      n-mc02/memory/ && cat project_baseline_aif.md project_metrics_eval.md
+      project_rl_audit_…)
+  ⎿  ---
+     name: project-baseline-aif
+     description: "Baseline AIF v2 livrée (2026-07-19) : EFE géodésique + c
+     … +202 lines (ctrl+o to expand)
+  ⎿  Shell cwd was reset to /home/djihene_guitoun/simulation_mc02
+
+● Bash(sed -n 1,60p scripts/12_aif_isaac_sim.py; echo "=== grep qr dans le
+      script AIF ==="; grep -n "qr\|QR" scripts/12_aif_isaac_sim.py | head -20)
+  ⎿  #!/usr/bin/env python3
+
+     from __future__ import annotations
+     … +76 lines (ctrl+o to expand)
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● Bash(for d in logs/runs/*/; do echo "--- $(basename $d)"; python3 -c "
+      import json,sys…)
+  ⎿  --- run_20260531_041619_aif_cent_baseline
+     steps 45 | expl% 93.04 | planner_cov 93.04 | H 0.3166 | drones 3
+     --- run_20260531_042411_aif_dist_baseline
+     … +13 lines (ctrl+o to expand)
+● Bash(grep -n "target_coverage\|max_steps" scripts/12_aif_isaac_sim.py | head;
+      echo "=== qr_stats ==="; cat
+      logs/runs/run_20260531_041619_aif_cent_baseline/qr_stats.j…)
+  ⎿  463:        max_steps=a.max_steps, env_width=a.env_width, env_height=a
+     .env_height,
+     878:    while running and aif_step < cfg.max_steps and sim_app.is_runn
+     … +54 lines (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import json…)
+  ⎿  run_20260531_041619_aif_cent_baseline -> {'w_epistemic': 2.5, 'w_pragm
+     atic': 0.8, 'softmax_temp': 0.3, 'planner': 'aif', 'arch': 'centralize
+     d', 'ns3_mode': 'wifi', 'kill_drone_at_step': -1, 'max_steps': 80, 'si
+     … +9 lines (ctrl+o to expand)
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+● Bash(python3 -c "
+      import json,collections…)
+  ⎿  run_20260531_044951_aif_cent_kill_d0_s20 Counter({'recovery': 31, 'dur
+     able': 28, 'normal': 20})
+       innov min/max 0.5 0.882
+     … +3 lines (ctrl+o to expand)
+
+● J'ai lu le code des deux solutions (rl_inventory/ pour le RL,
+  scripts/aif_core/ pour l'inférence active) et j'ai repris les chiffres mesurés
+  dans les runs enregistrés. Voici les deux textes.
+
+  Read 2 files (ctrl+o to expand)
+
+● Deux fichiers écrits :
+
+  docs/memoire_solution_rl.md — 1 419 mots (≈ 3 pages)
+  L'idée du « tout appris » → la règle « aucune position de QR dans
+  l'observation » → ce que le drone voit (cartes égocentriques 2 échelles +
+  vecteur 98 nombres, critique privilégié) → ce qu'il commande (4 vitesses +
+  modèle d'actionneur) → les 5 conditions de lecture → la récompense →
+  l'entraînement (PPO partagé, curriculum à 10 crans, split gelé, pannes
+  entraînées) → les résultats → les leçons.
+
+  Chiffres repris : 0,819 bruité / 0,733 déterministe sur le split test,
+  transfert 0,90, 90 % des occasions converties ; puis la retombée à 0,014 au
+  gate nominal avec sa cause mesurée (acteur éteint à 99,4 %, commande constante
+  à 0,634 m/s, bruit portant 88 % de la variance) ; et le pilote de référence à
+  0,95. J'ai gardé deux réserves honnêtes : le split trop peu varié (8 configs
+  de test sur 20 identiques à l'entraînement) et l'écart bruité/déterministe.
+
+  docs/memoire_active_inference.md — 1 363 mots (≈ 3 pages)
+  L'idée (agir pour réduire la surprise) → la croyance en log-odds mise à jour
+  au lidar → la fusion à 30 % → la formule de G avec ses cinq termes et le
+  tirage adouci → la résilience par l'innovation → le banc (centralisé vs
+  distribué, ns-3, quatre perturbations) → les résultats → la limite → la
+  version réécrite pour l'inventaire.
+
+  Les chiffres du tableau viennent des huit runs de logs/runs/ que j'ai relus :
+  45 décisions pour l'AIF centralisé contre 69 pour l'heuristique de frontière,
+  70,5 % de couverture connue quand les liens entre drones sautent, 79 décisions
+  à deux drones après une panne. J'ai aussi écrit deux choses que les données
+  montrent et qu'il vaut mieux assumer : la sortie de stress automatique ne
+  s'est jamais déclenchée (innovation 0,45–0,89 contre une cible à 0,16), et la
+  lecture QR n'était qu'un démonstrateur (7 décodages sur 1 620 tentatives) — ce
+  qui amène naturellement à la suite du travail.
+
+  Si tu veux que je raccourcisse l'un des deux à 2 pages, ou que j'enlève les
+  tableaux pour du texte suivi, dis-moi lequel.
+
+❯ juste le principe de la soltion son architecture ses composant comment elle   
+  fonctionne pas les resulktat et son histoire merde                            
+
+● Compris — je refais les deux : principe, architecture, composants,
+  fonctionnement. Rien d'autre.
+
+  Read 2 files (ctrl+o to expand)
+
+● Les deux fichiers sont réécrits.
+
+  docs/memoire_solution_rl.md — 1 304 mots
+  Principe (une politique unique décide tout, aucune position de QR dans
+  l'observation) → schéma de la boucle → 8 composants : l'arène, la mémoire
+  spatiale partagée avec ses 9 couches, l'observation (2 cartes égocentriques +
+  vecteur), l'action et l'actionneur, les 5 conditions de lecture, la récompense
+  en 3 familles, le réseau acteur/critique, le curriculum → le déroulé d'un pas
+  en 6 étapes.
+
+  docs/memoire_active_inference.md — 1 268 mots
+  Principe (un seul critère, l'énergie libre attendue) → schéma + les deux
+  architectures centralisée/distribuée → 8 composants : la croyance en log-odds,
+  la perception lidar, l'entropie, la fusion, le planificateur et sa formule de
+  G, la détection de changement par l'innovation, la couche réseau, les
+  perturbations → le déroulé d'un cycle en 6 étapes → la variante pour
+  l'inventaire.
+
+  Supprimé des deux : tous les tableaux de mesures, les runs, les diagnostics,
+  les versions abandonnées, les leçons tirées.
+
+❯ faut parler juste sur la solution rl et aif car le contexte ..... on a deja   
+  parle dans le rapport je veux juste ; comment chaque solution fonctionne et   
+  comment elle implmenete ; comme dans rl comment on a entraine ; dans aif on a 
+  quelle composant les formule comment choisir .....   je veux juste les 2      
+  solution not the whole contexte and setup merde                               
+
+  Read 2 files (ctrl+o to expand)
+
+● docs/memoire_solution_rl.md — 1 216 mots
+  Ce que la politique apprend → l'observation (18 432 + 98 + 7) → l'action avec
+  ses formules de bornage → la récompense écrite terme par terme → le schéma du
+  réseau → l'entraînement : PPO, tableau des hyperparamètres, les 64 entrepôts ×
+  3 drones aplatis en 192 environnements, le retrait automatique du bruit, ce
+  qui est retiré au sort à chaque épisode → le curriculum (formule
+  d'interpolation, table des seuils, règles de montée et de recul) → la table
+  des fichiers.
+
+  docs/memoire_active_inference.md — 1 233 mots
+  Le critère → la croyance (log-odds, mise à jour lidar, entropie) → la fusion →
+  les candidats → les cinq termes de G écrits un par un, puis la formule
+  complète → le choix par tirage adouci → l'innovation et les trois formules de
+  G selon la phase → la table des fichiers et le cycle → la variante pour
+  l'inventaire avec ses trois termes changés.
+
+  Retiré : l'entrepôt, les drones, Isaac, Pegasus, ns-3, les perturbations, les
+  deux architectures en tant que section, tout ce qui relevait du décor.

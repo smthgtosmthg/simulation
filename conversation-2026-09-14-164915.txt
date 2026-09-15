@@ -1,0 +1,13 @@
+╭─── Claude Code v2.1.220 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│                Welcome back djihen!                │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ What's new              │
+│                        ▘▘ ▝▝                       │ Bug fixes and reliabil… │
+│     Opus 5 (1M context) · API Usage Billing ·      │ Added Claude Opus 5 (`… │
+│     d_guitoun@esi.dz's Organization                │ Added `sandbox.network… │
+│                 ~/simulation_mc02                  │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+   Fable 5.1 writes better code and reports progress on long tasks. Switch anytime with /model.
